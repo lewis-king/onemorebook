@@ -1,0 +1,5 @@
+.env
+.dynamodb
+node_modules
+dist
+.idea

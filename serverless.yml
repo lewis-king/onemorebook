@@ -1,0 +1,134 @@
+service: onemorebook-backend
+
+plugins:
+  - serverless-dotenv-plugin
+  - serverless-offline
+  - serverless-dynamodb
+
+custom:
+  dotenv:
+    path: ./.env
+    include:
+      - OPENAI_API_KEY
+  serverless-dynamodb:
+    stages:
+      - dev
+    start:
+      port: 8000
+      inMemory: true
+      migrate: true
+    migration:
+      dir: offline/migrations
+  conditions:
+    offline: ${env:IS_OFFLINE, 'false'}
+
+provider:
+  name: aws
+  runtime: nodejs18.x
+  region: ${opt:region, 'eu-west-1'}
+  timeout: 30
+  environment:
+    DYNAMO_TABLE: ${self:service}-${opt:stage, 'dev'}
+    LLM_MODEL: gpt-4o
+    IS_OFFLINE: ${self:custom.conditions.offline}
+    OPENAI_API_KEY: ${env:OPENAI_API_KEY}
+  iam:
+    role:
+      statements:
+        - Effect: Allow
+          Action:
+            - dynamodb:PutItem
+            - dynamodb:GetItem
+            - dynamodb:Query
+          Resource: arn:aws:dynamodb:${self:provider.region}:*:table/${self:provider.environment.DYNAMO_TABLE}
+
+functions:
+  generateBook:
+    handler: dist/handlers/generateBook.handler
+    timeout: 30
+    events:
+      - http:
+          path: /books
+          method: post
+          cors: true
+
+  getBook:
+    handler: dist/handlers/getBook.handler
+    events:
+      - http:
+          path: /books/{id}
+          method: get
+          cors: true
+
+  getTopBooks:
+    handler: dist/handlers/getTopBooks.handler
+    events:
+      - http:
+          path: /books/top
+          method: get
+          cors: true
+
+  updateStars:
+    handler: dist/handlers/updateStars.handler
+    events:
+      - http:
+          path: /books/{id}/stars
+          method: put
+          cors: true
+
+  listBooks:
+    handler: dist/handlers/listBooks.handler
+    events:
+      - http:
+          path: /books
+          method: get
+          cors: true
+          request:
+            parameters:
+              querystrings:
+                sortBy: false
+                order: false
+                limit: false
+
+resources:
+  Resources:
+    BooksTable:
+      Type: AWS::DynamoDB::Table
+      Properties:
+        TableName: ${self:provider.environment.DYNAMO_TABLE}
+        AttributeDefinitions:
+          - AttributeName: id
+            AttributeType: S
+          - AttributeName: dummy
+            AttributeType: S
+          - AttributeName: stars
+            AttributeType: N
+          - AttributeName: createdAt
+            AttributeType: S
+        KeySchema:
+          - AttributeName: id
+            KeyType: HASH
+        GlobalSecondaryIndexes:
+          - IndexName: StarsSortIndex
+            KeySchema:
+              - AttributeName: dummy
+                KeyType: HASH
+              - AttributeName: stars
+                KeyType: RANGE
+            Projection:
+              ProjectionType: ALL
+            ProvisionedThroughput:
+              ReadCapacityUnits: 5
+              WriteCapacityUnits: 5
+          - IndexName: DateSortIndex
+            KeySchema:
+              - AttributeName: dummy
+                KeyType: HASH
+              - AttributeName: createdAt
+                KeyType: RANGE
+            Projection:
+              ProjectionType: ALL
+            ProvisionedThroughput:
+              ReadCapacityUnits: 5
+              WriteCapacityUnits: 5
+        BillingMode: PAY_PER_REQUEST
