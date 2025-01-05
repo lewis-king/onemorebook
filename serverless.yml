@@ -15,8 +15,9 @@ custom:
       - dev
     start:
       port: 8000
-      inMemory: true
+      inMemory: false
       migrate: true
+      dbPath: "./.dynamodb"
     migration:
       dir: offline/migrations
   conditions:
