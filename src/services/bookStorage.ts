@@ -1,19 +1,18 @@
 import { DynamoDBClient } from "@aws-sdk/client-dynamodb";
-import { DynamoDBDocumentClient, PutCommand, GetCommand, QueryCommand, UpdateCommand } from "@aws-sdk/lib-dynamodb";
+import {DynamoDBDocumentClient, PutCommand, GetCommand, QueryCommand, UpdateCommand} from "@aws-sdk/lib-dynamodb";
 import { v4 as uuidv4 } from 'uuid';
 import { Book } from '../types/book';
-import {config} from "../config/config";
-
-export type SortOrder = 'asc' | 'desc';
+import { config } from '../config/config';
 
 export interface ListBooksOptions {
     sortBy: 'stars' | 'date';
-    order: SortOrder;
+    order: 'asc' | 'desc';
     limit?: number;
 }
 
 export class BookStorageService {
     private docClient: DynamoDBDocumentClient;
+    private readonly PARTITION_KEY = 'BOOK';
 
     constructor() {
         const clientConfig = {
@@ -31,22 +30,13 @@ export class BookStorageService {
         this.docClient = DynamoDBDocumentClient.from(client);
     }
 
-    async storeBook(bookData: Omit<Book, 'id' | 'createdAt' | 'stars'>): Promise<Book> {
-        const now = new Date().toISOString();
-        const book: {
-            dummy: string;
-            createdAt: string;
-            metadata: { ageRange: string; theme: string; characters: string[] };
-            id: string;
-            stars: number;
-            title: string;
-            content: string
-        } = {
+    async storeBook(bookData: Omit<Book, 'id' | 'createdAt' | 'stars' | 'partitionKey'>): Promise<Book> {
+        const book: Book = {
             ...bookData,
             id: uuidv4(),
+            partitionKey: this.PARTITION_KEY,
             stars: 0,
-            createdAt: now,
-            dummy: 'BOOK', // Required for GSIs
+            createdAt: new Date().toISOString(),
         };
 
         await this.docClient.send(new PutCommand({
@@ -57,6 +47,18 @@ export class BookStorageService {
         return book;
     }
 
+    async getBook(id: string): Promise<Book | null> {
+        const response = await this.docClient.send(new GetCommand({
+            TableName: config.aws.dynamoTable,
+            Key: {
+                partitionKey: this.PARTITION_KEY,
+                id
+            },
+        }));
+
+        return response.Item as Book || null;
+    }
+
     async listBooks(options: ListBooksOptions): Promise<Book[]> {
         const { sortBy, order, limit = 10 } = options;
         const indexName = sortBy === 'stars' ? 'StarsSortIndex' : 'DateSortIndex';
@@ -64,30 +66,24 @@ export class BookStorageService {
         const response = await this.docClient.send(new QueryCommand({
             TableName: config.aws.dynamoTable,
             IndexName: indexName,
-            KeyConditionExpression: 'dummy = :dummy',
+            KeyConditionExpression: 'partitionKey = :pk',
             ExpressionAttributeValues: {
-                ':dummy': 'BOOK',
+                ':pk': this.PARTITION_KEY,
             },
-            ScanIndexForward: order === 'asc', // false for descending order
+            ScanIndexForward: order === 'asc',
             Limit: limit,
         }));
 
         return (response.Items || []) as Book[];
     }
 
-    async getBook(id: string): Promise<Book | null> {
-        const response = await this.docClient.send(new GetCommand({
-            TableName: config.aws.dynamoTable,
-            Key: { id },
-        }));
-
-        return response.Item as Book || null;
-    }
-
     async updateStars(id: string, stars: number): Promise<Book | null> {
         const response = await this.docClient.send(new UpdateCommand({
             TableName: config.aws.dynamoTable,
-            Key: { id },
+            Key: {
+                partitionKey: this.PARTITION_KEY,  // This is required
+                id
+            },
             UpdateExpression: 'set stars = :stars',
             ExpressionAttributeValues: {
                 ':stars': stars,
@@ -96,20 +92,5 @@ export class BookStorageService {
         }));
 
         return response.Attributes as Book || null;
-    }
-
-    async getTopBooks(limit: number = 10): Promise<Book[]> {
-        const response = await this.docClient.send(new QueryCommand({
-            TableName: config.aws.dynamoTable,
-            IndexName: 'StarsSortIndex',
-            KeyConditionExpression: 'dummy = :dummy',
-            ExpressionAttributeValues: {
-                ':dummy': 'BOOK', // We'll use this as a partition key in the GSI
-            },
-            ScanIndexForward: false, // This will sort in descending order
-            Limit: limit,
-        }));
-
-        return (response.Items || []) as Book[];
     }
 }

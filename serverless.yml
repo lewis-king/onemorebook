@@ -10,6 +10,9 @@ custom:
     path: ./.env
     include:
       - OPENAI_API_KEY
+      - AWS_PROFILE
+      - AWS_REGION
+      - S3_BUCKET
   serverless-dynamodb:
     stages:
       - dev
@@ -22,6 +25,7 @@ custom:
       dir: offline/migrations
   conditions:
     offline: ${env:IS_OFFLINE, 'false'}
+  s3Bucket: "children-books-imgs"
 
 provider:
   name: aws
@@ -33,6 +37,7 @@ provider:
     LLM_MODEL: gpt-4o
     IS_OFFLINE: ${self:custom.conditions.offline}
     OPENAI_API_KEY: ${env:OPENAI_API_KEY}
+    S3_BUCKET: ${self:custom.s3Bucket}
   iam:
     role:
       statements:
@@ -42,6 +47,12 @@ provider:
             - dynamodb:GetItem
             - dynamodb:Query
           Resource: arn:aws:dynamodb:${self:provider.region}:*:table/${self:provider.environment.DYNAMO_TABLE}
+        - Effect: Allow
+          Action:
+            - s3:PutObject
+            - s3:GetObject
+          Resource:
+            - arn:aws:s3:::${self:custom.s3Bucket}/*
 
 functions:
   generateBook:
@@ -58,14 +69,6 @@ functions:
     events:
       - http:
           path: /books/{id}
-          method: get
-          cors: true
-
-  getTopBooks:
-    handler: dist/handlers/getTopBooks.handler
-    events:
-      - http:
-          path: /books/top
           method: get
           cors: true
 
@@ -98,21 +101,23 @@ resources:
       Properties:
         TableName: ${self:provider.environment.DYNAMO_TABLE}
         AttributeDefinitions:
-          - AttributeName: id
+          - AttributeName: partitionKey
             AttributeType: S
-          - AttributeName: dummy
+          - AttributeName: id
             AttributeType: S
           - AttributeName: stars
             AttributeType: N
           - AttributeName: createdAt
             AttributeType: S
         KeySchema:
-          - AttributeName: id
+          - AttributeName: partitionKey
             KeyType: HASH
+          - AttributeName: id
+            KeyType: RANGE
         GlobalSecondaryIndexes:
           - IndexName: StarsSortIndex
             KeySchema:
-              - AttributeName: dummy
+              - AttributeName: partitionKey
                 KeyType: HASH
               - AttributeName: stars
                 KeyType: RANGE
@@ -123,7 +128,7 @@ resources:
               WriteCapacityUnits: 5
           - IndexName: DateSortIndex
             KeySchema:
-              - AttributeName: dummy
+              - AttributeName: partitionKey
                 KeyType: HASH
               - AttributeName: createdAt
                 KeyType: RANGE
@@ -133,3 +138,31 @@ resources:
               ReadCapacityUnits: 5
               WriteCapacityUnits: 5
         BillingMode: PAY_PER_REQUEST
+
+    BookCovers:
+      Type: AWS::S3::Bucket
+      Properties:
+        BucketName: ${self:custom.s3Bucket}
+        PublicAccessBlockConfiguration:
+          BlockPublicAcls: false
+          BlockPublicPolicy: false
+          IgnorePublicAcls: false
+          RestrictPublicBuckets: false
+        CorsConfiguration:
+          CorsRules:
+            - AllowedHeaders: [ '*' ]
+              AllowedMethods: [ GET, PUT, POST, DELETE, HEAD ]
+              AllowedOrigins: [ '*' ]
+              MaxAge: 3000
+
+    BookCoversBucketPolicy:
+      Type: AWS::S3::BucketPolicy
+      Properties:
+        Bucket: !Ref BookCovers
+        PolicyDocument:
+          Statement:
+            - Sid: PublicReadGetObject
+              Effect: Allow
+              Principal: '*'
+              Action: s3:GetObject
+              Resource: arn:aws:s3:::${self:custom.s3Bucket}/*

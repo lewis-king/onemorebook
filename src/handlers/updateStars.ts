@@ -9,17 +9,24 @@ export const handler = async (
         const body = JSON.parse(event.body || '{}');
         const { stars } = body;
 
+        console.log('Updating stars for book:', { bookId, stars }); // Add logging
+
         if (!bookId || typeof stars !== 'number') {
             return {
                 statusCode: 400,
-                body: JSON.stringify({ error: 'Book ID and stars count are required' }),
+                body: JSON.stringify({
+                    error: 'Book ID and stars count are required',
+                    receivedId: bookId,
+                    receivedStars: stars,
+                    receivedType: typeof stars
+                }),
             };
         }
 
         const storage = new BookStorageService();
-        const book = await storage.updateStars(bookId, stars);
+        const updatedBook = await storage.updateStars(bookId, stars);
 
-        if (!book) {
+        if (!updatedBook) {
             return {
                 statusCode: 404,
                 body: JSON.stringify({ error: 'Book not found' }),
@@ -28,13 +35,17 @@ export const handler = async (
 
         return {
             statusCode: 200,
-            body: JSON.stringify(book),
+            body: JSON.stringify(updatedBook),
+            headers: {
+                'Content-Type': 'application/json',
+                'Access-Control-Allow-Origin': '*',
+            },
         };
     } catch (error) {
         console.error('Error updating book stars:', error);
         return {
             statusCode: 500,
-            body: JSON.stringify({ error: 'Internal server error' }),
+            body: JSON.stringify({ error: 'Internal server error', details: (error as Error).message }),
         };
     }
 };

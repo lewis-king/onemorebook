@@ -1,12 +1,12 @@
 import { APIGatewayProxyEvent, APIGatewayProxyResult } from 'aws-lambda';
-import { BookStorageService, SortOrder } from '../services/bookStorage';
+import { BookStorageService } from '../services/bookStorage';
 
 export const handler = async (
     event: APIGatewayProxyEvent
 ): Promise<APIGatewayProxyResult> => {
     try {
         const sortBy = (event.queryStringParameters?.sortBy || 'stars') as 'stars' | 'date';
-        const order = (event.queryStringParameters?.order || 'desc') as SortOrder;
+        const order = (event.queryStringParameters?.order || 'desc') as 'asc' | 'desc';
         const limit = event.queryStringParameters?.limit
             ? parseInt(event.queryStringParameters.limit, 10)
             : 10;
