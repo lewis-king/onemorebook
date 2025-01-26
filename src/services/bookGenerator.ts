@@ -71,6 +71,7 @@ export class BookGeneratorService {
                     platformUrl: dalleImage.url,
                     prompt: dalleImage.prompt,
                 },
+                pageImages: []
             };
         } catch (error) {
             console.error('Error in book generation:', error);

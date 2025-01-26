@@ -15,4 +15,9 @@ export interface Book {
         theme: string;
         characters: string[];
     };
+    pageImages: {
+        url: string;
+        platformUrl: string;
+        prompt: string;
+    }[]
 }
