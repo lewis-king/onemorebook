@@ -2,7 +2,16 @@
 
 A full-stack application for generating children's books using LLMs. This project combines both frontend and backend components in a monorepo structure.
 
-![Book Content](./fontend/imgs/book2_content.png)
+### Homepage
+![homepage](./imgs/homepage.png)
+
+### Book Content (mobile responsive)
+![book1](./imgs/book1.png)
+
+### Book Content (desktop)
+![book2](./imgs/book2.png)
+![book2_content](./imgs/book2_content.png)
+
 
 ## Project Structure
 
@@ -110,7 +119,3 @@ cd fontend
 pnpm run build
 # Deploy the contents of the dist folder
 ```
-
-## License
-
-[Your license information here]

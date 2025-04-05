@@ -1,15 +1,5 @@
 ## onemorebook frontend
 
-### Homepage
-![homepage](./imgs/homepage.png)
-
-### Book Content (mobile responsive)
-![book1](./imgs/book1.png)
-
-### Book Content (desktop)
-![book2](./imgs/book2.png)
-![book2_content](./imgs/book2_content.png)
-
 ## Usage
 
 ```bash
