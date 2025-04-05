@@ -1,37 +1,22 @@
 {
-  "name": "onemorebook-backend",
+  "name": "onemorebook",
   "version": "1.0.0",
-  "description": "AWS Lambda backend for generating children's books using LLMs",
-  "main": "index.js",
+  "description": "Full-stack application for generating children's books using LLMs",
+  "private": true,
+  "workspaces": [
+    "backend",
+    "fontend"
+  ],
   "scripts": {
-    "build": "tsc",
-    "test": "jest",
-    "start": "serverless offline start",
-    "dev": "tsc -w & serverless offline start"
-  },
-  "dependencies": {
-    "@aws-sdk/client-dynamodb": "^3.0.0",
-    "@aws-sdk/client-s3": "^3.722.0",
-    "@aws-sdk/credential-providers": "^3.721.0",
-    "@aws-sdk/lib-dynamodb": "^3.0.0",
-    "@langchain/openai": "^0.3.16",
-    "dotenv": "^16.4.7",
-    "langchain": "^0.1.0",
-    "node-fetch": "^2.7.0",
-    "serverless-dynamodb": "^0.2.56",
-    "uuid": "^9.0.0",
-    "zod": "^3.0.0"
+    "install:all": "pnpm install && cd backend && pnpm install && cd ../fontend && pnpm install",
+    "dev:backend": "cd backend && pnpm run dev",
+    "dev:frontend": "cd fontend && pnpm run dev",
+    "dev": "concurrently \"pnpm run dev:backend\" \"pnpm run dev:frontend\"",
+    "build:backend": "cd backend && pnpm run build",
+    "build:frontend": "cd fontend && pnpm run build",
+    "build": "pnpm run build:backend && pnpm run build:frontend"
   },
   "devDependencies": {
-    "@types/aws-lambda": "^8.10.0",
-    "@types/jest": "^29.0.0",
-    "@types/node": "^18.0.0",
-    "@types/node-fetch": "2",
-    "@types/uuid": "^9.0.0",
-    "jest": "^29.0.0",
-    "serverless": "^3.40.0",
-    "serverless-dotenv-plugin": "^6.0.0",
-    "serverless-offline": "^14.4.0",
-    "ts-jest": "^29.0.0"
+    "concurrently": "^8.2.2"
   }
 }
