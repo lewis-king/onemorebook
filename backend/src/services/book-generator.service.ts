@@ -131,18 +131,45 @@ class BookGeneratorService {
 
   // Step 2: Generate/upload images using the book ID, return BookContent with image URLs
   async generateAndAttachImages(bookId: string, bookContent: BookContent): Promise<BookContent> {
-    // Upload cover image
+    // 1. Generate character reference images from metadata.characters
+    const characterPrompts = bookContent.metadata.characters;
+    const characterRefs = await Promise.all(
+      characterPrompts.map(prompt => this.imageGenerator.generateCharacterReference(prompt))
+    );
+    const crefUrls = characterRefs.map(ref => ref.url);
+
+    // Store character reference images
+    for (let i = 0; i < crefUrls.length; i++) {
+      await this.imageStorage.uploadImage(crefUrls[i], bookId, `character${i + 1}.jpeg`);
+    }
+
+    // 2. Generate style reference image(s) from coverImagePrompt and/or bookSummary
+    // We'll use a single style reference for now, but could expand to more
+    const stylePrompt = `${bookContent.metadata.coverImagePrompt}, ${bookContent.metadata.bookSummary}, storybook style, bright, engaging, appropriate for young readers`;
+    const styleRef = await this.imageGenerator.generateStyleReference(stylePrompt);
+    const srefUrls = [styleRef.url];
+
+    // Store style reference images
+    for (let i = 0; i < srefUrls.length; i++) {
+      await this.imageStorage.uploadImage(srefUrls[i], bookId, `style${i + 1}.jpeg`);
+    }
+
+    // Optionally store reference URLs in metadata
+    (bookContent.metadata as any).characterReferenceUrls = crefUrls;
+    (bookContent.metadata as any).styleReferenceUrls = srefUrls;
+
+    // 3. Generate and upload cover image using references
     if (bookContent.pages.length > 0) {
       const coverPagePrompt = bookContent.metadata.coverImagePrompt;
-      const coverImageResult = await this.imageGenerator.generateCoverImage(coverPagePrompt);
+      const coverImageResult = await this.imageGenerator.generateCoverImage(coverPagePrompt, crefUrls, srefUrls);
       await this.imageStorage.uploadImage(coverImageResult.url, bookId, 'cover.jpg');
-      // Upload the rest of the pages
+      // 4. Generate and upload each page image using references
       for (let i = 0; i < bookContent.pages.length; i++) {
         const page = bookContent.pages[i];
-        const imageResult = await this.imageGenerator.generatePageImage(page.imagePrompt, bookContent.metadata.bookSummary);
+        const imageResult = await this.imageGenerator.generatePageImage(page.imagePrompt, bookContent.metadata.bookSummary, crefUrls, srefUrls);
         await this.imageStorage.uploadImage(imageResult.url, bookId, `page${i+1}.jpg`);
       }
-    } 
+    }
     return {
       ...bookContent,
       id: bookId,
