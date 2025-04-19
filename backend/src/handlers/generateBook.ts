@@ -1,36 +1,11 @@
-import { APIGatewayProxyEvent, APIGatewayProxyResult } from 'aws-lambda';
-import { BookGeneratorService } from '../services/bookGenerator';
-import { BookStorageService } from '../services/bookStorage';
+// This file is now deprecated
+// The functionality has been migrated to the Express controller in:
+// ../controllers/book.controller.ts - generateBook function
+//
+// This file is kept for reference only and can be safely deleted
 
-export const handler = async (
-    event: APIGatewayProxyEvent
-): Promise<APIGatewayProxyResult> => {
-    try {
-        const body = JSON.parse(event.body || '{}');
-        const { prompt } = body;
+import { Request, Response } from 'express';
+import { generateBook } from '../controllers/book.controller';
 
-        if (!prompt) {
-            return {
-                statusCode: 400,
-                body: JSON.stringify({ error: 'Prompt is required' }),
-            };
-        }
-
-        const generator = new BookGeneratorService();
-        const storage = new BookStorageService();
-
-        const bookData = await generator.generateBook(prompt);
-        const book = await storage.storeBook(bookData);
-
-        return {
-            statusCode: 200,
-            body: JSON.stringify(book),
-        };
-    } catch (error) {
-        console.error('Error generating book:', error);
-        return {
-            statusCode: 500,
-            body: JSON.stringify({ error: 'Internal server error' }),
-        };
-    }
-};
+// Export the controller function for compatibility
+export { generateBook };

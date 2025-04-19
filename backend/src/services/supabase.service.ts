@@ -6,7 +6,7 @@ import { Book, Tables } from '../types';
 dotenv.config();
 
 class SupabaseService {
-  private client: SupabaseClient;
+  private client: SupabaseClient<Tables>;
   private static instance: SupabaseService;
 
   private constructor() {
@@ -17,7 +17,7 @@ class SupabaseService {
       throw new Error('Missing Supabase credentials. Please check your .env file.');
     }
     
-    this.client = createClient<Tables>(supabaseUrl, supabaseKey);
+    this.client = createClient(supabaseUrl, supabaseKey);
   }
 
   public static getInstance(): SupabaseService {
@@ -28,7 +28,7 @@ class SupabaseService {
   }
 
   // Books table operations
-  async createBook(book: Book): Promise<Book | null> {
+  async createBook(book: Omit<Book, 'id' | 'created_at' | 'updated_at'>): Promise<Book | null> {
     const { data, error } = await this.client
       .from('books')
       .insert([book])
@@ -52,6 +52,40 @@ class SupabaseService {
       
     if (error) {
       console.error('Error fetching book:', error);
+      throw error;
+    }
+    
+    return data;
+  }
+
+  async listBooks(options: { sortBy: 'stars' | 'date', order: 'asc' | 'desc', limit: number }): Promise<Book[]> {
+    const { sortBy, order, limit } = options;
+    const orderByField = sortBy === 'date' ? 'created_at' : 'stars';
+    
+    const { data, error } = await this.client
+      .from('books')
+      .select('*')
+      .order(orderByField, { ascending: order === 'asc' })
+      .limit(limit);
+      
+    if (error) {
+      console.error('Error listing books:', error);
+      throw error;
+    }
+    
+    return data || [];
+  }
+
+  async updateBookStars(id: string, stars: number): Promise<Book | null> {
+    const { data, error } = await this.client
+      .from('books')
+      .update({ stars })
+      .eq('id', id)
+      .select()
+      .single();
+      
+    if (error) {
+      console.error('Error updating book stars:', error);
       throw error;
     }
     

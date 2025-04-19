@@ -1,12 +1,24 @@
 import { Book, CreateBookParams } from '../types/book';
 
-//const API_BASE_URL = 'http://localhost:3000/dev'; // local
-const API_BASE_URL = 'http://localhost:3000/dev';
+//const API_BASE_URL = 'http://localhost:3000'; // local
+const API_BASE_URL = 'http://localhost:3000/api';
 
 export const bookService = {
   async listBooks(): Promise<Book[]> {
     const response = await fetch(`${API_BASE_URL}/books`);
-    return response.json();
+    const data = await response.json();
+    // Optionally, ensure all fields are present and fallback if needed
+    return data.map((book: any) => ({
+      ...book,
+      book_summary: book.book_summary || '',
+      content: book.content || { id: '', pages: [], metadata: { title: '', ageRange: '', createdAt: '', characters: [], storyPrompt: '' } },
+      age_range: book.age_range || '',
+      story_prompt: book.story_prompt || '',
+      characters: book.characters || [],
+      created_at: book.created_at || '',
+      updated_at: book.updated_at || '',
+      stars: book.stars || 0
+    }));
   },
 
   async getTopBooks(): Promise<Book[]> {
@@ -25,7 +37,7 @@ export const bookService = {
       headers: {
         'Content-Type': 'application/json',
       },
-      body: JSON.stringify(params),
+      body: JSON.stringify({ ...params, theme: params.storyPrompt }),
     });
     return response.json();
   },

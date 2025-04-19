@@ -11,12 +11,14 @@ export interface BookPage {
 // Book content interface
 export interface BookContent {
   id: string;
-  title: string;
   pages: BookPage[];
   metadata: {
+    title: string;
+    bookSummary: string;
+    coverImagePrompt: string;
     ageRange: string;
-    theme: string;
-    additionalInfo: string;
+    characters: string[];
+    storyPrompt: string;
     createdAt: string;
   };
 }
@@ -25,21 +27,21 @@ export interface BookContent {
 export interface Book {
   id: string;
   title: string;
+  book_summary?: string;
+  cover_image_prompt?: string;
   content: BookContent;
   age_range: string;
-  theme: string;
+  story_prompt: string;
+  characters: string[];
   created_at?: string;
   updated_at?: string;
-  created_by?: string;
 }
 
 // Zod schema for book generation request validation
 export const GenerateBookSchema = z.object({
-  title: z.string().min(1, 'Title is required'),
+  characters: z.array(z.string()).min(1, 'At least one character is required'),
+  storyPrompt: z.string().min(1, 'Story prompt is required'),
   ageRange: z.string().min(1, 'Age range is required'),
-  mainCharacter: z.string().min(1, 'Main character is required'),
-  theme: z.string().min(1, 'Theme is required'),
-  additionalInfo: z.string().optional(),
 });
 
 export type GenerateBookRequest = z.infer<typeof GenerateBookSchema>;

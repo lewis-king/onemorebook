@@ -17,10 +17,10 @@ export default function HomePage() {
     const filteredBooks = () => {
         if (!books()) return [];
 
-        const sortedBooks = [...books()].sort((a, b) => b.stars - a.stars);
+        // No need to sort by stars if backend already sorts, but keep fallback
         return selectedCategory() === 'all'
-            ? sortedBooks
-            : sortedBooks.filter(book => book.metadata.theme === selectedCategory());
+            ? books()
+            : books().filter(book => Array.isArray(book.characters) && book.characters.includes(selectedCategory()));
     };
 
     return (

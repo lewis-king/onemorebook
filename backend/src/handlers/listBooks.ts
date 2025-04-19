@@ -1,43 +1,11 @@
-import { APIGatewayProxyEvent, APIGatewayProxyResult } from 'aws-lambda';
-import { BookStorageService } from '../services/bookStorage';
+// This file is now deprecated
+// The functionality has been migrated to the Express controller in:
+// ../controllers/book.controller.ts - listBooks function
+//
+// This file is kept for reference only and can be safely deleted
 
-export const handler = async (
-    event: APIGatewayProxyEvent
-): Promise<APIGatewayProxyResult> => {
-    try {
-        const sortBy = (event.queryStringParameters?.sortBy || 'stars') as 'stars' | 'date';
-        const order = (event.queryStringParameters?.order || 'desc') as 'asc' | 'desc';
-        const limit = event.queryStringParameters?.limit
-            ? parseInt(event.queryStringParameters.limit, 10)
-            : 10;
+import { Request, Response } from 'express';
+import { listBooks } from '../controllers/book.controller';
 
-        // Validate parameters
-        if (!['stars', 'date'].includes(sortBy)) {
-            return {
-                statusCode: 400,
-                body: JSON.stringify({ error: 'sortBy must be either "stars" or "date"' }),
-            };
-        }
-
-        if (!['asc', 'desc'].includes(order)) {
-            return {
-                statusCode: 400,
-                body: JSON.stringify({ error: 'order must be either "asc" or "desc"' }),
-            };
-        }
-
-        const storage = new BookStorageService();
-        const books = await storage.listBooks({ sortBy, order, limit });
-
-        return {
-            statusCode: 200,
-            body: JSON.stringify(books),
-        };
-    } catch (error) {
-        console.error('Error listing books:', error);
-        return {
-            statusCode: 500,
-            body: JSON.stringify({ error: 'Internal server error' }),
-        };
-    }
-};
+// Export the controller function for compatibility
+export { listBooks };

@@ -8,17 +8,33 @@ export default function CreateStoryPage() {
   const [isLoading, setIsLoading] = createSignal(false);
   const [formData, setFormData] = createSignal<CreateBookParams>({
     characters: [],
-    theme: "",
+    storyPrompt: "",
     ageRange: "4-5"
   });
+  const [charactersInput, setCharactersInput] = createSignal("");
+
+  const handleCharactersBlur = () => {
+    setFormData({
+      ...formData(),
+      characters: charactersInput().split(',').map(c => c.trim()).filter(Boolean)
+    });
+  };
 
   const handleSubmit = async (e: Event) => {
     e.preventDefault();
+    setFormData({
+      ...formData(),
+      characters: charactersInput().split(',').map(c => c.trim()).filter(Boolean)
+    });
     setIsLoading(true);
 
     try {
-      const book = await bookService.createBook(formData());
-      navigate(`/book/${book.id}`);
+      const result = await bookService.createBook(formData());
+      if (result.bookId) {
+        navigate(`/book/${result.bookId}`);
+      } else {
+        console.error('No bookId returned from API:', result);
+      }
     } catch (error) {
       console.error('Failed to create story:', error);
     } finally {
@@ -41,27 +57,25 @@ export default function CreateStoryPage() {
                 type="text"
                 class="w-full p-3 border rounded-lg focus:ring-2 focus:ring-kiddy-primary"
                 placeholder="E.g. brave dragon, wise owl"
-                value={formData().characters.join(', ')}
-                onInput={(e) => setFormData({
-                  ...formData(),
-                  characters: e.currentTarget.value.split(',').map(c => c.trim())
-                })}
+                value={charactersInput()}
+                onInput={(e) => setCharactersInput(e.currentTarget.value)}
+                onBlur={handleCharactersBlur}
             />
           </div>
 
           <div>
-            <label class="block text-gray-700 mb-2" for="theme">
-              What's the story about?
+            <label class="block text-gray-700 mb-2" for="storyPrompt">
+              What is the story about in one or two sentences?
             </label>
             <input
-                id="theme"
+                id="storyPrompt"
                 type="text"
                 class="w-full p-3 border rounded-lg focus:ring-2 focus:ring-kiddy-primary"
-                placeholder="E.g. friendship, bravery"
-                value={formData().theme}
+                placeholder="E.g. A magical journey through the forest to find a lost friend."
+                value={formData().storyPrompt}
                 onInput={(e) => setFormData({
                   ...formData(),
-                  theme: e.currentTarget.value
+                  storyPrompt: e.currentTarget.value
                 })}
             />
           </div>

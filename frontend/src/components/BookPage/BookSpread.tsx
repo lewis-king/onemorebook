@@ -21,13 +21,13 @@ export const BookSpread: Component<BookSpreadProps> = (props) => {
   onMount(() => {
     if (bookElement) {
       pageFlip = new PageFlip(bookElement, {
-        width: 550,
-        height: 733,
+        width: 700,
+        height: 933,
         size: "stretch",
         minWidth: 315,
-        maxWidth: 1000,
+        maxWidth: 1600,
         minHeight: 420,
-        maxHeight: 1350,
+        maxHeight: 2000,
         maxShadowOpacity: 0.5,
         showCover: true,
         mobileScrollSupport: false,
@@ -73,7 +73,7 @@ export const BookSpread: Component<BookSpreadProps> = (props) => {
 
   const getPageImage = (index: number) => {
     // Adjust index to account for cover page
-    const imageIndex = index - 1;
+    const imageIndex = index;
     if (imageIndex < 0 || !props.pageImages || imageIndex >= props.pageImages.length) {
       return undefined;
     }
@@ -118,7 +118,7 @@ export const BookSpread: Component<BookSpreadProps> = (props) => {
                             <img
                                 src={props.coverImage}
                                 alt="Story cover"
-                                class="h-full w-full object-cover"
+                                class="h-full w-full object-cover rounded-lg shadow-lg"
                             />
                           </div>
                       ) : (
@@ -129,10 +129,10 @@ export const BookSpread: Component<BookSpreadProps> = (props) => {
                                     <img
                                         src={pageImage}
                                         alt={`Story illustration for page ${index()}`}
-                                        class="w-full h-full object-contain"
+                                        class="w-full h-80 md:h-[28rem] lg:h-[36rem] xl:h-[44rem] object-cover rounded-lg shadow-lg"
                                     />
                                   </div>
-                                  <div class="page-text flex-grow">
+                                  <div class="page-text-overlay absolute bottom-4 left-1/2 transform -translate-x-1/2 w-11/12 md:w-4/5 lg:w-3/4 bg-white/80 rounded-xl shadow-lg p-4 text-lg font-comic text-gray-900 text-center" style={{ 'backdrop-filter': 'blur(2px)' }}>
                                     {content}
                                   </div>
                                 </>

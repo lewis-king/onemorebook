@@ -3,11 +3,16 @@ import { A } from "@solidjs/router";
 import StarRating from "./StarRating";
 import { Book } from "../types/book";
 
+const SUPABASE_PROJECT = "kwhyhflyyjhtbvbmtdmt";
+const SUPABASE_IMG_URL = `https://${SUPABASE_PROJECT}.supabase.co/storage/v1/object/public/book-imgs`;
+
 interface BookCardProps extends Book {
     onUpvote: (id: string, currentStars: number) => void;
 }
 
 const BookCard: Component<BookCardProps> = (props) => {
+    // Compute cover image path from supabase
+    const coverImgPath = `${SUPABASE_IMG_URL}/${props.id}/cover.jpg`;
     return (
         <div class="book-card bg-white rounded-2xl overflow-hidden shadow-xl
                 hover:shadow-2xl transition-all duration-300
@@ -16,9 +21,9 @@ const BookCard: Component<BookCardProps> = (props) => {
             <A href={`/book/${props.id}`} class="flex flex-col h-full">
                 <div class="relative aspect-[4/3] overflow-hidden">
                     <img
-                        src={props.coverImage.url}
+                        src={coverImgPath}
                         alt={props.title}
-                        class="w-full h-full object-contain bg-gray-50"
+                        class="w-full h-full object-cover bg-gray-50"
                     />
                     <div class="absolute top-3 right-3">
                         <StarRating
@@ -38,10 +43,10 @@ const BookCard: Component<BookCardProps> = (props) => {
                             {props.title}
                         </h3>
                         <p class="text-gray-600 font-rounded">
-                            Theme: {props.metadata.theme}
+                            Characters: {props.characters?.join(', ')}
                         </p>
                         <p class="text-sm text-gray-500 mt-2">
-                            Age Range: {props.metadata.ageRange}
+                            Age Range: {props.age_range}
                         </p>
                     </div>
 

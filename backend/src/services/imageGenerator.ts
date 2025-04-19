@@ -35,4 +35,25 @@ export class ImageGeneratorService {
             throw new Error('Failed to generate cover image');
         }
     }
+
+    async generatePageImage(prompt: string, summary: string): Promise<{ url: string, prompt: string }> {
+        try {
+            const imageUrl = await this.imageModel.invoke(
+                `Book page illustration: ${prompt}. Style: Children's book illustration, bright, engaging, appropriate for young readers.
+                Book Summary for context: ${summary}`
+            );
+
+            if (!imageUrl) {
+                throw new Error('No image generated');
+            }
+
+            return {
+                url: imageUrl,
+                prompt: prompt,
+            };
+        } catch (error) {
+            console.error('Error generating image:', error);
+            throw new Error('Failed to generate cover image');
+        }
+    }
 }

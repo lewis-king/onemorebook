@@ -13,7 +13,7 @@ const BookContent: Component<BookContentProps> = (props) => {
                 <img
                     src={props.coverImage}
                     alt="Book cover"
-                    class="w-full max-w-md rounded-lg shadow-lg mb-8"
+                    class="w-full max-w-md h-72 sm:h-96 md:h-[28rem] lg:h-[32rem] object-cover rounded-lg shadow-lg mb-8"
                 />
             ) : (
                 <p class="prose max-w-none text-xl font-rounded leading-relaxed">

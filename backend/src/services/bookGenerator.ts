@@ -18,7 +18,7 @@ export class BookGeneratorService {
         }
 
         this.llm = new ChatOpenAI({
-            modelName: "gpt-3.5-turbo",
+            modelName: "gpt-4.1",
             temperature: 0.7,
             openAIApiKey: process.env.OPENAI_API_KEY,
         });

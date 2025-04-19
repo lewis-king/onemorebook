@@ -16,14 +16,14 @@ export class ImageStorageService {
         this.client = createClient(url, anonKey);
     }
 
-    async uploadImage(imageUrl: string, bookId: string): Promise<string> {
+    async uploadImage(imageUrl: string, bookId: string, filename: string): Promise<string> {
         try {
             const response = await fetch(imageUrl);
             const imageBuffer = await response.buffer();  // Use buffer() instead of arrayBuffer() for node-fetch v2
 
-            const filePath = `${bookId}/cover.png`;
-            const bucketName = config.supabase.storageCoversBucket;
-
+            const filePath = `${bookId}/${filename}`;
+            const bucketName = config.supabase.storageBooksBucket;
+            console.log('Uploading image to Supabase:', bucketName, filePath);
             const { data, error } = await this.client
                 .storage
                 .from(bucketName)
@@ -50,10 +50,10 @@ export class ImageStorageService {
         }
     }
 
-    async deleteImage(bookId: string): Promise<void> {
+    async deleteImage(bookId: string, filename: string): Promise<void> {
         try {
-            const filePath = `${bookId}/cover.png`;
-            const bucketName = config.supabase.storageCoversBucket;
+            const filePath = `${bookId}/${filename}`;
+            const bucketName = config.supabase.storageBooksBucket;
 
             const { error } = await this.client
                 .storage

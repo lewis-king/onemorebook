@@ -56,7 +56,7 @@ async function initializeSupabase() {
     // Create storage bucket for book images
     const { data: bucketData, error: bucketError } = await supabase
       .storage
-      .createBucket('book-images', {
+      .createBucket('book-imgs', {
         public: true, // Images will be publicly accessible
         fileSizeLimit: 5242880, // 5MB limit for images
       });
