@@ -21,8 +21,15 @@ interface MidjourneyTaskDetail {
 }
 
 export class ImageGeneratorService {
+    private ensurePromptParamsSpaced(prompt: string): string {
+        // Inserts a space before any --param if missing
+        return prompt.replace(/([^\s])(--[\w-]+)/g, '$1 $2');
+    }
+
     private async requestImage(prompt: string, extraParams: Record<string, any> = {}): Promise<{ url: string, prompt: string }> {
         try {
+            // Ensure prompt params are spaced
+            prompt = this.ensurePromptParamsSpaced(prompt);
             const body = JSON.stringify({
                 prompt,
                 skip_prompt_check: false,
@@ -110,14 +117,14 @@ export class ImageGeneratorService {
     async generateCoverImage(prompt: string, crefUrls: string[] = [], srefUrls: string[] = []): Promise<{ url: string, prompt: string }> {
         let cref = crefUrls.length ? `--cref ${crefUrls.join(' ')} --cw 0` : '';
         let sref = srefUrls.length ? `--sref ${srefUrls.join(' ')}` : '';
-        const fullPrompt = `Book cover illustration: ${prompt}. Style: Children's book illustration, bright, engaging, appropriate for young readers. ${cref} ${sref}`.trim();
+        const fullPrompt = `Children's book style - Book cover illustration to generate image for: ${prompt}. ${cref} ${sref}`.trim();
         return this.requestImage(fullPrompt);
     }
 
     async generatePageImage(prompt: string, summary: string, crefUrls: string[] = [], srefUrls: string[] = []): Promise<{ url: string, prompt: string }> {
         let cref = crefUrls.length ? `--cref ${crefUrls.join(' ')} --cw 0` : '';
         let sref = srefUrls.length ? `--sref ${srefUrls.join(' ')}` : '';
-        const fullPrompt = `Book page illustration: ${prompt}. Style: Children's book illustration, bright, engaging, appropriate for young readers. Book Summary for context: ${summary}. ${cref} ${sref}`.trim();
+        const fullPrompt = `Children's book style - Book page illustration to generate image for: ${prompt}. Book Summary for context: ${summary}. ${cref} ${sref}`.trim();
         return this.requestImage(fullPrompt);
     }
 }

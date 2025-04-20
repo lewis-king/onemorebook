@@ -22,7 +22,7 @@ class BookGeneratorService {
     this.openai = new ChatOpenAI({
       apiKey,
       modelName: 'gpt-4.1',
-      temperature: 0.7,
+      temperature: 0.9,
     });
     this.imageGenerator = new ImageGeneratorService();
     this.imageStorage = new ImageStorageService();
@@ -52,8 +52,8 @@ class BookGeneratorService {
       Story Prompt: {storyPrompt}
 
       Write a children's book that is appropriate for the specified age range.
-      The book should have at least 5 pages, where each page has a short paragraph of text (2-3 sentences).
-      The story should be about what is described in the story prompt, should include the listed characters and be fun and engaging.
+      The book should have at least 5 pages (ideally more so that the story can be more engaging), where each page has a short paragraph of text (2-3 sentences).
+      The story should be about what is described in the story prompt, should include the listed characters and be fun, engaging and unique.
       Output should be formatted as valid JSON with the following structure:
       {{
         "title": "The Book Title",

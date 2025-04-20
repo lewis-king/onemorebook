@@ -132,16 +132,17 @@ export const BookSpread: Component<BookSpreadProps> = (props) => {
                                         class="w-full h-80 md:h-[28rem] lg:h-[36rem] xl:h-[44rem] object-cover rounded-lg shadow-lg"
                                     />
                                   </div>
-                                  <div class="page-text-overlay absolute bottom-4 left-1/2 transform -translate-x-1/2 w-11/12 md:w-4/5 lg:w-3/4 bg-white/80 rounded-xl shadow-lg p-4 text-lg font-comic text-gray-900 text-center" style={{ 'backdrop-filter': 'blur(2px)' }}>
+                                  <div class="flex-grow" />
+                                  <div class="page-text-overlay w-full px-4 pb-2 text-lg font-comic text-gray-900 text-center" style={{ position: 'relative' }}>
                                     {content}
                                   </div>
                                 </>
                             ) : (
-                                <div class="page-text centered">
+                                <div class="page-text centered items-end pb-2">
                                   {content}
                                 </div>
                             )}
-                            <div class="page-footer mt-auto">
+                            <div class="page-footer mt-0">
                               Page {index()}
                             </div>
                           </div>

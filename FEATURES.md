@@ -1,0 +1,1 @@
+- When using Midjourney you get 4 images back for each call. Incorporate a flow during story generation to allow the user to select the best image in the frontend before moving on to the next image generation. This would ensure quality is increased. Also this collaborative process could be incorporated into story generation too
