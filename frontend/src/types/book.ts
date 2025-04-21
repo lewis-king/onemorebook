@@ -35,4 +35,5 @@ export interface CreateBookParams {
     characters: string[];
     storyPrompt: string;
     ageRange: string;
+    numOfPages?: number;
 }

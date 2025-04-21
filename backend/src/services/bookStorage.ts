@@ -7,6 +7,7 @@ export interface ListBooksOptions {
     sortBy: 'stars' | 'date';
     order: 'asc' | 'desc';
     limit?: number;
+    offset?: number;
 }
 
 export class BookStorageService {
@@ -60,14 +61,17 @@ export class BookStorageService {
     }
 
     async listBooks(options: ListBooksOptions): Promise<Book[]> {
-        const { sortBy, order, limit = 10 } = options;
+        const { sortBy, order, limit = 10, offset = 0 } = options;
         const column = sortBy === 'stars' ? 'stars' : 'created_at';
+
+        const from = offset;
+        const to = offset + limit - 1;
 
         const { data, error } = await this.client
             .from('books')
             .select('*')
             .order(column, { ascending: order === 'asc' })
-            .limit(limit);
+            .range(from, to);
 
         if (error) {
             console.error('Error listing books:', error);

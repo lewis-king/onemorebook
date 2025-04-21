@@ -81,11 +81,17 @@
 }
 
 .page-text-overlay {
-    background: none !important;
-    box-shadow: none !important;
-    padding: 0.5rem 1rem !important;
-    border-radius: 0.5rem;
+    background: rgba(255, 245, 210, 0.85) !important; /* subtle creamy overlay */
+    color: #3a2e1a !important;
+    box-shadow: 0 4px 24px 0 rgba(0,0,0,0.08);
+    text-shadow: 0 1px 4px rgba(255,255,255,0.6), 0 1px 0 #fff;
+    padding: 1rem 1.5rem !important;
+    border-radius: 0.75rem;
     position: relative;
+    display: inline-block;
+    margin: 0 auto;
+    max-width: 90%;
+    font-weight: 600;
 }
 
 .page-footer {

@@ -14,6 +14,7 @@ export interface Book {
         ageRange: string;
         theme: string;
         characters: string[];
+        numOfPages?: number;
     };
     pageImages: {
         url: string;

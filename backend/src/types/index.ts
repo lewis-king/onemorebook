@@ -42,6 +42,7 @@ export const GenerateBookSchema = z.object({
   characters: z.array(z.string()).min(1, 'At least one character is required'),
   storyPrompt: z.string().min(1, 'Story prompt is required'),
   ageRange: z.string().min(1, 'Age range is required'),
+  numOfPages: z.number().int().min(3, 'Number of pages must be at least 3').optional(),
 });
 
 export type GenerateBookRequest = z.infer<typeof GenerateBookSchema>;

@@ -1,4 +1,5 @@
-import { createSignal, createResource, For, Show } from "solid-js";
+import { createSignal, onCleanup, onMount, For, Show } from "solid-js";
+import { Book } from '../types/book';
 import BookCard from "../components/BookCard";
 import CategoryFilter from "../components/CategoryFilter";
 import WelcomeHero from "../components/WelcomeHero";
@@ -6,21 +7,53 @@ import { bookService } from "../services/api";
 
 export default function HomePage() {
     const [selectedCategory, setSelectedCategory] = createSignal('all');
+    const [books, setBooks] = createSignal<Book[]>([]);
+    const [loading, setLoading] = createSignal(false);
+    const [hasMore, setHasMore] = createSignal(true);
+    const [offset, setOffset] = createSignal(0);
+    const limit = 9;
 
-    const [books, { refetch }] = createResource(bookService.listBooks);
+    const fetchBooks = async (reset = false) => {
+        setLoading(true);
+        const newBooks = await bookService.listBooks({ limit, offset: reset ? 0 : offset() });
+        if (reset) {
+            setBooks(newBooks);
+            setOffset(newBooks.length);
+        } else {
+            setBooks(prev => [...prev, ...newBooks]);
+            setOffset(prev => prev + newBooks.length);
+        }
+        setHasMore(newBooks.length === limit);
+        setLoading(false);
+    };
+
+    onMount(() => {
+        fetchBooks(true);
+        window.addEventListener('scroll', handleScroll);
+    });
+
+    onCleanup(() => {
+        window.removeEventListener('scroll', handleScroll);
+    });
+
+    const handleScroll = () => {
+        if (loading() || !hasMore()) return;
+        if (window.innerHeight + window.scrollY >= document.body.offsetHeight - 300) {
+            fetchBooks();
+        }
+    };
 
     const handleUpvote = async (id: string, currentStars: number) => {
         await bookService.updateStars(id, currentStars);
-        refetch();
+        setOffset(0);
+        fetchBooks(true);
     };
 
     const filteredBooks = () => {
         if (!books()) return [];
-
-        // No need to sort by stars if backend already sorts, but keep fallback
         return selectedCategory() === 'all'
             ? books()
-            : books().filter(book => Array.isArray(book.characters) && book.characters.includes(selectedCategory()));
+            : books().filter((book: Book) => Array.isArray(book.characters) && book.characters.includes(selectedCategory()));
     };
 
     return (
@@ -29,11 +62,15 @@ export default function HomePage() {
 
             <CategoryFilter
                 selected={selectedCategory()}
-                onSelect={setSelectedCategory}
+                onSelect={cat => {
+                    setSelectedCategory(cat);
+                    setOffset(0);
+                    fetchBooks(true);
+                }}
             />
 
             <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
-                <Show when={!books.loading} fallback={<div class="text-center text-lg font-comic text-gray-400 py-12 animate-pulse">Loading books...</div>}>
+                <Show when={!loading()} fallback={<div class="text-center text-lg font-comic text-gray-400 py-12 animate-pulse">Loading books...</div>}>
                     <Show when={filteredBooks().length > 0} fallback={
                         <div class="col-span-full flex flex-col items-center justify-center py-16">
                           <div class="text-5xl mb-4 animate-bounce">🦄</div>

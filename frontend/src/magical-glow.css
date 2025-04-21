@@ -1,0 +1,36 @@
+.magical-glow {
+  animation: magicalGlow 6s ease-in-out infinite alternate;
+  text-shadow:
+    0 0 8px #ffe066,
+    0 0 16px #ffb6ff,
+    0 0 24px #a3e0ff,
+    0 0 32px #fff6a3;
+  position: relative;
+}
+
+@keyframes magicalGlow {
+  0% {
+    text-shadow:
+      0 0 8px #ffe066,
+      0 0 16px #ffb6ff,
+      0 0 24px #a3e0ff,
+      0 0 32px #fff6a3;
+    color: #a855f7;
+  }
+  50% {
+    text-shadow:
+      0 0 12px #fff6a3,
+      0 0 24px #ffe066,
+      0 0 36px #ffb6ff,
+      0 0 48px #a3e0ff;
+    color: #fbbf24;
+  }
+  100% {
+    text-shadow:
+      0 0 8px #ffe066,
+      0 0 16px #ffb6ff,
+      0 0 24px #a3e0ff,
+      0 0 32px #fff6a3;
+    color: #a855f7;
+  }
+}

@@ -2,6 +2,7 @@ import { createSignal } from "solid-js";
 import { useNavigate } from "@solidjs/router";
 import { bookService } from "../services/api";
 import type { CreateBookParams } from "../types/book";
+import "../magical-glow.css";
 
 export default function CreateStoryPage() {
   const navigate = useNavigate();
@@ -9,7 +10,8 @@ export default function CreateStoryPage() {
   const [formData, setFormData] = createSignal<CreateBookParams>({
     characters: [],
     storyPrompt: "",
-    ageRange: "4-5"
+    ageRange: "4-5",
+    numOfPages: undefined
   });
   const [charactersInput, setCharactersInput] = createSignal("");
 
@@ -30,8 +32,9 @@ export default function CreateStoryPage() {
 
     try {
       const result = await bookService.createBook(formData());
-      if (result.bookId) {
-        navigate(`/book/${result.bookId}`);
+      if ((result as any).bookId || (result as any).book?.id) {
+        const bookId = (result as any).bookId || (result as any).book?.id;
+        navigate(`/book/${bookId}`);
       } else {
         console.error('No bookId returned from API:', result);
       }
@@ -44,19 +47,20 @@ export default function CreateStoryPage() {
 
   return (
       <div class="max-w-2xl mx-auto">
-        {/* Home navigation button */}
-        <div class="mb-6 flex justify-start">
-          <a href="/" class="inline-flex items-center gap-2 bg-gradient-to-r from-kiddy-primary to-kiddy-secondary text-white font-comic px-5 py-3 rounded-full shadow-lg hover:scale-105 transition-transform duration-300">
-            <span class="text-xl">🏠</span> <span>Back to Home</span>
-          </a>
-        </div>
-        <h1 class="text-4xl font-comic text-center text-kiddy-primary mb-4 animate-bounce">
-          ✨ Create Your Magical Story ✨
-        </h1>
-        <p class="text-center text-lg text-gray-600 mb-8 font-rounded">
-          Unleash your imagination! Add fun characters, a wild adventure, and help us make a story just for you.
-        </p>
+        {/* Home navigation button, title, and description are now grouped with the form */}
         <form onSubmit={handleSubmit} class="space-y-8 bg-gradient-to-br from-yellow-100 via-pink-100 to-blue-100 p-8 rounded-3xl shadow-2xl border-4 border-kiddy-primary/10">
+          <div class="mb-6 flex justify-start">
+            <a href="/" class="inline-flex items-center gap-2 bg-gradient-to-r from-kiddy-primary to-kiddy-secondary text-white font-comic px-5 py-3 rounded-full shadow-lg hover:scale-105 transition-transform duration-300">
+              <span class="text-xl">🏠</span> <span>Back to Home</span>
+            </a>
+          </div>
+          <h1 class="text-4xl font-comic text-center text-kiddy-primary mb-4 magical-glow">
+            ✨ Create Your Magical Story ✨
+          </h1>
+          <p class="text-center text-lg text-gray-600 mb-8 font-rounded">
+            Unleash your imagination! Add fun characters, a wild adventure, and help us make a story just for you.
+          </p>
+
           <div>
             <label class="block text-kiddy-primary text-lg mb-2 font-comic" for="characters">
               🦄 Who are the characters in your story?
@@ -69,7 +73,7 @@ export default function CreateStoryPage() {
                 value={charactersInput()}
                 onInput={(e) => setCharactersInput(e.currentTarget.value)}
                 onBlur={handleCharactersBlur}
-                autoComplete="off"
+                autocomplete="off"
             />
             <p class="text-xs text-gray-500 mt-1 ml-1">Separate characters with commas. Be creative!</p>
           </div>
@@ -110,6 +114,21 @@ export default function CreateStoryPage() {
                   <option value="5-6">5-6 years</option>
                   <option value="7-8">7-8 years</option>
               </select>
+          </div>
+
+          <div>
+            <label class="block text-kiddy-primary text-lg mb-2 font-comic" for="numOfPages">
+              Number of Pages (optional)
+            </label>
+            <input
+              id="numOfPages"
+              type="number"
+              min="1"
+              class="w-full p-3 border-2 border-kiddy-primary/30 rounded-xl focus:ring-2 focus:ring-kiddy-primary text-lg font-rounded bg-white"
+              value={formData().numOfPages === undefined ? '' : formData().numOfPages}
+              onInput={e => setFormData({ ...formData(), numOfPages: e.currentTarget.value ? Number(e.currentTarget.value) : undefined })}
+              placeholder="e.g. 10"
+            />
           </div>
 
           <button

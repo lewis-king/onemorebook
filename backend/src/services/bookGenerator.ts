@@ -1,140 +1,197 @@
-import { ChatOpenAI } from "langchain/chat_models/openai";
-import { PromptTemplate } from "langchain/prompts";
-import { StructuredOutputParser } from "langchain/output_parsers";
-import { z } from "zod";
-import { Book } from '../types/book';
+import { ChatOpenAI } from '@langchain/openai';
+import { PromptTemplate } from '@langchain/core/prompts';
+import { z } from 'zod';
+import { v4 as uuidv4 } from 'uuid';
+import { BookContent, GenerateBookRequest } from '../types';
 import { ImageGeneratorService } from './imageGenerator';
 import { ImageStorageService } from './imageStorage';
 
-export class BookGeneratorService {
-    private llm: ChatOpenAI;
-    private parser: StructuredOutputParser<any>;
-    private imageGenerator: ImageGeneratorService;
-    private imageStorage: ImageStorageService;
+class BookGeneratorService {
+  private openai: ChatOpenAI;
+  private static instance: BookGeneratorService;
+  private imageGenerator: ImageGeneratorService;
+  private imageStorage: ImageStorageService;
 
-    constructor() {
-        if (!process.env.OPENAI_API_KEY) {
-            throw new Error('OpenAI API key not found');
+  private constructor() {
+    const apiKey = process.env.OPENAI_API_KEY;
+    if (!apiKey) {
+      throw new Error('Missing OpenAI API key. Please check your .env file.');
+    }
+    
+    this.openai = new ChatOpenAI({
+      apiKey,
+      modelName: 'gpt-4.1',
+      temperature: 0.9,
+    });
+    this.imageGenerator = new ImageGeneratorService();
+    this.imageStorage = new ImageStorageService();
+  }
+
+  public static getInstance(): BookGeneratorService {
+    if (!BookGeneratorService.instance) {
+      BookGeneratorService.instance = new BookGeneratorService();
+    }
+    return BookGeneratorService.instance;
+  }
+
+  async generateBook(request: GenerateBookRequest): Promise<BookContent> {
+    const bookId = uuidv4();
+    const bookContent = await this.generateBookContent(request);
+    const bookContentWithImages = await this.generateAndAttachImages(bookId, bookContent);
+    return bookContentWithImages;
+  }
+
+  // Step 1: Generate book content (pages, image prompts, no images yet)
+  async generateBookContent(request: GenerateBookRequest): Promise<BookContent> {
+    // Prompt LLM for book content
+    const bookPromptTemplate = PromptTemplate.fromTemplate(`
+      Create a children's book with the following details:
+      Age Range: {ageRange}
+      Characters: {characters}
+      Story Prompt: {storyPrompt}
+      ${request.numOfPages ? `Number of Pages: ${request.numOfPages}` : ''}
+
+      Write a children's book that is appropriate for the specified age range.
+      The book should have at least 5 pages${request.numOfPages ? ` (target: ${request.numOfPages} pages)` : ' (ideally more so that the story can be more engaging)'}, where each page has a short paragraph of text (2-3 sentences).
+      The story should be about what is described in the story prompt, should include the listed characters and be fun, engaging and unique.
+      Output should be formatted as valid JSON with the following structure:
+      {{
+        "title": "The Book Title",
+        "bookSummary": "A short summary of the book",
+        "coverImagePrompt": "A detailed description for generating the book cover",
+        "pages": [
+          {{
+            "pageNumber": 1,
+            "text": "The text content for page 1 - 2-3 sentences",
+            "imagePrompt": "A detailed image prompt for page 1"
+          }}
+          // ...and so on for all pages
+        ]
+      }}
+      Each imagePrompt should be a detailed description for generating an illustration that matches the text on that page.
+    `);
+    const prompt = await bookPromptTemplate.format({
+      ageRange: request.ageRange,
+      characters: request.characters.join(', '),
+      storyPrompt: request.storyPrompt,
+    });
+    const response = await this.openai.invoke(prompt);
+    try {
+      let responseText = '';
+      if (typeof response === 'string') {
+        responseText = response;
+      } else if (response && typeof response === 'object') {
+        if ('content' in response && typeof response.content === 'string') {
+          responseText = response.content;
+        } else if ('text' in response && typeof response.text === 'string') {
+          responseText = response.text;
+        } else if (Array.isArray(response.content)) {
+          responseText = response.content.map((part: any) =>
+            typeof part === 'string' ? part : part.text || ''
+          ).join(' ');
+        } else {
+          responseText = String(response);
         }
+      } else {
+        responseText = String(response);
+      }
+      const jsonString = this.extractJsonFromString(responseText);
+      const bookData = JSON.parse(jsonString);
+      const BookResponseSchema = z.object({
+        title: z.string(),
+        bookSummary: z.string(),
+        coverImagePrompt: z.string(),
+        pages: z.array(z.object({
+          pageNumber: z.number(),
+          text: z.string(),
+          imagePrompt: z.string(),
+        })),
+      });
+      const validatedData = BookResponseSchema.parse(bookData);
+      // Compose BookContent (no images yet)
+      const bookContent: BookContent = {
+        id: '', // Will be set after DB insert
+        pages: validatedData.pages,
+        metadata: {
+          title: validatedData.title,
+          bookSummary: validatedData.bookSummary,
+          coverImagePrompt: validatedData.coverImagePrompt,
+          ageRange: request.ageRange,
+          characters: request.characters,
+          storyPrompt: request.storyPrompt,
+          createdAt: new Date().toISOString(),
+        }
+      };
+      return bookContent;
+    } catch (error) {
+      console.error('Error parsing book generation response:', error);
+      throw new Error('Failed to generate book content');
+    }
+  }
 
-        this.llm = new ChatOpenAI({
-            modelName: "gpt-4.1",
-            temperature: 0.7,
-            openAIApiKey: process.env.OPENAI_API_KEY,
-        });
+  // Step 2: Generate/upload images using the book ID, return BookContent with image URLs
+  async generateAndAttachImages(bookId: string, bookContent: BookContent): Promise<BookContent> {
+    // 1. Generate character reference images from metadata.characters
+    const characterPrompts = bookContent.metadata.characters;
+    const characterRefs = await Promise.all(
+      characterPrompts.map(prompt => this.imageGenerator.generateCharacterReference(prompt))
+    );
+    const crefUrls = characterRefs.map(ref => ref.url);
 
-        // More strict parser
-        this.parser = StructuredOutputParser.fromZodSchema(
-            z.object({
-                title: z.string().min(1),
-                content: z.string().min(1),  // We'll validate page breaks in the content
-                metadata: z.object({
-                    ageRange: z.string(),
-                    theme: z.string(),
-                    characters: z.array(z.string())
-                }),
-            })
-        );
-
-        this.imageGenerator = new ImageGeneratorService();
-        this.imageStorage = new ImageStorageService();
+    // Store character reference images
+    for (let i = 0; i < crefUrls.length; i++) {
+      await this.imageStorage.uploadImage(crefUrls[i], bookId, `character${i + 1}.jpeg`);
     }
 
-    async generateBook(prompt: string): Promise<Omit<Book, 'id' | 'createdAt' | 'stars'>> {
-        try {
-            // Generate the story content
-            const storyContent = await this.generateStoryContent(prompt);
+    // 2. Generate style reference image(s) from coverImagePrompt and/or bookSummary
+    // We'll use a single style reference for now, but could expand to more
+    const stylePrompt = `${bookContent.metadata.coverImagePrompt}, ${bookContent.metadata.bookSummary}, storybook style, bright, engaging, appropriate for young readers`;
+    const styleRef = await this.imageGenerator.generateStyleReference(stylePrompt);
+    const srefUrls = [styleRef.url];
 
-            // Create a focused prompt for the cover image
-            const coverImagePrompt = `Create a children's book cover for "${storyContent.title}". 
-        The story is about ${storyContent.metadata.characters.join(', ')} 
-        and has themes of ${storyContent.metadata.theme}. 
-        The target age range is ${storyContent.metadata.ageRange}.`;
-
-            // Generate image with DALL-E
-            const dalleImage = await this.imageGenerator.generateCoverImage(coverImagePrompt);
-
-            // Generate a temporary ID for the book
-            const tempId = `temp-${Date.now()}`;
-
-            // Upload to S3 and get permanent URL
-            const s3Url = await this.imageStorage.uploadImage(dalleImage.url, tempId);
-
-            // Return the complete book data
-            return {
-                partitionKey: "BOOK",
-                title: storyContent.title,
-                content: storyContent.content,
-                metadata: storyContent.metadata,
-                coverImage: {
-                    url: s3Url,
-                    platformUrl: dalleImage.url,
-                    prompt: dalleImage.prompt,
-                },
-                pageImages: []
-            };
-        } catch (error) {
-            console.error('Error in book generation:', error);
-            throw new Error('Failed to generate book: ' + (error as Error).message);
-        }
+    // Store style reference images
+    for (let i = 0; i < srefUrls.length; i++) {
+      await this.imageStorage.uploadImage(srefUrls[i], bookId, `style${i + 1}.jpeg`);
     }
 
-    private async generateStoryContent(prompt: string): Promise<Omit<Book, 'id' | 'createdAt' | 'stars' | 'coverImage'>> {
-        const template = `You are a professional children's book author. Create a children's story with the following exact structure:
+    // Optionally store reference URLs in metadata
+    (bookContent.metadata as any).characterReferenceUrls = crefUrls;
+    (bookContent.metadata as any).styleReferenceUrls = srefUrls;
 
-{format_instructions}
-
-REQUIRED FORMAT:
-The content field should be a single text field containing the entire story with PAGE_BREAK markers between pages.
-
-Example of correct response structure (replace with your story):
-
-Title: The Magical Garden
-
-Content: In a colorful garden filled with butterflies, lived a young fairy named Luna. She had sparkly wings and loved to help flowers grow.
-PAGE_BREAK
-One day, Luna discovered a wilting rose that had lost all its color. 'Don't worry,' she whispered to the flower, 'I will help you.'
-PAGE_BREAK
-Luna sprinkled her magical fairy dust on the rose, but nothing happened. She knew she needed to try something different.
-PAGE_BREAK
-She gathered her friends - a wise owl, a hardworking bee, and a gentle rain cloud - to help her with the rose.
-PAGE_BREAK
-Together, they combined their magic: the owl's wisdom, the bee's honey, the cloud's rain, and Luna's fairy dust.
-PAGE_BREAK
-Suddenly, the rose began to glow! Its color returned brighter than ever, and it became the most beautiful flower in the garden.
-
-Metadata:
-- Age Range: 4-6 years
-- Theme: friendship and cooperation
-- Characters: Luna the fairy, wise owl, hardworking bee, rain cloud
-
-CRITICAL REQUIREMENTS:
-1. The story MUST be at least 6 pages long
-2. Each page must be separated by 'PAGE_BREAK'
-3. All story content must be in one continuous text
-4. The content must be properly formatted for the Zod parser
-5. Include appropriate metadata
-
-Now write a complete story based on this prompt: {prompt}`;
-
-        const promptTemplate = new PromptTemplate({
-            template,
-            inputVariables: ["prompt"],
-            partialVariables: {
-                format_instructions: this.parser.getFormatInstructions(),
-            },
-        });
-
-        const input = await promptTemplate.format({ prompt });
-        let response = await this.llm.invoke(input);
-
-        // Validate page count before parsing
-        const pages = response.text.split('PAGE_BREAK').filter(page => page.trim().length > 0);
-        if (pages.length < 6) {
-            const retryPrompt = `Your previous response only had ${pages.length} pages. Please generate a new story with at least 6 pages. Remember to keep all content in a single continuous text with PAGE_BREAK separators.\n\n${input}`;
-            response = await this.llm.invoke(retryPrompt);
-        }
-
-        return this.parser.parse(response.text);
+    // 3. Generate and upload cover image using references
+    if (bookContent.pages.length > 0) {
+      const coverPagePrompt = bookContent.metadata.coverImagePrompt;
+      const coverImageResult = await this.imageGenerator.generateCoverImage(coverPagePrompt, crefUrls, srefUrls);
+      await this.imageStorage.uploadImage(coverImageResult.url, bookId, 'cover.jpg');
+      // 4. Generate and upload each page image using references
+      for (let i = 0; i < bookContent.pages.length; i++) {
+        const page = bookContent.pages[i];
+        const imageResult = await this.imageGenerator.generatePageImage(page.imagePrompt, bookContent.metadata.bookSummary, crefUrls, srefUrls);
+        await this.imageStorage.uploadImage(imageResult.url, bookId, `page${i+1}.jpg`);
+      }
     }
+    return {
+      ...bookContent,
+      id: bookId,
+      pages: bookContent.pages,
+    };
+  }
+
+  private async fetchImageAsUint8Array(imageUrl: string): Promise<Uint8Array> {
+    const response = await fetch(imageUrl);
+    const arrayBuffer = await response.arrayBuffer();
+    return new Uint8Array(arrayBuffer);
+  }
+
+  // Helper function to extract JSON from a string that might have other text around it
+  private extractJsonFromString(text: string): string {
+    const jsonRegex = /{[\s\S]*}/;
+    const match = text.match(jsonRegex);
+    if (!match) {
+      throw new Error('Could not extract valid JSON from the response');
+    }
+    return match[0];
+  }
 }
+
+export default BookGeneratorService.getInstance();

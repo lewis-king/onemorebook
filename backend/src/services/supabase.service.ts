@@ -58,21 +58,20 @@ class SupabaseService {
     return data;
   }
 
-  async listBooks(options: { sortBy: 'stars' | 'date', order: 'asc' | 'desc', limit: number }): Promise<Book[]> {
-    const { sortBy, order, limit } = options;
+  async listBooks(options: { sortBy: 'stars' | 'date', order: 'asc' | 'desc', limit: number, offset?: number }): Promise<Book[]> {
+    const { sortBy, order, limit, offset = 0 } = options;
     const orderByField = sortBy === 'date' ? 'created_at' : 'stars';
-    
+    const from = offset;
+    const to = offset + limit - 1;
     const { data, error } = await this.client
       .from('books')
       .select('*')
       .order(orderByField, { ascending: order === 'asc' })
-      .limit(limit);
-      
+      .range(from, to);
     if (error) {
       console.error('Error listing books:', error);
       throw error;
     }
-    
     return data || [];
   }
 

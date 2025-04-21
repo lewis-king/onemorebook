@@ -4,8 +4,14 @@ import { Book, CreateBookParams } from '../types/book';
 const API_BASE_URL = 'http://localhost:3000/api';
 
 export const bookService = {
-  async listBooks(): Promise<Book[]> {
-    const response = await fetch(`${API_BASE_URL}/books`);
+  async listBooks({ limit = 9, offset = 0, sortBy = 'stars', order = 'desc' } = {}): Promise<Book[]> {
+    const params = new URLSearchParams({
+      limit: String(limit),
+      offset: String(offset),
+      sortBy,
+      order,
+    });
+    const response = await fetch(`${API_BASE_URL}/books?${params.toString()}`);
     const data = await response.json();
     // Optionally, ensure all fields are present and fallback if needed
     return data.map((book: any) => ({

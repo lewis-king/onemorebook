@@ -1,7 +1,7 @@
 import { Request, Response } from 'express';
 import { GenerateBookSchema } from '../types';
 import supabaseService from '../services/supabase.service';
-import bookGeneratorService from '../services/book-generator.service';
+import bookGeneratorService from '../services/bookGenerator';
 
 export async function generateBook(req: Request, res: Response) {
   try {
@@ -67,7 +67,8 @@ export async function listBooks(req: Request, res: Response) {
   try {
     const sortBy = (req.query.sortBy as string || 'stars') as 'stars' | 'date';
     const order = (req.query.order as string || 'desc') as 'asc' | 'desc';
-    const limit = req.query.limit ? parseInt(req.query.limit as string, 10) : 10;
+    const limit = req.query.limit ? parseInt(req.query.limit as string, 10) : 9;
+    const offset = req.query.offset ? parseInt(req.query.offset as string, 10) : 0;
 
     // Validate parameters
     if (!['stars', 'date'].includes(sortBy)) {
@@ -78,7 +79,7 @@ export async function listBooks(req: Request, res: Response) {
       return res.status(400).json({ error: 'order must be either "asc" or "desc"' });
     }
 
-    const books = await supabaseService.listBooks({ sortBy, order, limit });
+    const books = await supabaseService.listBooks({ sortBy, order, limit, offset });
     // Transform each book to the new format
     const transformedBooks = books.map((book: any) => ({
       id: book.id,
