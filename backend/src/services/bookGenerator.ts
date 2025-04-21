@@ -177,6 +177,56 @@ class BookGeneratorService {
     };
   }
 
+  // Autofill characters and story prompt using LLM
+  async autofillBookFields({ ageRange, numOfPages }: { ageRange: string, numOfPages?: number }) {
+    // Prompt for characters and story prompt
+    const autofillPrompt = PromptTemplate.fromTemplate(`
+      You are helping a child create a magical storybook. Given the age range: {ageRange}, generate:
+      1. A creative story idea (short paragraph explaining the story, imaginative, fun, unique, suitable for the age)
+      2. A list of 1-3 main characters (animal, child, mystical creature, etc. Use names and a short description for each, comma-separated)
+      Respond as valid JSON with keys 'storyPrompt' and 'characters'.
+      Example:
+      {{
+        "storyPrompt": "A brave kitten and a mystical dragon go on a quest to find a hidden treasure.",
+        "characters": ["Milo the brave kitten", "Drago the mystical dragon"]
+      }}
+    `);
+    const prompt = await autofillPrompt.format({ ageRange, numOfPages });
+    const response = await this.openai.invoke(prompt);
+    // Robustly extract string content from response
+    let contentStr = '';
+    if (typeof response === 'string') {
+      contentStr = response;
+    } else if (response && typeof response === 'object') {
+      if ('content' in response && typeof response.content === 'string') {
+        contentStr = response.content;
+      } else if ('text' in response && typeof response.text === 'string') {
+        contentStr = response.text;
+      } else if (Array.isArray(response.content)) {
+        const arr = response.content as any[];
+        contentStr = arr.map((c) => c.text || c.content || '').join('\n');
+      } else {
+        contentStr = String(response);
+      }
+    } else {
+      contentStr = String(response);
+    }
+    if (!contentStr) {
+      throw new Error('Could not extract text content from LLM response');
+    }
+    const jsonStr = this.extractJsonFromString(contentStr);
+    const parsed = JSON.parse(jsonStr);
+    // Ensure characters is an array (handle comma-separated string fallback)
+    let characters = parsed.characters;
+    if (typeof characters === 'string') {
+      characters = characters.split(',').map((c: string) => c.trim()).filter(Boolean);
+    }
+    return {
+      storyPrompt: parsed.storyPrompt,
+      characters
+    };
+  }
+
   private async fetchImageAsUint8Array(imageUrl: string): Promise<Uint8Array> {
     const response = await fetch(imageUrl);
     const arrayBuffer = await response.arrayBuffer();

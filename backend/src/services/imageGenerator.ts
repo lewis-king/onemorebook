@@ -68,7 +68,7 @@ export class ImageGeneratorService {
             // 2. Poll for completion using the correct endpoint and POST body
             const fetchUrl = 'https://api.goapi.ai/mj/v2/fetch';
             let pollCount = 0;
-            const maxPolls = 24; // poll for up to ~2 minutes (5s x 24)
+            const maxPolls = 48; // poll for up to ~4 minutes (5s x 48)
             const pollDelay = 5000; // ms
             let imageUrl = '';
             while (pollCount < maxPolls) {

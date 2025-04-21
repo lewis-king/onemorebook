@@ -5,11 +5,39 @@ import bookGeneratorService from '../services/bookGenerator';
 
 export async function generateBook(req: Request, res: Response) {
   try {
-    // Validate request
-    const validatedData = GenerateBookSchema.parse(req.body);
+    // Accept raw body, validate only after autofill
+    let validatedData = { ...req.body };
 
+    // If characters or storyPrompt missing/empty, autofill
+    if (!validatedData.ageRange) {
+      return res.status(400).json({ error: 'ageRange is required' });
+    }
+    
+    if (!validatedData.characters || validatedData.characters.length === 0 || !validatedData.storyPrompt) {
+      const autofill = await bookGeneratorService.autofillBookFields({
+        ageRange: validatedData.ageRange,
+        numOfPages: validatedData.numOfPages
+      });
+      if (!autofill.characters || autofill.characters.length === 0 || !autofill.storyPrompt) {
+        return res.status(500).json({ error: 'AI autofill failed to generate story details. Please try again.' });
+      }
+      validatedData = {
+        ...validatedData,
+        characters: autofill.characters,
+        storyPrompt: autofill.storyPrompt,
+      };
+    }
+    // Assign required fields
+    validatedData = {
+      ...validatedData,
+      ageRange: validatedData.ageRange,
+      characters: validatedData.characters || [],
+      storyPrompt: validatedData.storyPrompt || '',
+    };
+    // Now validate as full schema (enforces required fields)
+    const parsedData = GenerateBookSchema.parse(validatedData);
     // Step 1: Generate book content (pages, image prompts, no images yet)
-    const bookContent = await bookGeneratorService.generateBookContent(validatedData);
+    const bookContent = await bookGeneratorService.generateBookContent(parsedData);
 
     // Step 2: Insert book record without images, get generated ID
     // Extract title from bookContent or request (for now, use placeholder if not present)
@@ -19,9 +47,9 @@ export async function generateBook(req: Request, res: Response) {
       title,
       book_summary: bookContent.metadata.bookSummary,
       cover_image_prompt: bookContent.metadata.coverImagePrompt,
-      age_range: validatedData.ageRange,
-      characters: validatedData.characters,
-      story_prompt: validatedData.storyPrompt,
+      age_range: parsedData.ageRange,
+      characters: parsedData.characters,
+      story_prompt: parsedData.storyPrompt,
       content: bookContent,
     });
     if (!insertedBook || !insertedBook.id) {
