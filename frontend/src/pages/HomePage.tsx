@@ -1,9 +1,18 @@
-import { createSignal, onCleanup, onMount, For, Show } from "solid-js";
+import { createSignal, onCleanup, onMount, For, Show, createMemo } from "solid-js";
 import { Book } from '../types/book';
 import BookCard from "../components/BookCard";
 import CategoryFilter from "../components/CategoryFilter";
 import WelcomeHero from "../components/WelcomeHero";
 import { bookService } from "../services/api";
+
+// Debounce utility
+function debounce(fn: (...args: any[]) => void, delay: number) {
+  let timeout: ReturnType<typeof setTimeout>;
+  return (...args: any[]) => {
+    clearTimeout(timeout);
+    timeout = setTimeout(() => fn(...args), delay);
+  };
+}
 
 export default function HomePage() {
     const [selectedCategory, setSelectedCategory] = createSignal('all');
@@ -11,6 +20,7 @@ export default function HomePage() {
     const [loading, setLoading] = createSignal(false);
     const [hasMore, setHasMore] = createSignal(true);
     const [offset, setOffset] = createSignal(0);
+    const [initialLoad, setInitialLoad] = createSignal(true);
     const limit = 9;
 
     const fetchBooks = async (reset = false) => {
@@ -19,6 +29,7 @@ export default function HomePage() {
         if (reset) {
             setBooks(newBooks);
             setOffset(newBooks.length);
+            setInitialLoad(false);
         } else {
             setBooks(prev => [...prev, ...newBooks]);
             setOffset(prev => prev + newBooks.length);
@@ -26,6 +37,14 @@ export default function HomePage() {
         setHasMore(newBooks.length === limit);
         setLoading(false);
     };
+
+    // Debounced scroll handler
+    const handleScroll = debounce(() => {
+        if (loading() || !hasMore()) return;
+        if (window.innerHeight + window.scrollY >= document.body.offsetHeight - 300) {
+            fetchBooks();
+        }
+    }, 200);
 
     onMount(() => {
         fetchBooks(true);
@@ -36,41 +55,36 @@ export default function HomePage() {
         window.removeEventListener('scroll', handleScroll);
     });
 
-    const handleScroll = () => {
-        if (loading() || !hasMore()) return;
-        if (window.innerHeight + window.scrollY >= document.body.offsetHeight - 300) {
-            fetchBooks();
-        }
-    };
-
+    // Optimized upvote: update local state only
     const handleUpvote = async (id: string, currentStars: number) => {
         await bookService.updateStars(id, currentStars);
-        setOffset(0);
-        fetchBooks(true);
+        setBooks(prev => prev.map(book => book.id === id ? { ...book, stars: currentStars } : book));
     };
 
-    const filteredBooks = () => {
+    // Memoized filteredBooks
+    const filteredBooks = createMemo(() => {
         if (!books()) return [];
         return selectedCategory() === 'all'
             ? books()
             : books().filter((book: Book) => Array.isArray(book.characters) && book.characters.includes(selectedCategory()));
-    };
+    });
 
     return (
         <div class="space-y-12 max-w-7xl mx-auto px-4 py-8">
             <WelcomeHero />
 
-            <CategoryFilter
+            {/* <CategoryFilter
                 selected={selectedCategory()}
                 onSelect={cat => {
                     setSelectedCategory(cat);
                     setOffset(0);
                     fetchBooks(true);
                 }}
-            />
+            /> */}
+            
 
             <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
-                <Show when={!loading()} fallback={<div class="text-center text-lg font-comic text-gray-400 py-12 animate-pulse">Loading books...</div>}>
+                <Show when={!initialLoad()} fallback={<div class="text-center text-lg font-comic text-gray-400 py-12 animate-pulse">Loading books...</div>}>
                     <Show when={filteredBooks().length > 0} fallback={
                         <div class="col-span-full flex flex-col items-center justify-center py-16">
                           <div class="text-5xl mb-4 animate-bounce">🦄</div>
@@ -82,6 +96,12 @@ export default function HomePage() {
                         </div>
                     }>
                         <For each={filteredBooks()}>{book => <BookCard {...book} onUpvote={handleUpvote} />}</For>
+                        <Show when={loading() && !initialLoad()}>
+                            <div class="col-span-full flex justify-center py-8">
+                                <div class="animate-spin rounded-full h-8 w-8 border-t-4 border-b-4 border-kiddy-accent"></div>
+                                <span class="ml-4 text-lg text-gray-400 font-comic">Loading more books…</span>
+                            </div>
+                        </Show>
                     </Show>
                 </Show>
             </div>

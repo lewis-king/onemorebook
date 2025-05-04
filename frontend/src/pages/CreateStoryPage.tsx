@@ -1,4 +1,4 @@
-import { createSignal } from "solid-js";
+import { createSignal, createEffect, onCleanup } from "solid-js";
 import { useNavigate } from "@solidjs/router";
 import { bookService } from "../services/api";
 import type { CreateBookParams } from "../types/book";
@@ -17,6 +17,53 @@ export default function CreateStoryPage() {
   const [autofillLoading, setAutofillLoading] = createSignal(false);
   const [autofillError, setAutofillError] = createSignal<string | null>(null);
   const [creationMode, setCreationMode] = createSignal<'manual' | 'ai'>('manual');
+
+  // Add progress state for loading bar
+  const [progress, setProgress] = createSignal(0);
+  let progressInterval: number | undefined;
+
+  // Add progress state for autofill loading bar
+  const [autofillProgress, setAutofillProgress] = createSignal(0);
+  let autofillProgressInterval: number | undefined;
+
+  // Start/reset loading bar when isLoading changes
+  createEffect(() => {
+    if (isLoading()) {
+      setProgress(0);
+      const duration = 180000; // 3 minutes in ms
+      const intervalMs = 100;
+      const steps = duration / intervalMs;
+      let currentStep = 0;
+      progressInterval = window.setInterval(() => {
+        currentStep++;
+        setProgress(Math.min((currentStep / steps) * 100, 99.5));
+      }, intervalMs);
+    } else {
+      setProgress(0);
+      if (progressInterval) clearInterval(progressInterval);
+    }
+  });
+  // Start/reset autofill loading bar when autofillLoading changes
+  createEffect(() => {
+    if (autofillLoading()) {
+      setAutofillProgress(0);
+      const duration = 180000; // 3 minutes in ms
+      const intervalMs = 100;
+      const steps = duration / intervalMs;
+      let currentStep = 0;
+      autofillProgressInterval = window.setInterval(() => {
+        currentStep++;
+        setAutofillProgress(Math.min((currentStep / steps) * 100, 99.5));
+      }, intervalMs);
+    } else {
+      setAutofillProgress(0);
+      if (autofillProgressInterval) clearInterval(autofillProgressInterval);
+    }
+  });
+  onCleanup(() => {
+    if (progressInterval) clearInterval(progressInterval);
+    if (autofillProgressInterval) clearInterval(autofillProgressInterval);
+  });
 
   const handleCharactersBlur = () => {
     setFormData({
@@ -67,23 +114,22 @@ export default function CreateStoryPage() {
     }
     setAutofillLoading(true);
     try {
-      // POST to /books with only ageRange and numOfPages
+      // POST to /books with only ageRange and numOfPages, expecting a real book to be created
       const result = await bookService.createBook({
         ageRange: formData().ageRange,
         numOfPages: formData().numOfPages,
         characters: [],
         storyPrompt: ''
       });
-      // The backend will autofill and return the generated fields
-      const book = (result as any).book || result;
-      setFormData({
-        ...formData(),
-        storyPrompt: book.story_prompt || '',
-        characters: book.characters || []
-      });
-      setCharactersInput((book.characters || []).join(', '));
+      // The backend should create the book and return the bookId
+      const bookId = (result as any).bookId || (result as any).book?.id;
+      if (bookId) {
+        navigate(`/book/${bookId}`);
+      } else {
+        setAutofillError('Oops! The magic didn\'t work this time. Please try again');
+      }
     } catch (err: any) {
-      setAutofillError('Could not generate story details. Try again!');
+      setAutofillError('Oops! The magic didn\'t work this time. Please try again');
     } finally {
       setAutofillLoading(false);
     }
@@ -187,7 +233,15 @@ export default function CreateStoryPage() {
               >
                 {isLoading() ? (
                   <>
-                    <span class="animate-spin mr-2">🌀</span> Creating Story...
+                    <div class="w-full flex flex-col items-center">
+                      <div class="w-full bg-gradient-to-r from-blue-200 via-pink-200 to-yellow-200 rounded-full h-4 mb-2 border-2 border-kiddy-primary/40 overflow-hidden shadow-inner">
+                        <div
+                          class="h-4 bg-gradient-to-r from-blue-400 to-pink-400 transition-all duration-100"
+                          style={{ width: `${progress()}%` }}
+                        ></div>
+                      </div>
+                      <span class="font-comic text-kiddy-primary text-lg animate-pulse">Creating Story... ({Math.floor(progress())}%)</span>
+                    </div>
                   </>
                 ) : (
                   <>
@@ -208,7 +262,17 @@ export default function CreateStoryPage() {
                   title="Let the AI pick the story idea and characters for you!"
                 >
                   <span class="text-2xl">🤖✨</span>
-                  {autofillLoading() ? 'Letting AI Choose...' : 'Let AI Choose For Me'}
+                  {autofillLoading() ? (
+                    <>
+                      <div class="w-40 bg-gradient-to-r from-blue-200 via-pink-200 to-yellow-200 rounded-full h-3 mx-2 border-2 border-blue-400/40 overflow-hidden shadow-inner">
+                        <div
+                          class="h-3 bg-gradient-to-r from-blue-400 to-pink-400 transition-all duration-100"
+                          style={{ width: `${autofillProgress()}%` }}
+                        ></div>
+                      </div>
+                      <span class="font-comic text-blue-100 text-base animate-pulse">Letting AI Choose... ({Math.floor(autofillProgress())}%)</span>
+                    </>
+                  ) : 'Let AI Choose For Me'}
                 </button>
                 {autofillError() && <span class="text-red-600 text-sm mt-1">{autofillError()}</span>}
                 <span class="text-xs text-gray-500">(Only Age Range required. AI will do the rest!)</span>
@@ -241,7 +305,15 @@ export default function CreateStoryPage() {
                   >
                     {isLoading() ? (
                       <>
-                        <span class="animate-spin mr-2">🌀</span> Creating Story...
+                        <div class="w-full flex flex-col items-center">
+                          <div class="w-full bg-gradient-to-r from-blue-200 via-pink-200 to-yellow-200 rounded-full h-4 mb-2 border-2 border-blue-400/40 overflow-hidden shadow-inner">
+                            <div
+                              class="h-4 bg-gradient-to-r from-blue-400 to-pink-400 transition-all duration-100"
+                              style={{ width: `${progress()}%` }}
+                            ></div>
+                          </div>
+                          <span class="font-comic text-blue-600 text-lg animate-pulse">Creating Story... ({Math.floor(progress())}%)</span>
+                        </div>
                       </>
                     ) : (
                       <>

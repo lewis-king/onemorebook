@@ -20,5 +20,6 @@ export interface Book {
         url: string;
         platformUrl: string;
         prompt: string;
-    }[]
+    }[];
+    status: 'pending' | 'complete' | 'failed';
 }

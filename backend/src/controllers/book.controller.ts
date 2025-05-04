@@ -39,30 +39,56 @@ export async function generateBook(req: Request, res: Response) {
     // Step 1: Generate book content (pages, image prompts, no images yet)
     const bookContent = await bookGeneratorService.generateBookContent(parsedData);
 
-    // Step 2: Insert book record without images, get generated ID
-    // Extract title from bookContent or request (for now, use placeholder if not present)
-    const title = bookContent.metadata.title || 'Untitled';
+    // Step 2: Insert book record as soon as we need the ID (status: 'pending')
+    let insertedBook;
+    try {
+      insertedBook = await supabaseService.createBook({
+        title: bookContent.metadata.title || 'Untitled',
+        book_summary: bookContent.metadata.bookSummary,
+        cover_image_prompt: bookContent.metadata.coverImagePrompt,
+        age_range: parsedData.ageRange,
+        characters: parsedData.characters,
+        story_prompt: parsedData.storyPrompt,
+        content: bookContent,
+        status: 'pending',
+      });
+      if (!insertedBook || !insertedBook.id) {
+        throw new Error('Failed to create book in database');
+      }
+    } catch (dbError) {
+      console.error('Error during initial DB insert:', dbError);
+      return res.status(500).json({ error: 'Book generation failed at initial saving step. Please try again.' });
+    }
+    const bookId = insertedBook.id;
 
-    const insertedBook = await supabaseService.createBook({
-      title,
-      book_summary: bookContent.metadata.bookSummary,
-      cover_image_prompt: bookContent.metadata.coverImagePrompt,
-      age_range: parsedData.ageRange,
-      characters: parsedData.characters,
-      story_prompt: parsedData.storyPrompt,
-      content: bookContent,
-    });
-    if (!insertedBook || !insertedBook.id) {
-      throw new Error('Failed to create book in database');
+    // Step 3: Generate/upload images using the book ID
+    let bookContentWithImages;
+    try {
+      bookContentWithImages = await bookGeneratorService.generateAndAttachImages(bookId, bookContent);
+    } catch (imageGenError) {
+      // If image generation fails, mark status as 'failed'
+      await supabaseService.updateBook(bookId, { status: 'failed' });
+      console.error('Error during image generation:', imageGenError);
+      return res.status(500).json({ error: 'Book generation failed during image creation. Please try again.' });
     }
 
-    // Step 3: Generate/upload images using the new book ID
-    const bookContentWithImages = await bookGeneratorService.generateAndAttachImages(insertedBook.id, bookContent);
+    // Step 4: Update book record to 'complete' and save final content
+    try {
+      await supabaseService.updateBook(bookId, {
+        content: bookContentWithImages,
+        status: 'complete',
+      });
+    } catch (dbError) {
+      // If DB update fails, mark as 'failed'
+      await supabaseService.updateBook(bookId, { status: 'failed' });
+      console.error('Error during DB update:', dbError);
+      return res.status(500).json({ error: 'Book generation failed at saving step. Please try again.' });
+    }
 
-    // Step 4: Return the generated book details
+    // Step 5: Return the generated book details
     res.status(201).json({
       message: 'Book generated successfully',
-      bookId: insertedBook.id,
+      bookId,
       book: bookContentWithImages
     });
   } catch (error: any) {
@@ -70,7 +96,7 @@ export async function generateBook(req: Request, res: Response) {
     if (error.name === 'ZodError') {
       return res.status(400).json({ error: error.errors });
     }
-    res.status(500).json({ error: 'An unexpected error occurred' });
+    res.status(500).json({ error: 'Book generation failed. Please try again.' });
   }
 }
 

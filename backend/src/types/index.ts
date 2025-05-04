@@ -35,6 +35,7 @@ export interface Book {
   characters: string[];
   created_at?: string;
   updated_at?: string;
+  status: 'pending' | 'complete' | 'failed';
 }
 
 // Zod schema for book generation request validation

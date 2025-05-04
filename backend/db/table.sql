@@ -13,7 +13,8 @@ CREATE TABLE books (
   --user_id uuid REFERENCES users(id) ON DELETE SET NULL,
   created_at timestamp with time zone DEFAULT timezone('utc'::text, now()) NOT NULL,
   updated_at timestamp with time zone DEFAULT timezone('utc'::text, now()),
-  stars integer DEFAULT 0
+  stars integer DEFAULT 0,
+  status text NOT NULL DEFAULT 'pending'
 );
 
 -- Allow uploads for authenticated users (including anon key) to the book-imgs bucket

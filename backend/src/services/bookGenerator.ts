@@ -164,11 +164,12 @@ class BookGeneratorService {
       const coverImageResult = await this.imageGenerator.generateCoverImage(coverPagePrompt, crefUrls, srefUrls);
       await this.imageStorage.uploadImage(coverImageResult.url, bookId, 'cover.jpg');
       // 4. Generate and upload each page image using references
-      for (let i = 0; i < bookContent.pages.length; i++) {
-        const page = bookContent.pages[i];
-        const imageResult = await this.imageGenerator.generatePageImage(page.imagePrompt, bookContent.metadata.bookSummary, crefUrls, srefUrls);
-        await this.imageStorage.uploadImage(imageResult.url, bookId, `page${i+1}.jpg`);
-      }
+      // Parallelize image generation and upload for all pages
+      const pageImageTasks = bookContent.pages.map((page, i) =>
+        this.imageGenerator.generatePageImage(page.imagePrompt, bookContent.metadata.bookSummary, crefUrls, srefUrls)
+          .then(imageResult => this.imageStorage.uploadImage(imageResult.url, bookId, `page${i+1}.jpg`))
+      );
+      await Promise.all(pageImageTasks);
     }
     return {
       ...bookContent,

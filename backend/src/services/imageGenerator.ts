@@ -111,7 +111,7 @@ export class ImageGeneratorService {
     }
 
     async generateStyleReference(prompt: string): Promise<{ url: string, prompt: string }> {
-        return this.requestImage(`Children's book style reference: ${prompt}`);
+        return this.requestImage(`Children's book style reference, this should not include characters but be style image that can be used throughout a book: ${prompt}`);
     }
 
     async generateCoverImage(prompt: string, crefUrls: string[] = [], srefUrls: string[] = []): Promise<{ url: string, prompt: string }> {

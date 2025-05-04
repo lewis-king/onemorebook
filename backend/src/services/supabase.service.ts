@@ -66,6 +66,7 @@ class SupabaseService {
     const { data, error } = await this.client
       .from('books')
       .select('*')
+      .eq('status', 'complete')
       .order(orderByField, { ascending: order === 'asc' })
       .range(from, to);
     if (error) {
@@ -106,6 +107,16 @@ class SupabaseService {
     return data || [];
   }
 
+  /**
+   * Updates a book with the given id.
+   * 
+   * The updates object can include any fields from the Book type, except 'id'.
+   * This is useful for updating the status and content fields for the new workflow.
+   * 
+   * @param id The id of the book to update.
+   * @param updates The fields to update.
+   * @returns The updated book, or null if the update failed.
+   */
   async updateBook(id: string, updates: Partial<Omit<Book, 'id'>>): Promise<Book | null> {
     const { data, error } = await this.client
       .from('books')

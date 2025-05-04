@@ -1,0 +1,12 @@
+services:
+  - type: web
+    name: onemorebook-backend
+    env: node
+    plan: free
+    buildCommand: npm install && npm run build
+    startCommand: npm start
+    rootDir: .
+    envVars:
+      - key: NODE_ENV
+        value: production
+      # Add your other env vars here
