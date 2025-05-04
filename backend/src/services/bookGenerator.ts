@@ -57,8 +57,9 @@ class BookGeneratorService {
       The story should have a gentle theme or lesson appropriate for the age range (e.g., friendship, courage, kindness), woven naturally into the narrative.
       The book should have at least 5 pages${request.numOfPages ? ` (target: ${request.numOfPages} pages)` : ' (ideally more so that the story can be more engaging)'}, where each page has a short paragraph of text (2-3 sentences).
       The story should be about what is described in the story prompt, should include the listed characters and be fun, engaging and unique.
-      For each page, in addition to the text and imagePrompt, include a list of the main characters present on that page (from the provided character list) as an array called charactersPresent. If a character does not appear on a page, do not include them in that page's charactersPresent array.
-      Each imagePrompt should be a detailed description for generating an illustration that matches the text on that page. Specify the illustration style (e.g., bright watercolor, playful cartoon), main colors, and the overall mood of the scene.
+      For each page, in addition to the text, include a list of the main characters present on that page (from the provided character list) as an array called charactersPresent. IMPORTANT: For each character in charactersPresent, include ONLY the character's name (e.g., "Benny"). If a character does not appear on a page, do not include them in that page's charactersPresent array.
+      For each page's imagePrompt, write a detailed, natural description for generating an illustration that matches the text on that page. When referencing a character, always use the format: Character Name - [descriptive adjective phrase] (e.g., "Luna (a brave, adventurous young fox with a bushy tail, golden fur, and a playful spirit)"). The adjective phrase should be highly descriptive and suitable for image generation (include species, color, personality traits, clothing, etc.). The imagePrompt should explicitly and naturally mention all relevant characters present on that page (using this format), so that the prompt is suitable for generating an accurate illustration. Do not just append the characters—integrate them into the scene description. Specify the illustration style (e.g., bright watercolor, playful cartoon), main colors, and the overall mood of the scene.
+      For the coverImagePrompt, write a detailed, natural description for generating the book cover illustration. The coverImagePrompt should visually and descriptively feature all the main characters (using the Character Name - [descriptive adjective phrase] format) and capture the overall theme or story of the book. Integrate the characters and theme naturally into the scene description, specifying the illustration style (e.g., bright watercolor, playful cartoon), main colors, and the overall mood of the cover. The prompt should be ready to use for generating an accurate and engaging book cover image.
       Ensure the story and illustrations reflect diversity and inclusion, showing characters of different backgrounds and abilities.
       Output should be formatted as valid JSON with the following structure:
       {{
@@ -160,30 +161,28 @@ class BookGeneratorService {
 
     // 3. Generate and upload cover image using references
     if (bookContent.pages.length > 0) {
-      // Compose cover prompt: include all main characters in prompt text, only main character as cref
-      const coverCharactersText = characterPrompts.length > 1
-        ? `featuring ${characterPrompts.join(', ')}`
-        : characterPrompts[0];
-      const coverPagePrompt = `${bookContent.metadata.coverImagePrompt}. ${coverCharactersText}`;
-      const coverImageResult = await this.imageGenerator.generateCoverImage(coverPagePrompt, crefUrls, srefUrls);
+      // Use coverImagePrompt directly (already includes main characters and theme)
+      const coverImageResult = await this.imageGenerator.generateCoverImage(
+        bookContent.metadata.coverImagePrompt,
+        crefUrls,
+        srefUrls
+      );
       await this.imageStorage.uploadImage(coverImageResult.url, bookId, 'cover.jpg');
 
       // 4. Generate and upload each page image using references
       // Parallelize image generation and upload for all pages
-      const pageImageTasks = bookContent.pages.map((page, i) => {
-        // Use only the main characters actually present on this page
-        const presentCharacters = (page.charactersPresent && page.charactersPresent.length > 0)
-          ? page.charactersPresent
-          : [];
-        let pageCharactersText = presentCharacters.length > 1
-          ? `featuring ${presentCharacters.join(', ')}`
-          : (presentCharacters[0] || '');
-        // Combine the original page image prompt with explicit character list (if any)
-        const fullPagePrompt = pageCharactersText
-          ? `${page.imagePrompt}. ${pageCharactersText}`
-          : page.imagePrompt;
-        return this.imageGenerator.generatePageImage(fullPagePrompt, bookContent.metadata.bookSummary, crefUrls, srefUrls)
-          .then(imageResult => this.imageStorage.uploadImage(imageResult.url, bookId, `page${i+1}.jpg`));
+      const mainCharacterName = bookContent.metadata.characters[0];
+      const pageImageTasks = bookContent.pages.map(async (page, i) => {
+        // Only pass crefUrl if the main character is referenced in the imagePrompt
+        const crefUrlsToPass = page.imagePrompt.includes(mainCharacterName) ? crefUrls : [];
+        return this.imageGenerator.generatePageImage(
+          page.imagePrompt,
+          bookContent.metadata.bookSummary,
+          crefUrlsToPass,
+          srefUrls
+        ).then(imageResult =>
+          this.imageStorage.uploadImage(imageResult.url, bookId, `page${i+1}.jpg`)
+        );
       });
       await Promise.all(pageImageTasks);
     }

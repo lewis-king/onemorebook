@@ -21,23 +21,11 @@ interface MidjourneyTaskDetail {
 }
 
 export class ImageGeneratorService {
-    private ensurePromptParamsSpaced(prompt: string): string {
-        // Inserts a space before any --param if missing, even after punctuation
-        let sanitized = prompt.replace(/([\w\d])(--[\w-]+)/g, '$1 $2');
-        // Insert a space after punctuation (.,!?) if directly before --param
-        sanitized = sanitized.replace(/([.,!?])(--[\w-]+)/g, '$1 $2');
-        // Remove accidental double commas or misplaced punctuation
-        sanitized = sanitized.replace(/,+/g, ',').replace(/ ,/g, ',').replace(/\s{2,}/g, ' ');
-        // Ensure a space before every --param (even if at start)
-        sanitized = sanitized.replace(/(^|[^\s])(--[\w-]+)/g, (m, p1, p2) => (p1.trim() ? p1 + ' ' + p2 : p2));
-        return sanitized.trim();
-    }
 
     private async requestImage(prompt: string, extraParams: Record<string, any> = {}): Promise<{ url: string, prompt: string }> {
         try {
-            // Ensure prompt params are spaced
-            prompt = this.ensurePromptParamsSpaced(prompt);
-            console.log('[Midjourney FINAL PROMPT]', prompt); // <-- Log the exact prompt
+            // Log the exact prompt (unmodified)
+            console.log('[Midjourney API RAW PROMPT]', prompt);
             const body = JSON.stringify({
                 prompt,
                 skip_prompt_check: false,
@@ -121,20 +109,36 @@ export class ImageGeneratorService {
     async generateStyleReference(prompt: string): Promise<{ url: string, prompt: string }> {
         // If prompt contains a comma followed by --, ensure a space before --
         let safePrompt = prompt.replace(/,\s*--/g, ' --');
-        return this.requestImage(`Children's book style reference, this should not include characters but be style image that can be used throughout a book: ${safePrompt}`);
+        const finalPrompt = `Children's book style reference, this should not include characters but be style image that can be used throughout a book: ${safePrompt}`;
+        console.log('[generateStyleReference FINAL PROMPT]', finalPrompt);
+        return this.requestImage(finalPrompt);
     }
 
     async generateCoverImage(prompt: string, crefUrls: string[] = [], srefUrls: string[] = []): Promise<{ url: string, prompt: string }> {
-        let cref = crefUrls.length ? `--cref ${crefUrls.join(' ')} --cw 0` : '';
-        let sref = srefUrls.length ? `--sref ${srefUrls.join(' ')}` : '';
-        const fullPrompt = `Children's book style - Book cover illustration to generate image for: ${prompt}. ${cref} ${sref}`.trim();
+        const cref = crefUrls[0] ? `--cref ${crefUrls[0]} --cw 0` : '';
+        const sref = srefUrls[0] ? `--sref ${srefUrls[0]}` : '';
+        // Build the prompt robustly to ensure proper spacing before --cref/--sref
+        const promptParts = [
+            `Children's book style - Book cover illustration to generate image for:`,
+            prompt.endsWith('.') ? prompt : prompt + '.',
+            cref,
+            sref
+        ];
+        const fullPrompt = promptParts.filter(Boolean).join(' ').replace(/\s+/g, ' ').trim();
         return this.requestImage(fullPrompt);
     }
 
     async generatePageImage(prompt: string, summary: string, crefUrls: string[] = [], srefUrls: string[] = []): Promise<{ url: string, prompt: string }> {
-        let cref = crefUrls.length ? `--cref ${crefUrls.join(' ')} --cw 0` : '';
-        let sref = srefUrls.length ? `--sref ${srefUrls.join(' ')}` : '';
-        const fullPrompt = `Children's book style - Book page illustration to generate image for: ${prompt}. Book Summary for context: ${summary}. ${cref} ${sref}`.trim();
+        const cref = crefUrls[0] ? `--cref ${crefUrls[0]} --cw 0` : '';
+        const sref = srefUrls[0] ? `--sref ${srefUrls[0]}` : '';
+        // Build the prompt robustly to ensure proper spacing before --cref/--sref
+        const promptParts = [
+            `Children's book style - Book page illustration to generate image for:`,
+            prompt.endsWith('.') ? prompt : prompt + '.',
+            cref,
+            sref
+        ];
+        const fullPrompt = promptParts.filter(Boolean).join(' ').replace(/\s+/g, ' ').trim();
         return this.requestImage(fullPrompt);
     }
 }
