@@ -82,9 +82,9 @@ export const BookSpread: Component<BookSpreadProps> = (props) => {
   // Watch for currentPage prop changes and sync PageFlip
   createEffect(() => {
     if (pageFlip && typeof props.currentPage === 'number') {
-      if (pageFlip.getCurrentPageIndex && pageFlip.getCurrentPageIndex() !== props.currentPage) {
-        pageFlip.turnToPage(props.currentPage);
-      }
+      const flipIndex = pageFlip.getCurrentPageIndex ? pageFlip.getCurrentPageIndex() : undefined;
+      console.log('BookSpread: currentPage prop', props.currentPage, 'PageFlip index', flipIndex);
+      pageFlip.turnToPage(props.currentPage);
     }
   });
 
