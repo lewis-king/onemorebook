@@ -1,7 +1,5 @@
 import { Book, CreateBookParams } from '../types/book';
-
-//const API_BASE_URL = 'http://localhost:3000'; // local
-const API_BASE_URL = 'http://localhost:3000/api';
+import { API_BASE_URL } from '../config';
 
 export const bookService = {
   async listBooks({ limit = 9, offset = 0, sortBy = 'stars', order = 'desc' } = {}): Promise<Book[]> {
