@@ -3,10 +3,10 @@ services:
     name: onemorebook-backend
     env: node
     plan: free
-    buildCommand: npm install && npm run build
-    startCommand: npm start
+    buildCommand: pnpm install && pnpm run build
+    startCommand: pnpm run start
     rootDir: .
     envVars:
-      - key: NODE_ENV
-        value: production
+      - key: LLM_MODEL
+        value: gpt-4.1
       # Add your other env vars here

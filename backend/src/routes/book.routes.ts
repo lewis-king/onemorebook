@@ -10,6 +10,6 @@ router.get('/books', bookController.listBooks);
 router.put('/books/:id/stars', bookController.updateBookStars);
 router.get('/user/books', bookController.getUserBooks);
 router.put('/books/:id', bookController.updateBook);
-router.delete('/books/:id', bookController.deleteBook);
+//router.delete('/books/:id', bookController.deleteBook);
 
 export default router;

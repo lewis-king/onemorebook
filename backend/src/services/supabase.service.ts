@@ -133,6 +133,8 @@ class SupabaseService {
     return data;
   }
 
+  // Commenting out deleteBook for now
+  /*
   async deleteBook(id: string): Promise<void> {
     const { error } = await this.client
       .from('books')
@@ -196,6 +198,7 @@ class SupabaseService {
       }
     }
   }
+  */
 }
 
 export default SupabaseService.getInstance();

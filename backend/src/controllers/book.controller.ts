@@ -221,6 +221,8 @@ export async function updateBook(req: Request, res: Response) {
   }
 }
 
+// Commenting out deleteBook for now
+/*
 export async function deleteBook(req: Request, res: Response) {
   const { id } = req.params;
   
@@ -244,3 +246,4 @@ export async function deleteBook(req: Request, res: Response) {
     res.status(500).json({ error: 'An unexpected error occurred' });
   }
 }
+*/
