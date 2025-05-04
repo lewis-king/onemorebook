@@ -20,6 +20,7 @@ export const BookSpread: Component<BookSpreadProps> = (props) => {
   let pageFlip: any;
 
   onMount(() => {
+    let resizeTimeout: any = null;
     if (bookElement) {
       pageFlip = new PageFlip(bookElement, {
         width: 700,
@@ -52,10 +53,14 @@ export const BookSpread: Component<BookSpreadProps> = (props) => {
         props.onPageChange(e.data);
       });
 
+      // Debounced resize/orientation handler
       const handleResize = () => {
-        if (pageFlip) {
-          pageFlip.updateFromState();
-        }
+        if (resizeTimeout) clearTimeout(resizeTimeout);
+        resizeTimeout = setTimeout(() => {
+          if (pageFlip) {
+            pageFlip.updateFromState();
+          }
+        }, 200); // 200ms debounce
       };
 
       window.addEventListener('resize', handleResize);
@@ -64,6 +69,7 @@ export const BookSpread: Component<BookSpreadProps> = (props) => {
       onCleanup(() => {
         window.removeEventListener('resize', handleResize);
         window.removeEventListener('orientationchange', handleResize);
+        if (resizeTimeout) clearTimeout(resizeTimeout);
       });
     }
   });
