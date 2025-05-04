@@ -6,7 +6,7 @@ export default defineConfig({
   plugins: [solid()],
   server: {
     proxy: {
-      '/api': 'http://localhost:5001' // Change 5001 to your backend port if different
+      '/api': 'http://localhost:3000'
     }
   }
 })

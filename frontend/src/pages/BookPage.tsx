@@ -12,6 +12,7 @@ export default function BookPage() {
     const [book, { refetch }] = createResource(() => validId ? params.id : undefined, bookService.getBook);
     const [currentPage, setCurrentPage] = createSignal(0);
     const [error, setError] = createSignal<string | null>(null);
+    const [pageFlipInstance, setPageFlipInstance] = createSignal<any>(null);
 
     // Helper to extract page content and images from new structure
     const getPages = () => {
@@ -44,6 +45,24 @@ export default function BookPage() {
         }
     };
 
+    // Helper for Next/Back with animation
+    const handlePrevious = () => {
+        const flip = pageFlipInstance();
+        if (flip && flip.flipPrev) {
+            flip.flipPrev();
+        } else if (currentPage() > 0) {
+            setCurrentPage(currentPage() - 1);
+        }
+    };
+    const handleNext = () => {
+        const flip = pageFlipInstance();
+        if (flip && flip.flipNext) {
+            flip.flipNext();
+        } else if (currentPage() < getPages().length - 1) {
+            setCurrentPage(currentPage() + 1);
+        }
+    };
+
     return (
         <div class="w-full max-w-[1600px] mx-auto px-4 lg:px-12 flex flex-col items-center justify-center">
             <Show when={error()}>
@@ -57,16 +76,8 @@ export default function BookPage() {
                 <PageControls
                     currentPage={currentPage()}
                     totalPages={getPages().length}
-                    onPrevious={() => {
-                        if (currentPage() > 0) {
-                            setCurrentPage(currentPage() - 1);
-                        }
-                    }}
-                    onNext={() => {
-                        if (currentPage() < getPages().length - 1) {
-                            setCurrentPage(currentPage() + 1);
-                        }
-                    }}
+                    onPrevious={handlePrevious}
+                    onNext={handleNext}
                 />
             </Show>
 
@@ -82,7 +93,7 @@ export default function BookPage() {
                     pages={getPages()}
                     coverImage={getCoverImage()}
                     pageImages={getPageImages()}
-                    onPageFlipInit={() => {}}
+                    onPageFlipInit={setPageFlipInstance}
                     onPageChange={setCurrentPage}
                     bookId={book()?.id ?? ''}
                     stars={book()?.stars || 0}
