@@ -12,8 +12,8 @@
     "dev:backend": "cd backend && pnpm run dev",
     "dev:frontend": "cd frontend && pnpm run dev",
     "dev": "concurrently \"pnpm run dev:backend\" \"pnpm run dev:frontend\"",
-    "build:backend": "cd backend && pnpm run build",
-    "build:frontend": "cd frontend && pnpm run build",
+    "build:backend": "cd backend && pnpm install && pnpm run build",
+    "build:frontend": "cd frontend && pnpm install && pnpm run build",
     "build": "pnpm run build:backend && pnpm run build:frontend"
   },
   "devDependencies": {
