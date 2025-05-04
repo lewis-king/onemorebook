@@ -7,7 +7,7 @@ export default {
   theme: {
     extend: {
       fontFamily: {
-        'comic': ['Comic Sans MS', 'cursive'],
+        'comic': ['"Comic Neue"', 'Comic Sans MS', 'cursive'],
         'rounded': ['Varela Round', 'sans-serif'],
       },
       colors: {
