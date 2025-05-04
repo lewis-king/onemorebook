@@ -87,6 +87,7 @@ export default function BookPage() {
                     bookId={book()?.id ?? ''}
                     stars={book()?.stars || 0}
                     onUpvote={handleUpvote}
+                    currentPage={currentPage()} // Pass currentPage prop
                 />
             </Show>
         </div>

@@ -1,4 +1,4 @@
-import { Component, onMount, onCleanup, For } from "solid-js";
+import { Component, onMount, onCleanup, For, createEffect } from "solid-js";
 // @ts-ignore
 import { PageFlip } from 'page-flip';
 import { TbStarFilled } from "solid-icons/tb";
@@ -13,6 +13,7 @@ interface BookSpreadProps {
   stars: number;
   onUpvote: (id: string, currentStars: number) => void;
   pageImages?: { url: string }[];
+  currentPage: number;
 }
 
 export const BookSpread: Component<BookSpreadProps> = (props) => {
@@ -76,6 +77,15 @@ export const BookSpread: Component<BookSpreadProps> = (props) => {
 
   onCleanup(() => {
     pageFlip?.destroy();
+  });
+
+  // Watch for currentPage prop changes and sync PageFlip
+  createEffect(() => {
+    if (pageFlip && typeof props.currentPage === 'number') {
+      if (pageFlip.getCurrentPageIndex && pageFlip.getCurrentPageIndex() !== props.currentPage) {
+        pageFlip.turnToPage(props.currentPage);
+      }
+    }
   });
 
   const getPageImage = (index: number) => {
