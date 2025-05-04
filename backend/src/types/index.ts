@@ -6,6 +6,7 @@ export interface BookPage {
   text: string;
   imagePrompt: string;
   imageUrl?: string;
+  charactersPresent?: string[]; // Main characters present on this page
 }
 
 // Book content interface

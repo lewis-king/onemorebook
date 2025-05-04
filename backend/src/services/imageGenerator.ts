@@ -23,7 +23,13 @@ interface MidjourneyTaskDetail {
 export class ImageGeneratorService {
     private ensurePromptParamsSpaced(prompt: string): string {
         // Inserts a space before any --param if missing
-        return prompt.replace(/([^\s])(--[\w-]+)/g, '$1 $2');
+        // Also trims accidental double commas or extra spaces that may confuse the API
+        let sanitized = prompt.replace(/([^\s])(--[\w-]+)/g, '$1 $2');
+        // Remove accidental double commas or misplaced punctuation
+        sanitized = sanitized.replace(/,+/g, ',').replace(/ ,/g, ',').replace(/\s{2,}/g, ' ');
+        // Ensure a space before every --param (even if at start)
+        sanitized = sanitized.replace(/(^|[^\s])(--[\w-]+)/g, (m, p1, p2) => (p1.trim() ? p1 + ' ' + p2 : p2));
+        return sanitized.trim();
     }
 
     private async requestImage(prompt: string, extraParams: Record<string, any> = {}): Promise<{ url: string, prompt: string }> {
@@ -111,7 +117,9 @@ export class ImageGeneratorService {
     }
 
     async generateStyleReference(prompt: string): Promise<{ url: string, prompt: string }> {
-        return this.requestImage(`Children's book style reference, this should not include characters but be style image that can be used throughout a book: ${prompt}`);
+        // If prompt contains a comma followed by --, ensure a space before --
+        let safePrompt = prompt.replace(/,\s*--/g, ' --');
+        return this.requestImage(`Children's book style reference, this should not include characters but be style image that can be used throughout a book: ${safePrompt}`);
     }
 
     async generateCoverImage(prompt: string, crefUrls: string[] = [], srefUrls: string[] = []): Promise<{ url: string, prompt: string }> {

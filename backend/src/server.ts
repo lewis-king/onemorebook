@@ -13,9 +13,23 @@ const port = process.env.PORT || 3000;
 
 // Middleware
 app.use(cors({
-  origin: [
-    'https://onemorebook.ai'
-  ],
+  origin: (origin, callback) => {
+    // Allow requests with no origin (like mobile apps or curl requests)
+    if (!origin) return callback(null, true);
+    const allowedOrigins = [
+      'https://onemorebook.ai',
+      'http://localhost:3000',
+      'http://127.0.0.1:3000',
+    ];
+    // Allow localhost in development, always allow production domain
+    if (
+      allowedOrigins.includes(origin) ||
+      (process.env.NODE_ENV !== 'production' && origin.startsWith('http://localhost'))
+    ) {
+      return callback(null, true);
+    }
+    return callback(new Error('Not allowed by CORS'));
+  },
   credentials: true, // if using cookies or authentication
 }));
 app.use(express.json());

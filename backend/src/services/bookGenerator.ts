@@ -52,8 +52,14 @@ class BookGeneratorService {
       ${request.numOfPages ? `Number of Pages: ${request.numOfPages}` : ''}
 
       Write a children's book that is appropriate for the specified age range.
+      The writing style should be lively and age-appropriate. For younger children, use simple words, repetition, and gentle humor. For older children, allow for more complex sentences and subtle humor. The tone should match the age range (e.g., gentle and soothing for ages 3-5, adventurous and imaginative for ages 6-8).
+      Each character should have a clear personality trait or quirk that is reflected in the story. Settings should be described vividly, and each page should introduce a new visual element or scene to keep the story visually engaging.
+      The story should have a gentle theme or lesson appropriate for the age range (e.g., friendship, courage, kindness), woven naturally into the narrative.
       The book should have at least 5 pages${request.numOfPages ? ` (target: ${request.numOfPages} pages)` : ' (ideally more so that the story can be more engaging)'}, where each page has a short paragraph of text (2-3 sentences).
       The story should be about what is described in the story prompt, should include the listed characters and be fun, engaging and unique.
+      For each page, in addition to the text and imagePrompt, include a list of the main characters present on that page (from the provided character list) as an array called charactersPresent. If a character does not appear on a page, do not include them in that page's charactersPresent array.
+      Each imagePrompt should be a detailed description for generating an illustration that matches the text on that page. Specify the illustration style (e.g., bright watercolor, playful cartoon), main colors, and the overall mood of the scene.
+      Ensure the story and illustrations reflect diversity and inclusion, showing characters of different backgrounds and abilities.
       Output should be formatted as valid JSON with the following structure:
       {{
         "title": "The Book Title",
@@ -63,12 +69,13 @@ class BookGeneratorService {
           {{
             "pageNumber": 1,
             "text": "The text content for page 1 - 2-3 sentences",
-            "imagePrompt": "A detailed image prompt for page 1"
+            "imagePrompt": "A detailed image prompt for page 1",
+            "charactersPresent": ["Character 1", "Character 2"]
           }}
           // ...and so on for all pages
         ]
       }}
-      Each imagePrompt should be a detailed description for generating an illustration that matches the text on that page.
+      Double-check that your output is valid JSON and matches the structure exactly, with no trailing commas or comments.
     `);
     const prompt = await bookPromptTemplate.format({
       ageRange: request.ageRange,
@@ -105,6 +112,7 @@ class BookGeneratorService {
           pageNumber: z.number(),
           text: z.string(),
           imagePrompt: z.string(),
+          charactersPresent: z.array(z.string()).optional(),
         })),
       });
       const validatedData = BookResponseSchema.parse(bookData);
@@ -131,28 +139,20 @@ class BookGeneratorService {
 
   // Step 2: Generate/upload images using the book ID, return BookContent with image URLs
   async generateAndAttachImages(bookId: string, bookContent: BookContent): Promise<BookContent> {
-    // 1. Generate character reference images from metadata.characters
+    // 1. Generate character reference image ONLY for the main character (index 0)
     const characterPrompts = bookContent.metadata.characters;
-    const characterRefs = await Promise.all(
-      characterPrompts.map(prompt => this.imageGenerator.generateCharacterReference(prompt))
-    );
-    const crefUrls = characterRefs.map(ref => ref.url);
+    const mainCharacterPrompt = characterPrompts[0];
+    const mainCharacterRef = await this.imageGenerator.generateCharacterReference(mainCharacterPrompt);
+    const crefUrls = [mainCharacterRef.url];
 
-    // Store character reference images
-    for (let i = 0; i < crefUrls.length; i++) {
-      await this.imageStorage.uploadImage(crefUrls[i], bookId, `character${i + 1}.jpeg`);
-    }
+    // Store main character reference image
+    await this.imageStorage.uploadImage(mainCharacterRef.url, bookId, `character1.jpeg`);
 
     // 2. Generate style reference image(s) from coverImagePrompt and/or bookSummary
-    // We'll use a single style reference for now, but could expand to more
     const stylePrompt = `${bookContent.metadata.coverImagePrompt}, ${bookContent.metadata.bookSummary}, storybook style, bright, engaging, appropriate for young readers`;
     const styleRef = await this.imageGenerator.generateStyleReference(stylePrompt);
     const srefUrls = [styleRef.url];
-
-    // Store style reference images
-    for (let i = 0; i < srefUrls.length; i++) {
-      await this.imageStorage.uploadImage(srefUrls[i], bookId, `style${i + 1}.jpeg`);
-    }
+    await this.imageStorage.uploadImage(styleRef.url, bookId, `style1.jpeg`);
 
     // Optionally store reference URLs in metadata
     (bookContent.metadata as any).characterReferenceUrls = crefUrls;
@@ -160,15 +160,31 @@ class BookGeneratorService {
 
     // 3. Generate and upload cover image using references
     if (bookContent.pages.length > 0) {
-      const coverPagePrompt = bookContent.metadata.coverImagePrompt;
+      // Compose cover prompt: include all main characters in prompt text, only main character as cref
+      const coverCharactersText = characterPrompts.length > 1
+        ? `featuring ${characterPrompts.join(', ')}`
+        : characterPrompts[0];
+      const coverPagePrompt = `${bookContent.metadata.coverImagePrompt}. ${coverCharactersText}`;
       const coverImageResult = await this.imageGenerator.generateCoverImage(coverPagePrompt, crefUrls, srefUrls);
       await this.imageStorage.uploadImage(coverImageResult.url, bookId, 'cover.jpg');
+
       // 4. Generate and upload each page image using references
       // Parallelize image generation and upload for all pages
-      const pageImageTasks = bookContent.pages.map((page, i) =>
-        this.imageGenerator.generatePageImage(page.imagePrompt, bookContent.metadata.bookSummary, crefUrls, srefUrls)
-          .then(imageResult => this.imageStorage.uploadImage(imageResult.url, bookId, `page${i+1}.jpg`))
-      );
+      const pageImageTasks = bookContent.pages.map((page, i) => {
+        // Use only the main characters actually present on this page
+        const presentCharacters = (page.charactersPresent && page.charactersPresent.length > 0)
+          ? page.charactersPresent
+          : [];
+        let pageCharactersText = presentCharacters.length > 1
+          ? `featuring ${presentCharacters.join(', ')}`
+          : (presentCharacters[0] || '');
+        // Combine the original page image prompt with explicit character list (if any)
+        const fullPagePrompt = pageCharactersText
+          ? `${page.imagePrompt}. ${pageCharactersText}`
+          : page.imagePrompt;
+        return this.imageGenerator.generatePageImage(fullPagePrompt, bookContent.metadata.bookSummary, crefUrls, srefUrls)
+          .then(imageResult => this.imageStorage.uploadImage(imageResult.url, bookId, `page${i+1}.jpg`));
+      });
       await Promise.all(pageImageTasks);
     }
     return {
