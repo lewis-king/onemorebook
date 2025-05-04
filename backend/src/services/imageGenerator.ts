@@ -22,9 +22,10 @@ interface MidjourneyTaskDetail {
 
 export class ImageGeneratorService {
     private ensurePromptParamsSpaced(prompt: string): string {
-        // Inserts a space before any --param if missing
-        // Also trims accidental double commas or extra spaces that may confuse the API
-        let sanitized = prompt.replace(/([^\s])(--[\w-]+)/g, '$1 $2');
+        // Inserts a space before any --param if missing, even after punctuation
+        let sanitized = prompt.replace(/([\w\d])(--[\w-]+)/g, '$1 $2');
+        // Insert a space after punctuation (.,!?) if directly before --param
+        sanitized = sanitized.replace(/([.,!?])(--[\w-]+)/g, '$1 $2');
         // Remove accidental double commas or misplaced punctuation
         sanitized = sanitized.replace(/,+/g, ',').replace(/ ,/g, ',').replace(/\s{2,}/g, ' ');
         // Ensure a space before every --param (even if at start)
@@ -36,6 +37,7 @@ export class ImageGeneratorService {
         try {
             // Ensure prompt params are spaced
             prompt = this.ensurePromptParamsSpaced(prompt);
+            console.log('[Midjourney FINAL PROMPT]', prompt); // <-- Log the exact prompt
             const body = JSON.stringify({
                 prompt,
                 skip_prompt_check: false,
