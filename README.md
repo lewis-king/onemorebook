@@ -16,7 +16,7 @@ A full-stack application for generating children's books using LLMs. This projec
 ## Project Structure
 
 * **`/backend`**: Supabase backend built with TypeScript
-* **`/fontend`**: SolidJS frontend application with TailwindCSS
+* **`/frontend`**: SolidJS frontend application with TailwindCSS
 
 ## Prerequisites
 
@@ -37,7 +37,7 @@ cd backend
 pnpm install
 
 # Install frontend dependencies
-cd ../fontend
+cd ../frontend
 pnpm install
 ```
 
@@ -51,7 +51,7 @@ cd backend
 pnpm run dev     # Runs on http://localhost:3000 by default
 
 # In a separate terminal window
-cd fontend
+cd frontend
 pnpm run dev     # Runs on http://localhost:5173 by default
 ```
 
@@ -63,7 +63,7 @@ cd backend
 pnpm run build
 
 # Build the frontend
-cd ../fontend
+cd ../frontend
 pnpm run build
 ```
 
@@ -115,7 +115,7 @@ pnpm run build
 The frontend can be deployed to any static hosting service:
 
 ```bash
-cd fontend
+cd frontend
 pnpm run build
 # Deploy the contents of the dist folder
 ```

@@ -5,15 +5,15 @@
   "private": true,
   "workspaces": [
     "backend",
-    "fontend"
+    "frontend"
   ],
   "scripts": {
-    "install:all": "pnpm install && cd backend && pnpm install && cd ../fontend && pnpm install",
+    "install:all": "pnpm install && cd backend && pnpm install && cd ../frontend && pnpm install",
     "dev:backend": "cd backend && pnpm run dev",
-    "dev:frontend": "cd fontend && pnpm run dev",
+    "dev:frontend": "cd frontend && pnpm run dev",
     "dev": "concurrently \"pnpm run dev:backend\" \"pnpm run dev:frontend\"",
     "build:backend": "cd backend && pnpm run build",
-    "build:frontend": "cd fontend && pnpm run build",
+    "build:frontend": "cd frontend && pnpm run build",
     "build": "pnpm run build:backend && pnpm run build:frontend"
   },
   "devDependencies": {
