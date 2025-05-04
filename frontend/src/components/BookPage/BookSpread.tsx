@@ -1,4 +1,5 @@
 import { Component, onMount, onCleanup, For } from "solid-js";
+// @ts-ignore
 import { PageFlip } from 'page-flip';
 import { TbStarFilled } from "solid-icons/tb";
 import "./PageFlip.css";
@@ -16,7 +17,7 @@ interface BookSpreadProps {
 
 export const BookSpread: Component<BookSpreadProps> = (props) => {
   let bookElement: HTMLDivElement | undefined;
-  let pageFlip: PageFlip | undefined;
+  let pageFlip: any;
 
   onMount(() => {
     if (bookElement) {
@@ -47,7 +48,7 @@ export const BookSpread: Component<BookSpreadProps> = (props) => {
 
       props.onPageFlipInit(pageFlip);
 
-      pageFlip.on('flip', (e) => {
+      pageFlip.on('flip', (e: any) => {
         props.onPageChange(e.data);
       });
 

@@ -5,16 +5,19 @@ export interface BookPage {
     imageUrl?: string;
 }
 
+export interface BookContentMetadata {
+    title: string;
+    ageRange: string;
+    createdAt: string;
+    characters: string[];
+    storyPrompt: string;
+    theme?: string;
+}
+
 export interface BookContent {
     id: string;
     pages: BookPage[];
-    metadata: {
-        title: string;
-        ageRange: string;
-        createdAt: string;
-        characters: string[];
-        storyPrompt: string;
-    };
+    metadata: BookContentMetadata;
 }
 
 export interface Book {

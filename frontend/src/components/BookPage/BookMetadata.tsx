@@ -8,6 +8,12 @@ interface BookMetadataProps {
 }
 
 const BookMetadata: Component<BookMetadataProps> = (props) => {
+    // Use content.metadata if available, fallback to props.book fields
+    const metadata = props.book.content?.metadata ?? {
+        ageRange: props.book.age_range,
+        theme: '',
+        characters: props.book.characters ?? [],
+    };
     return (
         <div class="mb-8 text-center">
             <Show when={props.book}>
@@ -16,10 +22,10 @@ const BookMetadata: Component<BookMetadataProps> = (props) => {
                 </h1>
 
                 <div class="flex justify-center gap-4 items-center mb-4">
-                    <Show when={props.book.metadata}>
-                        <span class="text-gray-600">Age Range: {props.book.metadata.ageRange}</span>
+                    <Show when={metadata}>
+                        <span class="text-gray-600">Age Range: {metadata.ageRange}</span>
                         <span>•</span>
-                        <span class="text-gray-600">Theme: {props.book.metadata.theme}</span>
+                        <span class="text-gray-600">Theme: {metadata.theme}</span>
                         <span>•</span>
                     </Show>
                     <StarRating
@@ -31,14 +37,14 @@ const BookMetadata: Component<BookMetadataProps> = (props) => {
                     />
                 </div>
 
-                <Show when={props.book.metadata?.characters}>
+                <Show when={metadata?.characters && metadata.characters.length > 0}>
                     <div class="text-sm text-gray-500">
-                        Characters: {props.book.metadata.characters.join(', ')}
+                        Characters: {metadata.characters.join(', ')}
                     </div>
                 </Show>
             </Show>
         </div>
     );
-};
+}
 
 export default BookMetadata;

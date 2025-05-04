@@ -1,5 +1,5 @@
 import { Router, Route } from "@solidjs/router";
-import Navbar from "./components/Navbar";
+// import Navbar from "./components/Navbar";
 import HomePage from "./pages/HomePage";
 import CreateStoryPage from "./pages/CreateStoryPage";
 import BookPage from "./pages/BookPage";

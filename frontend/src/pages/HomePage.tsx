@@ -1,7 +1,7 @@
 import { createSignal, onCleanup, onMount, For, Show, createMemo } from "solid-js";
 import { Book } from '../types/book';
 import BookCard from "../components/BookCard";
-import CategoryFilter from "../components/CategoryFilter";
+// import CategoryFilter from "../components/CategoryFilter";
 import WelcomeHero from "../components/WelcomeHero";
 import { bookService } from "../services/api";
 
@@ -15,7 +15,7 @@ function debounce(fn: (...args: any[]) => void, delay: number) {
 }
 
 export default function HomePage() {
-    const [selectedCategory, setSelectedCategory] = createSignal('all');
+    const [selectedCategory] = createSignal('all');
     const [books, setBooks] = createSignal<Book[]>([]);
     const [loading, setLoading] = createSignal(false);
     const [hasMore, setHasMore] = createSignal(true);
@@ -76,7 +76,7 @@ export default function HomePage() {
             {/* <CategoryFilter
                 selected={selectedCategory()}
                 onSelect={cat => {
-                    setSelectedCategory(cat);
+                    // setSelectedCategory(cat);
                     setOffset(0);
                     fetchBooks(true);
                 }}
