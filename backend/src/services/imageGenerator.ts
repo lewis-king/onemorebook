@@ -24,10 +24,18 @@ export class ImageGeneratorService {
 
     private async requestImage(prompt: string, extraParams: Record<string, any> = {}): Promise<{ url: string, prompt: string }> {
         try {
-            // Log the exact prompt (unmodified)
-            console.log('[Midjourney API RAW PROMPT]', prompt);
+            // Sanitize prompt: replace em dash (—), en dash (–), and double hyphens (--) with a single hyphen
+            let safePrompt = prompt
+                .replace(/\—/g, '-')
+                .replace(/[—–]/g, '-') // em dash or en dash to hyphen
+                .replace(/--+/g, '-')   // double or more hyphens to single hyphen
+                .replace(/\s+/g, ' ')  // normalize whitespace
+                .trim();
+
+            console.log('[Midjourney API SANITIZED PROMPT]', safePrompt);
+
             const body = JSON.stringify({
-                prompt,
+                prompt: safePrompt,
                 skip_prompt_check: false,
                 process_mode: 'fast',
                 aspect_ratio: '',
@@ -95,7 +103,7 @@ export class ImageGeneratorService {
             if (!imageUrl) {
                 throw new Error('No image URL returned from Midjourney after polling');
             }
-            return { url: imageUrl, prompt };
+            return { url: imageUrl, prompt: safePrompt };
         } catch (error) {
             console.error('Error generating image:', error);
             throw new Error('Failed to generate image');
@@ -117,32 +125,14 @@ export class ImageGeneratorService {
     async generateCoverImage(prompt: string, crefUrls: string[] = [], srefUrls: string[] = []): Promise<{ url: string, prompt: string }> {
         const cref = crefUrls[0] ? `--cref ${crefUrls[0]} --cw 0` : '';
         const sref = srefUrls[0] ? `--sref ${srefUrls[0]}` : '';
-        // Build the prompt robustly to ensure proper spacing before --cref/--sref
-        // Place cref and sref on new lines if they exist
-        const promptParts = [
-            `Children's book style - Book cover illustration to generate image for:`,
-            prompt.endsWith('.') ? prompt : prompt + '.',
-            cref ? `\n${cref}` : '',
-            sref ? `\n${sref}` : ''
-        ];
-        // Join with space, then replace multiple spaces, and trim
-        const fullPrompt = promptParts.filter(Boolean).join(' ').replace(/ +/g, ' ').replace(/\s*\\n/g, '\n').trim();
+        const fullPrompt = `${prompt} ${cref} ${sref}`.replace(/ +/g, ' ').trim();
         return this.requestImage(fullPrompt);
     }
 
     async generatePageImage(prompt: string, summary: string, crefUrls: string[] = [], srefUrls: string[] = []): Promise<{ url: string, prompt: string }> {
         const cref = crefUrls[0] ? `--cref ${crefUrls[0]} --cw 0` : '';
         const sref = srefUrls[0] ? `--sref ${srefUrls[0]}` : '';
-        // Build the prompt robustly to ensure proper spacing before --cref/--sref
-        // Place cref and sref on new lines if they exist
-        const promptParts = [
-            `Children's book style - Book page illustration to generate image for:`,
-            prompt.endsWith('.') ? prompt : prompt + '.',
-            cref ? `\n${cref}` : '',
-            sref ? `\n${sref}` : ''
-        ];
-        // Join with space, then replace multiple spaces, and trim
-        const fullPrompt = promptParts.filter(Boolean).join(' ').replace(/ +/g, ' ').replace(/\s*\\n/g, '\n').trim();
+        const fullPrompt = `${prompt} ${cref} ${sref}`.replace(/ +/g, ' ').trim();
         return this.requestImage(fullPrompt);
     }
 }
