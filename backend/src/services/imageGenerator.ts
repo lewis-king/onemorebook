@@ -118,13 +118,15 @@ export class ImageGeneratorService {
         const cref = crefUrls[0] ? `--cref ${crefUrls[0]} --cw 0` : '';
         const sref = srefUrls[0] ? `--sref ${srefUrls[0]}` : '';
         // Build the prompt robustly to ensure proper spacing before --cref/--sref
+        // Place cref and sref on new lines if they exist
         const promptParts = [
             `Children's book style - Book cover illustration to generate image for:`,
             prompt.endsWith('.') ? prompt : prompt + '.',
-            cref,
-            sref
+            cref ? `\n${cref}` : '',
+            sref ? `\n${sref}` : ''
         ];
-        const fullPrompt = promptParts.filter(Boolean).join(' ').replace(/\s+/g, ' ').trim();
+        // Join with space, then replace multiple spaces, and trim
+        const fullPrompt = promptParts.filter(Boolean).join(' ').replace(/ +/g, ' ').replace(/\s*\\n/g, '\n').trim();
         return this.requestImage(fullPrompt);
     }
 
@@ -132,13 +134,15 @@ export class ImageGeneratorService {
         const cref = crefUrls[0] ? `--cref ${crefUrls[0]} --cw 0` : '';
         const sref = srefUrls[0] ? `--sref ${srefUrls[0]}` : '';
         // Build the prompt robustly to ensure proper spacing before --cref/--sref
+        // Place cref and sref on new lines if they exist
         const promptParts = [
             `Children's book style - Book page illustration to generate image for:`,
             prompt.endsWith('.') ? prompt : prompt + '.',
-            cref,
-            sref
+            cref ? `\n${cref}` : '',
+            sref ? `\n${sref}` : ''
         ];
-        const fullPrompt = promptParts.filter(Boolean).join(' ').replace(/\s+/g, ' ').trim();
+        // Join with space, then replace multiple spaces, and trim
+        const fullPrompt = promptParts.filter(Boolean).join(' ').replace(/ +/g, ' ').replace(/\s*\\n/g, '\n').trim();
         return this.requestImage(fullPrompt);
     }
 }
