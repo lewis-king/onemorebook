@@ -54,7 +54,7 @@ export class ImageGeneratorService {
             });
             if (!response.ok) {
                 const errorText = await response.text();
-                throw new Error(`Midjourney API error: ${response.status} ${errorText}`);
+                throw new Error(`Midjourney API error: ${response.status} ${errorText} body: ${body}`);
             }
             const data = await response.json() as { task_id: string, success: boolean, status: string, message: string };
             if (!data.task_id) {
