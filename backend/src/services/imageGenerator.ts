@@ -34,13 +34,10 @@ export class ImageGeneratorService {
 
     private async requestImage(prompt: string, extraParams: Record<string, any> = {}): Promise<{ url: string, prompt: string }> {
         try {
-            // Sanitize prompt
-            let safePrompt = sanitizePrompt(prompt);
-
-            console.log('[Midjourney API SANITIZED PROMPT]', safePrompt);
+            console.log('[Midjourney API SANITIZED PROMPT]', prompt);
 
             const body = JSON.stringify({
-                prompt: safePrompt,
+                prompt: prompt,
                 skip_prompt_check: false,
                 process_mode: 'fast',
                 aspect_ratio: '',
@@ -108,7 +105,7 @@ export class ImageGeneratorService {
             if (!imageUrl) {
                 throw new Error('No image URL returned from Midjourney after polling');
             }
-            return { url: imageUrl, prompt: safePrompt };
+            return { url: imageUrl, prompt: prompt };
         } catch (error) {
             console.error('Error generating image:', error);
             throw new Error('Failed to generate image');
@@ -116,13 +113,13 @@ export class ImageGeneratorService {
     }
 
     async generateCharacterReference(prompt: string): Promise<{ url: string, prompt: string }> {
-        return this.requestImage(`Children's book character reference: ${prompt}`);
+        const cleanedPrompt = sanitizePrompt(prompt);
+        return this.requestImage(`Children's book character reference: ${cleanedPrompt}`);
     }
 
     async generateStyleReference(prompt: string): Promise<{ url: string, prompt: string }> {
-        // If prompt contains a comma followed by --, ensure a space before --
-        let safePrompt = prompt.replace(/,\s*--/g, ' --');
-        const finalPrompt = `Children's book style reference, this should not include characters but be style image that can be used throughout a book: ${safePrompt}`;
+        const cleanedPrompt = sanitizePrompt(prompt);
+        const finalPrompt = `Children's book style reference, this should not include characters but be style image that can be used throughout a book: ${cleanedPrompt}`;
         console.log('[generateStyleReference FINAL PROMPT]', finalPrompt);
         return this.requestImage(finalPrompt);
     }
