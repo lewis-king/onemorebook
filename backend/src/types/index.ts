@@ -15,8 +15,10 @@ export interface BookContent {
   pages: BookPage[];
   metadata: {
     title: string;
+    theme: string;
     bookSummary: string;
     coverImagePrompt: string;
+    styleReferencePrompt: string;
     ageRange: string;
     characters: string[];
     storyPrompt: string;

@@ -119,7 +119,7 @@ export class ImageGeneratorService {
 
     async generateStyleReference(prompt: string): Promise<{ url: string, prompt: string }> {
         const cleanedPrompt = sanitizePrompt(prompt);
-        const finalPrompt = `Children's book style reference, this should not include characters but be style image that can be used throughout a book: ${cleanedPrompt}`;
+        const finalPrompt = `Children's book style reference: ${cleanedPrompt}`;
         console.log('[generateStyleReference FINAL PROMPT]', finalPrompt);
         return this.requestImage(finalPrompt);
     }

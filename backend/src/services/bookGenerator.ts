@@ -64,12 +64,14 @@ class BookGeneratorService {
       Output should be formatted as valid JSON with the following structure:
       {{
         "title": "The Book Title",
+        "theme": "The theme of the book based on one of these categories: Animals, Adventure, Fantasy, Friendship, Mystery, Feelings, School Life, Space, Sci-Fi, Superheroes, Fairytales, Family, Dinosaurs, Nature, Holidays, Seasons, Monsters",
         "bookSummary": "A short summary of the book",
         "coverImagePrompt": "A detailed description for generating the book cover",
+        "styleReferencePrompt": "A detailed description for generating the book style - should not include characters but the overall style and mood of the book",
         "pages": [
           {{
             "pageNumber": 1,
-            "text": "The text content for page 1 - 2-3 sentences",
+            "text": "The text content for page 1 - 2+ sentences (based on age range)",
             "imagePrompt": "A detailed image prompt for page 1",
             "charactersPresent": ["Character 1", "Character 2"]
           }}
@@ -107,8 +109,10 @@ class BookGeneratorService {
       const bookData = JSON.parse(jsonString);
       const BookResponseSchema = z.object({
         title: z.string(),
+        theme: z.string(),
         bookSummary: z.string(),
         coverImagePrompt: z.string(),
+        styleReferencePrompt: z.string(),
         pages: z.array(z.object({
           pageNumber: z.number(),
           text: z.string(),
@@ -123,8 +127,10 @@ class BookGeneratorService {
         pages: validatedData.pages,
         metadata: {
           title: validatedData.title,
+          theme: validatedData.theme,
           bookSummary: validatedData.bookSummary,
           coverImagePrompt: validatedData.coverImagePrompt,
+          styleReferencePrompt: validatedData.styleReferencePrompt,
           ageRange: request.ageRange,
           characters: request.characters,
           storyPrompt: request.storyPrompt,
@@ -150,7 +156,7 @@ class BookGeneratorService {
     await this.imageStorage.uploadImage(mainCharacterRef.url, bookId, `character1.jpeg`);
 
     // 2. Generate style reference image(s) from coverImagePrompt and/or bookSummary
-    const stylePrompt = `${bookContent.metadata.coverImagePrompt}, ${bookContent.metadata.bookSummary}, storybook style, bright, engaging, appropriate for young readers`;
+    const stylePrompt = bookContent.metadata.styleReferencePrompt;
     const styleRef = await this.imageGenerator.generateStyleReference(stylePrompt);
     const srefUrls = [styleRef.url];
     await this.imageStorage.uploadImage(styleRef.url, bookId, `style1.jpeg`);

@@ -4,8 +4,10 @@ CREATE EXTENSION IF NOT EXISTS "uuid-ossp";
 CREATE TABLE books (
   id uuid PRIMARY KEY DEFAULT uuid_generate_v4(),
   title text NOT NULL,
+  theme text,
   book_summary text,
   cover_image_prompt text,
+  style_reference_prompt text,
   content jsonb, -- stores full BookContent including pages and image URLs
   age_range text NOT NULL,
   story_prompt text NOT NULL,
