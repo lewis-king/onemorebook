@@ -20,17 +20,22 @@ interface MidjourneyTaskDetail {
     };
 }
 
+// Utility function to sanitize prompts for image generation
+function sanitizePrompt(prompt: string): string {
+    return prompt
+        .replace(/\—/g, '-')
+        .replace(/[—–]/g, '-') // em dash or en dash to hyphen
+        .replace(/--+/g, '-')   // double or more hyphens to single hyphen
+        .replace(/\s+/g, ' ')  // normalize whitespace
+        .trim();
+}
+
 export class ImageGeneratorService {
 
     private async requestImage(prompt: string, extraParams: Record<string, any> = {}): Promise<{ url: string, prompt: string }> {
         try {
-            // Sanitize prompt: replace em dash (—), en dash (–), and double hyphens (--) with a single hyphen
-            let safePrompt = prompt
-                .replace(/\—/g, '-')
-                .replace(/[—–]/g, '-') // em dash or en dash to hyphen
-                .replace(/--+/g, '-')   // double or more hyphens to single hyphen
-                .replace(/\s+/g, ' ')  // normalize whitespace
-                .trim();
+            // Sanitize prompt
+            let safePrompt = sanitizePrompt(prompt);
 
             console.log('[Midjourney API SANITIZED PROMPT]', safePrompt);
 
@@ -123,16 +128,20 @@ export class ImageGeneratorService {
     }
 
     async generateCoverImage(prompt: string, crefUrls: string[] = [], srefUrls: string[] = []): Promise<{ url: string, prompt: string }> {
-        const cref = crefUrls[0] ? `--cref ${crefUrls[0]} --cw 0` : '';
+        // Sanitize prompt before using
+        const cleanedPrompt = sanitizePrompt(prompt);
+        const cref = crefUrls[0] ? `--cref ${crefUrls[0]} --cw 100` : '';
         const sref = srefUrls[0] ? `--sref ${srefUrls[0]}` : '';
-        const fullPrompt = `${prompt} ${cref} ${sref}`.replace(/ +/g, ' ').trim();
+        const fullPrompt = `${cleanedPrompt} ${cref} ${sref}`.replace(/ +/g, ' ').trim();
         return this.requestImage(fullPrompt);
     }
 
     async generatePageImage(prompt: string, summary: string, crefUrls: string[] = [], srefUrls: string[] = []): Promise<{ url: string, prompt: string }> {
-        const cref = crefUrls[0] ? `--cref ${crefUrls[0]} --cw 0` : '';
+        // Sanitize prompt before using
+        const cleanedPrompt = sanitizePrompt(prompt);
+        const cref = crefUrls[0] ? `--cref ${crefUrls[0]} --cw 100` : '';
         const sref = srefUrls[0] ? `--sref ${srefUrls[0]}` : '';
-        const fullPrompt = `${prompt} ${cref} ${sref}`.replace(/ +/g, ' ').trim();
+        const fullPrompt = `${cleanedPrompt} ${cref} ${sref}`.replace(/ +/g, ' ').trim();
         return this.requestImage(fullPrompt);
     }
 }
