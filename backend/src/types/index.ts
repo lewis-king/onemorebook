@@ -7,6 +7,7 @@ export interface BookPage {
   imagePrompt: string;
   imageUrl?: string;
   charactersPresent?: string[]; // Main characters present on this page
+  isMainCharacterPresent?: boolean; // If the main character is present on this page
 }
 
 // Book content interface
@@ -17,6 +18,7 @@ export interface BookContent {
     title: string;
     theme: string;
     bookSummary: string;
+    mainCharacterDescriptivePrompt: string;
     coverImagePrompt: string;
     styleReferencePrompt: string;
     ageRange: string;

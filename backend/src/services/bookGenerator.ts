@@ -66,6 +66,8 @@ class BookGeneratorService {
         "title": "The Book Title",
         "theme": "The theme of the book based on one of these categories: Animals, Adventure, Fantasy, Friendship, Mystery, Feelings, School Life, Space, Sci-Fi, Superheroes, Fairytales, Family, Dinosaurs, Nature, Holidays, Seasons, Monsters",
         "bookSummary": "A short summary of the book",
+        "characters": ["Main Character", "Character 2", "Character 3"],
+        "mainCharacterDescriptivePrompt": "Main Character - [descriptive adjective phrase]",
         "coverImagePrompt": "A detailed description for generating the book cover",
         "styleReferencePrompt": "A detailed description for generating the book style - should not include characters but the overall style and mood of the book",
         "pages": [
@@ -74,6 +76,7 @@ class BookGeneratorService {
             "text": "The text content for page 1 - 2+ sentences (based on age range)",
             "imagePrompt": "A detailed image prompt for page 1",
             "charactersPresent": ["Character 1", "Character 2"]
+            "isMainCharacterPresent": true - if the main character is referenced in the text, false if not,
           }}
           // ...and so on for all pages
         ]
@@ -111,6 +114,8 @@ class BookGeneratorService {
         title: z.string(),
         theme: z.string(),
         bookSummary: z.string(),
+        characters: z.array(z.string()),
+        mainCharacterDescriptivePrompt: z.string(),
         coverImagePrompt: z.string(),
         styleReferencePrompt: z.string(),
         pages: z.array(z.object({
@@ -118,6 +123,7 @@ class BookGeneratorService {
           text: z.string(),
           imagePrompt: z.string(),
           charactersPresent: z.array(z.string()).optional(),
+          isMainCharacterPresent: z.boolean().optional(),
         })),
       });
       const validatedData = BookResponseSchema.parse(bookData);
@@ -129,10 +135,11 @@ class BookGeneratorService {
           title: validatedData.title,
           theme: validatedData.theme,
           bookSummary: validatedData.bookSummary,
+          mainCharacterDescriptivePrompt: validatedData.mainCharacterDescriptivePrompt,
+          characters: validatedData.characters,
           coverImagePrompt: validatedData.coverImagePrompt,
           styleReferencePrompt: validatedData.styleReferencePrompt,
           ageRange: request.ageRange,
-          characters: request.characters,
           storyPrompt: request.storyPrompt,
           createdAt: new Date().toISOString(),
         }
@@ -147,8 +154,7 @@ class BookGeneratorService {
   // Step 2: Generate/upload images using the book ID, return BookContent with image URLs
   async generateAndAttachImages(bookId: string, bookContent: BookContent): Promise<BookContent> {
     // 1. Generate character reference image ONLY for the main character (index 0)
-    const characterPrompts = bookContent.metadata.characters;
-    const mainCharacterPrompt = characterPrompts[0];
+    const mainCharacterPrompt = bookContent.metadata.mainCharacterDescriptivePrompt;
     const mainCharacterRef = await this.imageGenerator.generateCharacterReference(mainCharacterPrompt);
     const crefUrls = [mainCharacterRef.url];
 
@@ -180,7 +186,7 @@ class BookGeneratorService {
       const mainCharacterName = bookContent.metadata.characters[0];
       const pageImageTasks = bookContent.pages.map(async (page, i) => {
         // Only pass crefUrl if the main character is referenced in the imagePrompt
-        const crefUrlsToPass = page.imagePrompt.includes(mainCharacterName) ? crefUrls : [];
+        const crefUrlsToPass = page.isMainCharacterPresent ? crefUrls : [];
         return this.imageGenerator.generatePageImage(
           page.imagePrompt,
           bookContent.metadata.bookSummary,

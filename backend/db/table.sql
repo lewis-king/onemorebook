@@ -8,6 +8,7 @@ CREATE TABLE books (
   book_summary text,
   cover_image_prompt text,
   style_reference_prompt text,
+  main_character_descriptive_prompt text NOT NULL,
   content jsonb, -- stores full BookContent including pages and image URLs
   age_range text NOT NULL,
   story_prompt text NOT NULL,
