@@ -32,6 +32,7 @@ export interface BookContent {
 export interface Book {
   id: string;
   title: string;
+  theme?: string;
   book_summary?: string;
   cover_image_prompt?: string;
   content: BookContent;

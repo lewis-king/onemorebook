@@ -136,7 +136,7 @@ export class ImageGeneratorService {
     async generatePageImage(prompt: string, summary: string, crefUrls: string[] = [], srefUrls: string[] = []): Promise<{ url: string, prompt: string }> {
         // Sanitize prompt before using
         const cleanedPrompt = sanitizePrompt(prompt);
-        const cref = crefUrls[0] ? `--cref ${crefUrls[0]} --cw 100` : '';
+        const cref = crefUrls[0] ? `--cref ${crefUrls[0]} --cw 80` : '';
         const sref = srefUrls[0] ? `--sref ${srefUrls[0]}` : '';
         const fullPrompt = `${cleanedPrompt} ${cref} ${sref}`.replace(/ +/g, ' ').trim();
         return this.requestImage(fullPrompt);

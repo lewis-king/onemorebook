@@ -45,6 +45,7 @@ export async function generateBook(req: Request, res: Response) {
       insertedBook = await supabaseService.createBook({
         title: bookContent.metadata.title || 'Untitled',
         book_summary: bookContent.metadata.bookSummary,
+        theme: bookContent.metadata.theme,        
         cover_image_prompt: bookContent.metadata.coverImagePrompt,
         age_range: parsedData.ageRange,
         characters: parsedData.characters,
