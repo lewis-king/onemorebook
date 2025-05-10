@@ -20,8 +20,8 @@ class BookGeneratorService {
     
     this.openai = new ChatOpenAI({
       apiKey,
-      modelName: 'gpt-4.1',
-      temperature: 0.9,
+      modelName: process.env.LLM_MODEL || 'o3-mini',
+      // temperature: 0.9,
     });
     this.imageGenerator = new ImageGeneratorService();
     this.imageStorage = new ImageStorageService();
