@@ -270,9 +270,9 @@ export default function CreateStoryPage() {
                           style={{ width: `${autofillProgress()}%` }}
                         ></div>
                       </div>
-                      <span class="font-comic text-blue-100 text-base animate-pulse">Letting AI Choose... ({Math.floor(autofillProgress())}%)</span>
+                      <span class="font-comic text-blue-100 text-base animate-pulse">Not much longer now... ({Math.floor(autofillProgress())}%)</span>
                     </>
-                  ) : 'Let AI Choose For Me'}
+                  ) : 'Let the magic begin...'}
                 </button>
                 {autofillError() && <span class="text-red-600 text-sm mt-1">{autofillError()}</span>}
                 <span class="text-xs text-gray-500">(Only Age Range required. AI will do the rest!)</span>
