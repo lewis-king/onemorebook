@@ -142,6 +142,7 @@ export async function listBooks(req: Request, res: Response) {
       book_summary: book.book_summary,
       cover_image_prompt: book.cover_image_prompt,
       content: book.content,
+      theme: book.content?.metadata?.theme,
       age_range: book.content?.metadata?.ageRange || book.age_range,
       story_prompt: book.content?.metadata?.storyPrompt || book.story_prompt,
       characters: book.content?.metadata?.characters || book.characters,

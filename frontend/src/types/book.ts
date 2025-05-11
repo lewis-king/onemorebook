@@ -27,6 +27,7 @@ export interface Book {
     cover_image_prompt: string;
     content: BookContent;
     age_range: string;
+    theme?: string;
     story_prompt: string;
     characters: string[];
     created_at: string;

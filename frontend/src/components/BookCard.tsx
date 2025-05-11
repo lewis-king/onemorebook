@@ -42,9 +42,11 @@ const BookCard: Component<BookCardProps> = (props) => {
                        group-hover:text-kiddy-secondary transition-colors">
                             {props.title}
                         </h3>
-                        <p class="text-gray-600 font-rounded">
-                            Characters: {props.characters?.join(', ')}
-                        </p>
+                        {props.theme && (
+                            <p class="text-gray-600 font-rounded">
+                                Theme: {props.theme}
+                            </p>
+                        )}
                         <p class="text-sm text-gray-500 mt-2">
                             Age Range: {props.age_range}
                         </p>

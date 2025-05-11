@@ -57,9 +57,10 @@ export default function HomePage() {
 
     // Optimized upvote: update local state only
     const handleUpvote = async (id: string, currentStars: number) => {
-        await bookService.updateStars(id, currentStars);
-        setBooks(prev => prev.map(book => book.id === id ? { ...book, stars: currentStars } : book));
+        const updated = await bookService.updateStars(id, currentStars);
+        setBooks(prev => prev.map(book => book.id === id ? { ...book, stars: updated.stars } : book));
     };
+
 
     // Memoized filteredBooks
     const filteredBooks = createMemo(() => {
