@@ -1,4 +1,4 @@
-import { createResource, createSignal, Show } from "solid-js";
+import { createResource, createSignal, Show, createEffect } from "solid-js";
 import { useParams } from "@solidjs/router";
 import { bookService } from "../services/api";
 import { BookSpread } from "../components/BookPage/BookSpread";
@@ -9,10 +9,18 @@ export default function BookPage() {
     const params = useParams();
     // Guard: only fetch if params.id is defined and not 'undefined'
     const validId = params.id && params.id !== 'undefined';
-    const [book, { refetch }] = createResource(() => validId ? params.id : undefined, bookService.getBook);
+    const [book] = createResource(() => validId ? params.id : undefined, bookService.getBook);
     const [currentPage, setCurrentPage] = createSignal(0);
     const [error, setError] = createSignal<string | null>(null);
     const [pageFlipInstance, setPageFlipInstance] = createSignal<any>(null);
+    const [stars, setStars] = createSignal<number>(0);
+
+    // Sync stars signal with book data when book loads/changes
+    createEffect(() => {
+        if (book() && typeof book().stars === 'number') {
+            setStars(book().stars);
+        }
+    });
 
     // Helper to extract page content and images from new structure
     const getPages = () => {
@@ -37,13 +45,14 @@ export default function BookPage() {
 
     const handleUpvote = async (id: string, currentStars: number) => {
         try {
-            await bookService.updateStars(id, currentStars);
-            refetch();
+            const updated = await bookService.updateStars(id, currentStars);
+            setStars(updated.stars);
         } catch (e) {
             console.error('Error updating stars:', e);
             setError(e instanceof Error ? e.message : 'Failed to update stars');
         }
     };
+
 
     // Helper for Next/Back with animation
     const handlePrevious = () => {
@@ -96,7 +105,7 @@ export default function BookPage() {
                     onPageFlipInit={setPageFlipInstance}
                     onPageChange={setCurrentPage}
                     bookId={book()?.id ?? ''}
-                    stars={book()?.stars || 0}
+                    stars={stars()}
                     onUpvote={handleUpvote}
                     currentPage={currentPage()} // Pass currentPage prop
                 />
