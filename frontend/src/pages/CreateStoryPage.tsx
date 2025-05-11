@@ -153,8 +153,8 @@ export default function CreateStoryPage() {
             onClick={() => handleModeChange('ai')}
             aria-pressed={creationMode() === 'ai'}
           >
-            <span class="text-2xl mr-2">🤖✨</span> Let AI surprise me!
-            <div class="text-xs mt-1 text-gray-500">Just pick age, AI does the rest</div>
+            <span class="text-2xl mr-2">🤖✨</span> Surprise me!
+            <div class="text-xs mt-1 text-gray-500">What age is it for? We'll create the magic!</div>
           </button>
         </div>
         <form onSubmit={handleSubmit} class="space-y-8 bg-gradient-to-br from-yellow-100 via-pink-100 to-blue-100 p-8 rounded-3xl shadow-2xl border-4 border-kiddy-primary/10">
@@ -259,7 +259,7 @@ export default function CreateStoryPage() {
                   class={`flex items-center gap-2 px-6 py-3 rounded-full font-comic text-lg shadow-lg transition-transform duration-300 bg-gradient-to-r from-blue-400 to-pink-400 text-white hover:scale-105 focus:ring-4 focus:ring-blue-200 ${autofillLoading() ? 'opacity-60 cursor-not-allowed' : ''}`}
                   onClick={handleAIAutofill}
                   disabled={autofillLoading()}
-                  title="Let the AI pick the story idea and characters for you!"
+                  title="We'll pick the story idea and characters for you!"
                 >
                   <span class="text-2xl">🤖✨</span>
                   {autofillLoading() ? (

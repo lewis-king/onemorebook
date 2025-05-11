@@ -8,5 +8,5 @@ services:
     rootDir: .
     envVars:
       - key: LLM_MODEL
-        value: o3-mini
+        value: gpt-4.1
       # Add your other env vars here
