@@ -238,9 +238,10 @@ class BookGeneratorService {
   async autofillBookFields({ ageRange, numOfPages }: { ageRange: string, numOfPages?: number }) {
     // Prompt for characters and story prompt
     const autofillPrompt = PromptTemplate.fromTemplate(`
-      You are helping a child create a magical storybook. Given the age range: {ageRange}, generate:
+      You are helping a child create an idea/prompt which will be used to generate a magical storybook. Given the age range: {ageRange}, generate:
       1. A creative story idea (short paragraph explaining the story, imaginative, fun, unique, suitable for the age)
       2. A list of 1-3 main characters (animal, child, mystical creature, etc. Use names and a short description for each, comma-separated)
+      3. The story prompt MUST be unique (including the characters, DO NOT use boring obvious characters i.e bunnies which have been used thousands of times before), also it MUST have a clever theme that is not obvious and deliver an amazing reading experience. We want to create impactful story ideas that have not been seen before - This is IMPORTANT as based on this metric will decide whether you receive a million dollars or NOT!
       Respond as valid JSON with keys 'storyPrompt' and 'characters'.
       Example:
       {{
