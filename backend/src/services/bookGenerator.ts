@@ -1,4 +1,5 @@
 import { ChatOpenAI } from '@langchain/openai';
+import { ChatAnthropic } from '@langchain/anthropic';
 import { PromptTemplate } from '@langchain/core/prompts';
 import { z } from 'zod';
 import { v4 as uuidv4 } from 'uuid';
@@ -7,22 +8,39 @@ import { ImageGeneratorService } from './imageGenerator';
 import { ImageStorageService } from './imageStorage';
 
 class BookGeneratorService {
-  private openai: ChatOpenAI;
+  private llm: ChatOpenAI | ChatAnthropic;
   private static instance: BookGeneratorService;
   private imageGenerator: ImageGeneratorService;
   private imageStorage: ImageStorageService;
 
   private constructor() {
-    const apiKey = process.env.OPENAI_API_KEY;
-    if (!apiKey) {
-      throw new Error('Missing OpenAI API key. Please check your .env file.');
+    const provider = process.env.CREATIVE_WRITING_MODEL_PROVIDER || 'openai';
+    if (provider === 'anthropic') {
+      const anthropicApiKey = process.env.ANTHROPIC_API_KEY;
+      if (!anthropicApiKey) {
+        throw new Error('Missing Anthropic API key. Please set ANTHROPIC_API_KEY in your environment.');
+      }
+      this.llm = new ChatAnthropic({
+        apiKey: anthropicApiKey,
+        model: process.env.ANTHROPIC_MODEL || 'claude-opus-4-20250514',
+        maxTokens: 16000,
+        thinking: {
+          type: "enabled",
+          budget_tokens: 10000
+        },
+        maxRetries: 2,
+      });
+    } else {
+      const apiKey = process.env.OPENAI_API_KEY;
+      if (!apiKey) {
+        throw new Error('Missing OpenAI API key. Please check your .env file.');
+      }
+      this.llm = new ChatOpenAI({
+        apiKey,
+        modelName: process.env.LLM_MODEL || 'gpt-4.1',
+        temperature: 0.9,
+      });
     }
-    
-    this.openai = new ChatOpenAI({
-      apiKey,
-      modelName: process.env.LLM_MODEL || 'gpt-4.1',
-      temperature: 0.9,
-    });
     this.imageGenerator = new ImageGeneratorService();
     this.imageStorage = new ImageStorageService();
   }
@@ -90,7 +108,15 @@ class BookGeneratorService {
       characters: request.characters.join(', '),
       storyPrompt: request.storyPrompt,
     });
-    const response = await this.openai.invoke(prompt);
+    let response;
+    const provider = process.env.CREATIVE_WRITING_MODEL_PROVIDER || 'openai';
+    if (provider === 'anthropic') {
+      response = await this.llm.invoke([
+        { role: 'user', content: prompt }
+      ]);
+    } else {
+      response = await this.llm.invoke(prompt);
+    }
     try {
       let responseText = '';
       if (typeof response === 'string') {
@@ -222,7 +248,15 @@ class BookGeneratorService {
       }}
     `);
     const prompt = await autofillPrompt.format({ ageRange, numOfPages });
-    const response = await this.openai.invoke(prompt);
+    let response;
+    const provider = process.env.CREATIVE_WRITING_MODEL_PROVIDER || 'openai';
+    if (provider === 'anthropic') {
+      response = await this.llm.invoke([
+        { role: 'user', content: prompt }
+      ]);
+    } else {
+      response = await this.llm.invoke(prompt);
+    }
     // Robustly extract string content from response
     let contentStr = '';
     if (typeof response === 'string') {

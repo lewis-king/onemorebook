@@ -10,7 +10,8 @@
     "dev": "nodemon --watch 'src/**/*.ts' --exec 'ts-node' src/server.ts"
   },
   "dependencies": {
-    "@langchain/core": "^0.3.45",
+    "@langchain/anthropic": "^0.3.21",
+    "@langchain/core": "^0.3.57",
     "@langchain/openai": "^0.5.5",
     "@supabase/supabase-js": "^2.38.0",
     "cors": "^2.8.5",
