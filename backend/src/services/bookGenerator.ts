@@ -24,6 +24,7 @@ class BookGeneratorService {
         apiKey: anthropicApiKey,
         model: process.env.ANTHROPIC_MODEL || 'claude-opus-4-20250514',
         maxTokens: 16000,
+        temperature: 1.0,
         thinking: {
           type: "enabled",
           budget_tokens: 10000
