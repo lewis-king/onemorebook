@@ -4,6 +4,11 @@ import { PageFlip } from 'page-flip';
 import { TbStarFilled } from "solid-icons/tb";
 import "./PageFlip.css";
 
+interface PageImage {
+  url: string;
+  fallbackUrl?: string;
+}
+
 interface BookSpreadProps {
   pages: string[];
   coverImage?: string;
@@ -12,7 +17,7 @@ interface BookSpreadProps {
   bookId: string;
   stars: number;
   onUpvote: (id: string, currentStars: number) => void;
-  pageImages?: { url: string }[];
+  pageImages?: PageImage[];
   currentPage: number;
 }
 
@@ -88,13 +93,20 @@ export const BookSpread: Component<BookSpreadProps> = (props) => {
     }
   });
 
-  const getPageImage = (index: number) => {
+  const getPageImage = (index: number): PageImage | undefined => {
     // Adjust index to account for cover page
     const imageIndex = index;
     if (imageIndex < 0 || !props.pageImages || imageIndex >= props.pageImages.length) {
       return undefined;
     }
-    return props.pageImages[imageIndex].url;
+    return props.pageImages[imageIndex];
+  };
+
+  const handleImageError = (e: Event, fallbackUrl?: string) => {
+    const img = e.target as HTMLImageElement;
+    if (fallbackUrl && img.src !== fallbackUrl) {
+      img.src = fallbackUrl;
+    }
   };
 
   return (
@@ -144,9 +156,10 @@ export const BookSpread: Component<BookSpreadProps> = (props) => {
                                 <>
                                   <div class="page-image">
                                     <img
-                                        src={pageImage}
+                                        src={pageImage.url}
                                         alt={`Story illustration for page ${index()}`}
                                         class="w-full h-80 md:h-[28rem] lg:h-[36rem] xl:h-[44rem] object-cover rounded-lg shadow-lg"
+                                        onError={(e) => handleImageError(e, pageImage.fallbackUrl)}
                                     />
                                   </div>
                                   <div class="flex-grow" />

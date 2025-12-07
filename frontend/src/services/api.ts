@@ -1,4 +1,4 @@
-import { Book, CreateBookParams } from '../types/book';
+import { Book, CreateBookParams, UploadStoryParams, UpdateStoryParams } from '../types/book';
 import { API_BASE_URL } from '../config';
 
 export const bookService = {
@@ -57,6 +57,36 @@ export const bookService = {
         stars: currentStars + 1
       }),
     });
+    return response.json();
+  },
+
+  async uploadStory(params: UploadStoryParams): Promise<{ bookId: string; book: Book }> {
+    const response = await fetch(`${API_BASE_URL}/books/upload`, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify(params),
+    });
+    if (!response.ok) {
+      const error = await response.json();
+      throw new Error(error.error || 'Upload failed');
+    }
+    return response.json();
+  },
+
+  async updateStory(bookId: string, params: UpdateStoryParams): Promise<{ bookId: string; book: Book }> {
+    const response = await fetch(`${API_BASE_URL}/books/${bookId}/upload`, {
+      method: 'PUT',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify(params),
+    });
+    if (!response.ok) {
+      const error = await response.json();
+      throw new Error(error.error || 'Update failed');
+    }
     return response.json();
   },
 };

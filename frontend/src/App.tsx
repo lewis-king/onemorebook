@@ -3,6 +3,7 @@ import { Router, Route } from "@solidjs/router";
 import HomePage from "./pages/HomePage";
 import CreateStoryPage from "./pages/CreateStoryPage";
 import BookPage from "./pages/BookPage";
+import UploadStoryPage from "./pages/UploadStoryPage";
 
 function App() {
   return (
@@ -15,6 +16,8 @@ function App() {
               <Route path="/" component={HomePage} />
               <Route path="/create" component={CreateStoryPage} />
               <Route path="/book/:id" component={BookPage} />
+              <Route path="/book/upload" component={UploadStoryPage} />
+              <Route path="/book/:id/upload" component={UploadStoryPage} />
           
     </Router>
             </main>

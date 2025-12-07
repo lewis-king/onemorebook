@@ -69,4 +69,38 @@ export class ImageStorageService {
             throw error;
         }
     }
+
+    async uploadImageFromBase64(base64Data: string, bookId: string, filename: string): Promise<string> {
+        try {
+            const imageBuffer = Buffer.from(base64Data, 'base64');
+
+            const filePath = `${bookId}/${filename}`;
+            const bucketName = config.supabase.storageBooksBucket;
+            console.log('Uploading base64 image to Supabase:', bucketName, filePath);
+
+            const { data, error } = await this.client
+                .storage
+                .from(bucketName)
+                .upload(filePath, imageBuffer, {
+                    contentType: 'image/png',
+                    upsert: true
+                });
+
+            if (error) {
+                console.error('Error uploading base64 image to Supabase:', error);
+                throw error;
+            }
+
+            // Get the public URL for the uploaded image
+            const { data: urlData } = this.client
+                .storage
+                .from(bucketName)
+                .getPublicUrl(filePath);
+
+            return urlData.publicUrl;
+        } catch (error) {
+            console.error('Error uploading base64 image:', error);
+            throw error;
+        }
+    }
 }

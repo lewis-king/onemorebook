@@ -41,3 +41,55 @@ export interface CreateBookParams {
     ageRange: string;
     numOfPages?: number;
 }
+
+export interface UploadStoryPage {
+    text: string;
+    pageNumber: number;
+    imagePrompt: string;
+    charactersPresent?: string[];
+    isMainCharacterPresent?: boolean;
+}
+
+export interface UploadStoryMetadata {
+    title: string;
+    theme: string;
+    bookSummary: string;
+    mainCharacterDescriptivePrompt: string;
+    coverImagePrompt: string;
+    styleReferencePrompt: string;
+    ageRange: string;
+    characters: string[];
+    storyPrompt: string;
+}
+
+export interface UploadStoryParams {
+    story: {
+        pages: UploadStoryPage[];
+        metadata: UploadStoryMetadata;
+    };
+    coverImageBase64: string;
+    pageImages: {
+        pageNumber: number;
+        imageBase64: string;
+    }[];
+    characterImages?: {
+        name: string;
+        imageBase64: string;
+    }[];
+}
+
+export interface UpdateStoryParams {
+    story: {
+        pages: UploadStoryPage[];
+        metadata: UploadStoryMetadata;
+    };
+    coverImageBase64?: string;
+    pageImages?: {
+        pageNumber: number;
+        imageBase64: string;
+    }[];
+    characterImages?: {
+        name: string;
+        imageBase64: string;
+    }[];
+}

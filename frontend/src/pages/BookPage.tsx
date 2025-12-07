@@ -34,9 +34,13 @@ export default function BookPage() {
     const getPageImages = () => {
         const b = book();
         if (!b || !b.content || !Array.isArray(b.content.pages)) return [];
+        const baseUrl = `https://kwhyhflyyjhtbvbmtdmt.supabase.co/storage/v1/object/public/book-imgs/${b.id}`;
         // First image is the cover, then the rest are story pages. No placeholder at the end!
         return [{ url: getCoverImage() }]
-            .concat(b.content.pages.map((_, i) => ({ url:  `https://kwhyhflyyjhtbvbmtdmt.supabase.co/storage/v1/object/public/book-imgs/${b.id}/page${i+1}.jpg` })));
+            .concat(b.content.pages.map((page, i) => ({
+                url: page.imageUrl || `${baseUrl}/page_${i+1}.png`,
+                fallbackUrl: `${baseUrl}/page${i+1}.jpg`
+            })));
     };
     const getCoverImage = () => {
         const b = book();

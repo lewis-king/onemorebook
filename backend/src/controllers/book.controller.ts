@@ -1,7 +1,8 @@
 import { Request, Response } from 'express';
-import { GenerateBookSchema } from '../types';
+import { GenerateBookSchema, UploadStorySchema, UpdateStorySchema, BookContent } from '../types';
 import supabaseService from '../services/supabase.service';
 import bookGeneratorService from '../services/bookGenerator';
+import { ImageStorageService } from '../services/imageStorage';
 
 export async function generateBook(req: Request, res: Response) {
   try {
@@ -227,21 +228,21 @@ export async function updateBook(req: Request, res: Response) {
 /*
 export async function deleteBook(req: Request, res: Response) {
   const { id } = req.params;
-  
+
   try {
     // Get the existing book to make sure it exists
     const existingBook = await supabaseService.getBookById(id);
-    
+
     if (!existingBook) {
       return res.status(404).json({ error: 'Book not found' });
     }
 
     // Delete book images
     await supabaseService.deleteBookImages(id);
-    
+
     // Delete the book
     await supabaseService.deleteBook(id);
-    
+
     res.status(204).send();
   } catch (error) {
     console.error('Error deleting book:', error);
@@ -249,3 +250,242 @@ export async function deleteBook(req: Request, res: Response) {
   }
 }
 */
+
+export async function uploadStory(req: Request, res: Response) {
+  try {
+    // Validate request body
+    const validatedData = UploadStorySchema.parse(req.body);
+    const { story, coverImageBase64, pageImages, characterImages } = validatedData;
+
+    // Step 1: Create initial book record to get the ID
+    const bookContent: BookContent = {
+      id: '', // Will be set after DB insert
+      pages: story.pages.map(page => ({
+        pageNumber: page.pageNumber,
+        text: page.text,
+        imagePrompt: page.imagePrompt,
+        charactersPresent: page.charactersPresent,
+        isMainCharacterPresent: page.isMainCharacterPresent,
+      })),
+      metadata: {
+        title: story.metadata.title,
+        theme: story.metadata.theme,
+        bookSummary: story.metadata.bookSummary,
+        mainCharacterDescriptivePrompt: story.metadata.mainCharacterDescriptivePrompt,
+        coverImagePrompt: story.metadata.coverImagePrompt,
+        styleReferencePrompt: story.metadata.styleReferencePrompt,
+        ageRange: story.metadata.ageRange,
+        characters: story.metadata.characters,
+        storyPrompt: story.metadata.storyPrompt,
+        createdAt: new Date().toISOString(),
+      },
+    };
+
+    let insertedBook;
+    try {
+      insertedBook = await supabaseService.createBook({
+        title: story.metadata.title,
+        book_summary: story.metadata.bookSummary,
+        theme: story.metadata.theme,
+        cover_image_prompt: story.metadata.coverImagePrompt,
+        age_range: story.metadata.ageRange,
+        characters: story.metadata.characters,
+        story_prompt: story.metadata.storyPrompt,
+        content: bookContent,
+        status: 'pending',
+      });
+
+      if (!insertedBook || !insertedBook.id) {
+        throw new Error('Failed to create book in database');
+      }
+    } catch (dbError) {
+      console.error('Error during initial DB insert:', dbError);
+      return res.status(500).json({ error: 'Story upload failed at initial saving step. Please try again.' });
+    }
+
+    const bookId = insertedBook.id;
+    bookContent.id = bookId;
+
+    // Step 2: Upload images
+    const imageStorage = new ImageStorageService();
+
+    try {
+      // Upload cover image
+      await imageStorage.uploadImageFromBase64(coverImageBase64, bookId, 'cover.jpg');
+
+      // Upload page images
+      for (const pageImage of pageImages) {
+        const pageIndex = bookContent.pages.findIndex(p => p.pageNumber === pageImage.pageNumber);
+        if (pageIndex !== -1) {
+          const imageUrl = await imageStorage.uploadImageFromBase64(
+            pageImage.imageBase64,
+            bookId,
+            `page_${pageImage.pageNumber}.png`
+          );
+          bookContent.pages[pageIndex].imageUrl = imageUrl;
+        }
+      }
+
+      // Upload character images if provided
+      if (characterImages && characterImages.length > 0) {
+        for (const charImage of characterImages) {
+          // Sanitize character name for filename
+          const sanitizedName = charImage.name.replace(/[^a-zA-Z0-9]/g, '_').toLowerCase();
+          await imageStorage.uploadImageFromBase64(
+            charImage.imageBase64,
+            bookId,
+            `character_${sanitizedName}.png`
+          );
+        }
+      }
+    } catch (imageError) {
+      // If image upload fails, mark status as 'failed'
+      await supabaseService.updateBook(bookId, { status: 'failed' });
+      console.error('Error during image upload:', imageError);
+      return res.status(500).json({ error: 'Story upload failed during image upload. Please try again.' });
+    }
+
+    // Step 3: Update book record to 'complete' with final content
+    try {
+      await supabaseService.updateBook(bookId, {
+        content: bookContent,
+        status: 'complete',
+      });
+    } catch (dbError) {
+      await supabaseService.updateBook(bookId, { status: 'failed' });
+      console.error('Error during DB update:', dbError);
+      return res.status(500).json({ error: 'Story upload failed at saving step. Please try again.' });
+    }
+
+    // Step 4: Return the uploaded book details
+    res.status(201).json({
+      message: 'Story uploaded successfully',
+      bookId,
+      book: bookContent
+    });
+  } catch (error: any) {
+    console.error('Error uploading story:', error);
+    if (error.name === 'ZodError') {
+      return res.status(400).json({ error: error.errors });
+    }
+    res.status(500).json({ error: 'Story upload failed. Please try again.' });
+  }
+}
+
+export async function updateStory(req: Request, res: Response) {
+  try {
+    const { id } = req.params;
+
+    // Check if book exists
+    const existingBook = await supabaseService.getBookById(id);
+    if (!existingBook) {
+      return res.status(404).json({ error: 'Book not found' });
+    }
+
+    // Validate request body
+    const validatedData = UpdateStorySchema.parse(req.body);
+    const { story, coverImageBase64, pageImages, characterImages } = validatedData;
+
+    // Build updated book content, preserving existing imageUrls for pages without new images
+    const bookContent: BookContent = {
+      id: id,
+      pages: story.pages.map(page => {
+        // Find existing page to preserve imageUrl if no new image provided
+        const existingPage = existingBook.content?.pages?.find(
+          (p: any) => p.pageNumber === page.pageNumber
+        );
+        return {
+          pageNumber: page.pageNumber,
+          text: page.text,
+          imagePrompt: page.imagePrompt,
+          imageUrl: existingPage?.imageUrl, // Will be updated below if new image provided
+          charactersPresent: page.charactersPresent,
+          isMainCharacterPresent: page.isMainCharacterPresent,
+        };
+      }),
+      metadata: {
+        title: story.metadata.title,
+        theme: story.metadata.theme,
+        bookSummary: story.metadata.bookSummary,
+        mainCharacterDescriptivePrompt: story.metadata.mainCharacterDescriptivePrompt,
+        coverImagePrompt: story.metadata.coverImagePrompt,
+        styleReferencePrompt: story.metadata.styleReferencePrompt,
+        ageRange: story.metadata.ageRange,
+        characters: story.metadata.characters,
+        storyPrompt: story.metadata.storyPrompt,
+        createdAt: existingBook.content?.metadata?.createdAt || new Date().toISOString(),
+      },
+    };
+
+    // Upload new images if provided
+    const imageStorage = new ImageStorageService();
+
+    try {
+      // Upload cover image if provided
+      if (coverImageBase64) {
+        await imageStorage.uploadImageFromBase64(coverImageBase64, id, 'cover.jpg');
+      }
+
+      // Upload page images if provided
+      if (pageImages && pageImages.length > 0) {
+        for (const pageImage of pageImages) {
+          const pageIndex = bookContent.pages.findIndex(p => p.pageNumber === pageImage.pageNumber);
+          if (pageIndex !== -1) {
+            const imageUrl = await imageStorage.uploadImageFromBase64(
+              pageImage.imageBase64,
+              id,
+              `page_${pageImage.pageNumber}.png`
+            );
+            bookContent.pages[pageIndex].imageUrl = imageUrl;
+          }
+        }
+      }
+
+      // Upload character images if provided
+      if (characterImages && characterImages.length > 0) {
+        for (const charImage of characterImages) {
+          const sanitizedName = charImage.name.replace(/[^a-zA-Z0-9]/g, '_').toLowerCase();
+          await imageStorage.uploadImageFromBase64(
+            charImage.imageBase64,
+            id,
+            `character_${sanitizedName}.png`
+          );
+        }
+      }
+    } catch (imageError) {
+      console.error('Error during image upload:', imageError);
+      return res.status(500).json({ error: 'Story update failed during image upload. Please try again.' });
+    }
+
+    // Update book record
+    try {
+      await supabaseService.updateBook(id, {
+        title: story.metadata.title,
+        book_summary: story.metadata.bookSummary,
+        theme: story.metadata.theme,
+        cover_image_prompt: story.metadata.coverImagePrompt,
+        age_range: story.metadata.ageRange,
+        characters: story.metadata.characters,
+        story_prompt: story.metadata.storyPrompt,
+        content: bookContent,
+        status: 'complete',
+      });
+    } catch (dbError) {
+      console.error('Error during DB update:', dbError);
+      return res.status(500).json({ error: 'Story update failed at saving step. Please try again.' });
+    }
+
+    // Return the updated book details
+    res.status(200).json({
+      message: 'Story updated successfully',
+      bookId: id,
+      book: bookContent
+    });
+  } catch (error: any) {
+    console.error('Error updating story:', error);
+    if (error.name === 'ZodError') {
+      return res.status(400).json({ error: error.errors });
+    }
+    res.status(500).json({ error: 'Story update failed. Please try again.' });
+  }
+}

@@ -54,6 +54,63 @@ export const GenerateBookSchema = z.object({
 
 export type GenerateBookRequest = z.infer<typeof GenerateBookSchema>;
 
+// Zod schema for story upload request validation
+export const UploadStoryPageSchema = z.object({
+  text: z.string().min(1, 'Page text is required'),
+  pageNumber: z.number().int().min(1),
+  imagePrompt: z.string(),
+  charactersPresent: z.array(z.string()).optional(),
+  isMainCharacterPresent: z.boolean().optional(),
+});
+
+export const UploadStoryMetadataSchema = z.object({
+  title: z.string().min(1, 'Title is required'),
+  theme: z.string(),
+  bookSummary: z.string(),
+  mainCharacterDescriptivePrompt: z.string(),
+  coverImagePrompt: z.string(),
+  styleReferencePrompt: z.string(),
+  ageRange: z.string().min(1, 'Age range is required'),
+  characters: z.array(z.string()),
+  storyPrompt: z.string(),
+});
+
+export const UploadStorySchema = z.object({
+  story: z.object({
+    pages: z.array(UploadStoryPageSchema).min(1, 'At least one page is required'),
+    metadata: UploadStoryMetadataSchema,
+  }),
+  coverImageBase64: z.string().min(1, 'Cover image is required'),
+  pageImages: z.array(z.object({
+    pageNumber: z.number().int().min(1),
+    imageBase64: z.string().min(1),
+  })),
+  characterImages: z.array(z.object({
+    name: z.string(),
+    imageBase64: z.string().min(1),
+  })).optional(),
+});
+
+export type UploadStoryRequest = z.infer<typeof UploadStorySchema>;
+
+export const UpdateStorySchema = z.object({
+  story: z.object({
+    pages: z.array(UploadStoryPageSchema).min(1, 'At least one page is required'),
+    metadata: UploadStoryMetadataSchema,
+  }),
+  coverImageBase64: z.string().optional(),
+  pageImages: z.array(z.object({
+    pageNumber: z.number().int().min(1),
+    imageBase64: z.string().min(1),
+  })).optional(),
+  characterImages: z.array(z.object({
+    name: z.string(),
+    imageBase64: z.string().min(1),
+  })).optional(),
+});
+
+export type UpdateStoryRequest = z.infer<typeof UpdateStorySchema>;
+
 // Supabase Database types
 export type Tables = {
   books: Book;
