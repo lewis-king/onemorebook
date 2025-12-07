@@ -151,20 +151,21 @@ export const BookSpread: Component<BookSpreadProps> = (props) => {
                             />
                           </div>
                       ) : (
-                          <div class="flex flex-col h-full">
+                          <div class="page-layout">
                             {pageImage ? (
                                 <>
-                                  <div class="page-image">
+                                  <div class="page-image-area">
                                     <img
                                         src={pageImage.url}
                                         alt={`Story illustration for page ${index()}`}
-                                        class="w-full h-80 md:h-[28rem] lg:h-[36rem] xl:h-[44rem] object-cover rounded-lg shadow-lg"
+                                        class="page-illustration"
                                         onError={(e) => handleImageError(e, pageImage.fallbackUrl)}
                                     />
                                   </div>
-                                  <div class="flex-grow" />
-                                  <div class="page-text-overlay w-full px-4 pb-2 text-lg font-comic text-gray-900 text-center" style={{ position: 'relative' }}>
-                                    {content}
+                                  <div class="page-text-area">
+                                    <div class="page-story-text">
+                                      {content}
+                                    </div>
                                   </div>
                                 </>
                             ) : (
@@ -172,7 +173,7 @@ export const BookSpread: Component<BookSpreadProps> = (props) => {
                                   {content}
                                 </div>
                             )}
-                            <div class="page-footer mt-0">
+                            <div class="page-footer">
                               Page {index()}
                             </div>
                           </div>

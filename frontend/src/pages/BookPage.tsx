@@ -77,7 +77,7 @@ export default function BookPage() {
     };
 
     return (
-        <div class="w-full max-w-[1600px] mx-auto px-4 lg:px-12 flex flex-col items-center justify-center">
+        <div class="w-full max-w-[1600px] mx-auto px-1 md:px-4 lg:px-12 flex flex-col items-center justify-center">
             <Show when={error()}>
                 <div class="bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded mb-4">
                     {error()}
