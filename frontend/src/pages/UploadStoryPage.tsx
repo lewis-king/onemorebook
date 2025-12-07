@@ -498,7 +498,11 @@ export default function UploadStoryPage() {
                   <div class="space-y-4">
                     <For each={characterImages()}>
                       {(character) => {
-                        const displayImage = () => getDisplayImage(character.file, character.preview, character.existingUrl);
+                        const charImage = () => characterImages().find(c => c.name === character.name);
+                        const displayImage = () => {
+                          const img = charImage();
+                          return img ? getDisplayImage(img.file, img.preview, img.existingUrl) : null;
+                        };
                         return (
                           <div class="flex gap-4 items-center">
                             <div class="flex-1">
@@ -511,7 +515,7 @@ export default function UploadStoryPage() {
                                 onChange={(e) => handleCharacterImageChange(character.name, e)}
                                 class="w-full p-2 border-2 border-dashed border-kiddy-primary/30 rounded-lg bg-white"
                               />
-                              <Show when={isEditMode() && !character.file && character.existingUrl}>
+                              <Show when={isEditMode() && !charImage()?.file && charImage()?.existingUrl}>
                                 <p class="text-xs text-blue-600 mt-1">Using existing image (upload new to replace)</p>
                               </Show>
                             </div>
