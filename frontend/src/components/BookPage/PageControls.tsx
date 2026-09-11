@@ -1,6 +1,6 @@
 import { Component, Show } from "solid-js";
 import { A } from "@solidjs/router";
-import { TbArrowsMaximize, TbArrowsMinimize, TbChevronLeft, TbChevronRight } from "solid-icons/tb";
+import { TbArrowsMaximize, TbArrowsMinimize } from "solid-icons/tb";
 
 interface PageControlsProps {
     currentPage: number;
@@ -26,6 +26,7 @@ const PageControls: Component<PageControlsProps> = (props) => {
                         <button
                             onClick={props.onToggleFullscreen}
                             title="Exit full screen"
+                            aria-label="Exit full screen"
                             class="w-9 h-9 rounded-full bg-kiddy-primary text-white flex items-center justify-center
                                    shadow-md hover:scale-105 active:scale-95 transition-transform flex-shrink-0"
                         >
@@ -40,70 +41,78 @@ const PageControls: Component<PageControlsProps> = (props) => {
                             onClick={props.onPrevious}
                             disabled={props.currentPage === 0}
                             title="Previous page"
+                            aria-label="Previous page"
                             class="w-9 h-9 rounded-full bg-kiddy-primary text-white flex items-center justify-center
                                    shadow-md hover:scale-105 active:scale-95 transition-transform flex-shrink-0
                                    disabled:opacity-40 disabled:cursor-not-allowed"
                         >
-                            <TbChevronLeft size={20} />
+                            <span class="text-lg leading-none">👈</span>
                         </button>
 
                         <button
                             onClick={props.onNext}
                             disabled={props.currentPage === props.totalPages - 1}
                             title="Next page"
+                            aria-label="Next page"
                             class="w-9 h-9 rounded-full bg-kiddy-primary text-white flex items-center justify-center
                                    shadow-md hover:scale-105 active:scale-95 transition-transform flex-shrink-0
                                    disabled:opacity-40 disabled:cursor-not-allowed"
                         >
-                            <TbChevronRight size={20} />
+                            <span class="text-lg leading-none">👉</span>
                         </button>
                     </div>
                 </div>
             </Show>
 
             <Show when={!props.fullscreen}>
-                {/* Mobile: Compact inline controls */}
+                {/* Mobile: row of round icon bubbles */}
                 <div class="flex md:hidden items-center justify-between w-full px-2 py-1">
                     <A
                         href="/"
+                        title="Back to Stories"
+                        aria-label="Back to Stories"
                         class="bg-white/90 text-kiddy-primary w-10 h-10 rounded-full shadow-md
                                hover:bg-white transition-all duration-200 flex items-center justify-center flex-shrink-0
                                active:scale-90"
-                        title="Back to Stories"
                     >
-                        <span class="text-lg">🏠</span>
+                        <span class="text-lg leading-none">🏠</span>
                     </A>
 
                     <div class="flex items-center gap-1.5">
                         <button
                             onClick={props.onPrevious}
                             disabled={props.currentPage === 0}
-                            class="bg-kiddy-primary/90 text-white px-3.5 py-2.5 rounded-full
-                                   text-sm font-bold shadow-md transition-all duration-200
+                            title="Previous page"
+                            aria-label="Previous page"
+                            class="bg-kiddy-primary/90 text-white w-10 h-10 rounded-full
+                                   shadow-md transition-all duration-200 flex items-center justify-center
                                    disabled:opacity-40 disabled:cursor-not-allowed active:scale-95"
                         >
-                            ◀
+                            <span class="text-lg leading-none">👈</span>
                         </button>
 
                         <div class="font-comic text-sm text-kiddy-primary bg-white/90
-                                    rounded-full px-3.5 py-2 shadow-md whitespace-nowrap">
+                                    rounded-full px-3 py-2 shadow-md whitespace-nowrap">
                             {props.currentPage + 1} / {props.totalPages}
                         </div>
 
                         <button
                             onClick={props.onNext}
                             disabled={props.currentPage === props.totalPages - 1}
-                            class="bg-kiddy-primary/90 text-white px-3.5 py-2.5 rounded-full
-                                   text-sm font-bold shadow-md transition-all duration-200
+                            title="Next page"
+                            aria-label="Next page"
+                            class="bg-kiddy-primary/90 text-white w-10 h-10 rounded-full
+                                   shadow-md transition-all duration-200 flex items-center justify-center
                                    disabled:opacity-40 disabled:cursor-not-allowed active:scale-95"
                         >
-                            ▶
+                            <span class="text-lg leading-none">👉</span>
                         </button>
                     </div>
 
                     <button
                         onClick={props.onToggleFullscreen}
                         title="Read in full screen"
+                        aria-label="Read in full screen"
                         class="bg-white/90 text-kiddy-primary w-10 h-10 rounded-full shadow-md
                                hover:bg-white transition-all duration-200 flex items-center justify-center flex-shrink-0
                                active:scale-90"
@@ -112,29 +121,32 @@ const PageControls: Component<PageControlsProps> = (props) => {
                     </button>
                 </div>
 
-                {/* Desktop: Full controls */}
-                <div class="hidden md:flex flex-row justify-between items-center gap-4 my-6">
+                {/* Desktop: icon-only controls — the icons tell the story */}
+                <div class="hidden md:flex items-center gap-4 my-6 w-full">
                     <A
                         href="/"
+                        title="Back to Stories"
+                        aria-label="Back to Stories"
                         class="bg-gradient-to-r from-kiddy-primary to-kiddy-secondary
-                               text-white px-6 py-3 rounded-full font-bold shadow-lg
+                               text-white w-12 h-12 rounded-full shadow-lg flex items-center justify-center flex-shrink-0
                                hover:shadow-xl transition-all duration-300 hover:-translate-y-1
-                               active:translate-y-0 active:scale-95 font-comic flex items-center gap-2"
+                               active:translate-y-0 active:scale-95"
                     >
-                        <span class="text-xl">🏠</span>
-                        <span>Back to Stories</span>
+                        <span class="text-2xl leading-none">🏠</span>
                     </A>
 
-                    <div class="flex items-center gap-4">
+                    <div class="flex-1 flex items-center justify-center gap-3">
                         <button
                             onClick={props.onPrevious}
                             disabled={props.currentPage === 0}
-                            class="bg-kiddy-primary text-white px-6 py-3 rounded-full
-                                   font-bold shadow-lg hover:shadow-xl transition-all duration-300
+                            title="Previous page"
+                            aria-label="Previous page"
+                            class="bg-kiddy-primary text-white w-12 h-12 rounded-full
+                                   shadow-lg hover:shadow-xl transition-all duration-300 flex items-center justify-center
                                    disabled:opacity-50 disabled:cursor-not-allowed
-                                   hover:-translate-y-1 active:translate-y-0 active:scale-95 font-comic"
+                                   hover:-translate-y-1 active:translate-y-0 active:scale-95"
                         >
-                            👈 Back
+                            <span class="text-2xl leading-none">👈</span>
                         </button>
 
                         <div class="font-comic text-xl text-kiddy-primary bg-white/80
@@ -145,28 +157,28 @@ const PageControls: Component<PageControlsProps> = (props) => {
                         <button
                             onClick={props.onNext}
                             disabled={props.currentPage === props.totalPages - 1}
-                            class="bg-kiddy-primary text-white px-6 py-3 rounded-full
-                                   font-bold shadow-lg hover:shadow-xl transition-all duration-300
+                            title="Next page"
+                            aria-label="Next page"
+                            class="bg-kiddy-primary text-white w-12 h-12 rounded-full
+                                   shadow-lg hover:shadow-xl transition-all duration-300 flex items-center justify-center
                                    disabled:opacity-50 disabled:cursor-not-allowed
-                                   hover:-translate-y-1 active:translate-y-0 active:scale-95 font-comic"
+                                   hover:-translate-y-1 active:translate-y-0 active:scale-95"
                         >
-                            Next 👉
+                            <span class="text-2xl leading-none">👉</span>
                         </button>
                     </div>
 
-                    <div class="w-[160px] flex justify-end">
-                        <button
-                            onClick={props.onToggleFullscreen}
-                            title="Read in full screen"
-                            class="group bg-gradient-to-r from-kiddy-secondary to-kiddy-primary
-                                   text-white px-5 py-3 rounded-full font-bold shadow-lg
-                                   hover:shadow-xl transition-all duration-300 hover:-translate-y-1
-                                   active:translate-y-0 active:scale-95 font-comic flex items-center gap-2 whitespace-nowrap"
-                        >
-                            <TbArrowsMaximize size={20} class="group-hover:animate-wiggle" />
-                            <span class="hidden lg:inline">Big screen</span>
-                        </button>
-                    </div>
+                    <button
+                        onClick={props.onToggleFullscreen}
+                        title="Read in full screen"
+                        aria-label="Read in full screen"
+                        class="group bg-gradient-to-r from-kiddy-secondary to-kiddy-primary
+                               text-white w-12 h-12 rounded-full shadow-lg flex items-center justify-center flex-shrink-0
+                               hover:shadow-xl transition-all duration-300 hover:-translate-y-1
+                               active:translate-y-0 active:scale-95"
+                    >
+                        <TbArrowsMaximize size={22} class="group-hover:animate-wiggle" />
+                    </button>
                 </div>
 
                 {/* Story progress: how far through the book are we? */}
