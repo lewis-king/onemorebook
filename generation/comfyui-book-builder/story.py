@@ -217,6 +217,9 @@ Story idea: {idea}
 Exactly {config['page_count']} story pages, plus a separate cover. At most {config['max_characters']} named characters.
 Requested art direction: {config['art_style']}
 Creative variation seed: {config['seed']}.
+Write all story prose and metadata in British English (UK spelling and vocabulary), such as
+colour, favourite, centre and organise. Keep dialogue natural for children in the UK; do not
+switch to American spellings.
 
 Write a coherent beginning, small problem, meaningful actions and a satisfying ending.
 Make the ending compatible with each participant's earlier actions, location and knowledge.

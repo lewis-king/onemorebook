@@ -27,6 +27,9 @@ Creative variation seed: {config['seed']}.
 {length} A separate cover is additional to that count.
 At most {config['max_characters']} named characters; choose the cast the story needs.
 Art direction: {config['art_style']}
+Write all story prose and metadata in British English (UK spelling and vocabulary), such as
+colour, favourite, centre and organise. Keep dialogue natural for children in the UK; do not
+switch to American spellings.
 
 STORY AND VOICE
 Let the idea lead. Honour its requested subject, tone, form and visual preferences. When it

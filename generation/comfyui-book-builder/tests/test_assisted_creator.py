@@ -176,6 +176,14 @@ class AssistedCreatorTests(unittest.TestCase):
         value['story']['pages'][0]['charactersPresent']=['someone/Mira','Unknown']
         self.assertEqual(engine.normalize_generated_cast(value),(value,[]))
 
+    def test_missing_main_character_prompt_is_repaired_from_canonical_production_design(self):
+        value=fixtures.package_fixture();del value['story']['metadata']['mainCharacterDescriptivePrompt']
+        fixed,repairs=engine.normalize_generated_metadata(value)
+        self.assertEqual(fixed['story']['metadata']['mainCharacterDescriptivePrompt'],
+                         value['production']['characters'][0]['appearance'])
+        self.assertEqual(repairs[0]['field'],'metadata.mainCharacterDescriptivePrompt')
+        self.assertNotIn('mainCharacterDescriptivePrompt',value['story']['metadata'])
+
     def test_saved_fenced_json_reply_is_reused_without_another_model_call(self):
         state=self.prepare();intent=store.next_attempt(state)
         path=engine.directory(state['id'],state['current_stage'],intent['attempt'])

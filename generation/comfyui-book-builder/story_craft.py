@@ -104,6 +104,9 @@ Exactly {config['page_count']} story pages and a separate cover; at most {config
 Premise: {idea}
 Art direction: {config['art_style']}
 Creative variation seed: {config['seed']}.
+Write all story prose and metadata in British English (UK spelling and vocabulary), such as
+colour, favourite, centre and organise. Keep dialogue natural for children in the UK; do not
+switch to American spellings.
 
 STORY EXPERIENCE
 {flavour}

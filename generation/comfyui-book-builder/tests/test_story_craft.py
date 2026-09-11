@@ -34,6 +34,8 @@ class StoryCraftTests(fixtures.unittest.TestCase):
         self.assertEqual((store.root(state['id'])/'creator.json').read_bytes(), before)
         self.assertNotEqual(fixtures.story.writing_prompt(restored['config']),
                             fixtures.story.writing_prompt(state['config']))
+        self.assertIn('British English', fixtures.story.writing_prompt(state['config']))
+        self.assertIn('British English', fixtures.story.writing_prompt({**state['config'], 'story_craft_version': 'picturebook-2'}))
 
     def test_custom_art_replaces_preset_and_choices_fail_explicitly(self):
         cfg = store.config({'art_preset': 'graphic', 'art_style': '  Blue pencil on cream paper. '})

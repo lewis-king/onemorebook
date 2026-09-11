@@ -93,8 +93,10 @@ def text_step(state, intent):
             prompt += '\nPrevious draft to revise, preserving successful parts:\n'+store.candidate_path(state,prior).read_text()
     value = draft_json(state, stage_id, attempt, prompt, schema)
     formatting_repairs=[]
+    metadata_repairs=[]
     if stage_id=='story':
         value,formatting_repairs=normalize_generated_cast(value)
+        value,metadata_repairs=normalize_generated_metadata(value)
     import jsonschema
     validation_error=None
     try:
@@ -117,7 +119,8 @@ def text_step(state, intent):
     store.record_candidate(sid, stage_id, attempt, path, {'model': state['config']['ollama_model'], 'prompt': prompt,
                                                        'method': 'local_text_generation', 'content': value,
                                                        'validation_error':validation_error,
-                                                       'formatting_repairs':formatting_repairs, **craft_metadata})
+                                                       'formatting_repairs':formatting_repairs,
+                                                       'metadata_repairs':metadata_repairs, **craft_metadata})
 
 
 def normalize_generated_cast(value):
@@ -138,6 +141,29 @@ def normalize_generated_cast(value):
             if target and target!=name:
                 page['charactersPresent'][i]=target
                 repairs.append({'page':page.get('pageNumber'),'field':'charactersPresent','from':name,'to':target})
+    return value,repairs
+
+
+def normalize_generated_metadata(value):
+    """Fill the public main-character prompt from its private canonical design.
+
+    The two documents deliberately carry the same design for different consumers.
+    When a local writer omits this required public counterpart, copying the single
+    approved production main character is deterministic and does not invent content.
+    Other missing fields remain validation errors for human review.
+    """
+    import copy
+    value=copy.deepcopy(value);repairs=[]
+    story=value.get('story',{}) if isinstance(value,dict) else {}
+    metadata=story.get('metadata',{}) if isinstance(story,dict) else {}
+    production=value.get('production',{}) if isinstance(value,dict) else {}
+    characters=production.get('characters',[]) if isinstance(production,dict) else []
+    mains=[c for c in characters if isinstance(c,dict) and c.get('role')=='main'
+           and isinstance(c.get('appearance'),str) and c['appearance'].strip()]
+    if (isinstance(metadata,dict) and not str(metadata.get('mainCharacterDescriptivePrompt','')).strip()
+            and len(mains)==1):
+        metadata['mainCharacterDescriptivePrompt']=mains[0]['appearance'].strip()
+        repairs.append({'field':'metadata.mainCharacterDescriptivePrompt','source':'production.characters[role=main].appearance'})
     return value,repairs
 
 
