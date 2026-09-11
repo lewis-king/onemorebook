@@ -1,4 +1,5 @@
 import { createSignal, onCleanup, onMount, For, Show, createMemo } from "solid-js";
+import { createStore } from "solid-js/store";
 import { Book } from '../types/book';
 import BookCard from "../components/BookCard";
 // import CategoryFilter from "../components/CategoryFilter";
@@ -16,7 +17,10 @@ function debounce(fn: (...args: any[]) => void, delay: number) {
 
 export default function HomePage() {
     const [selectedCategory] = createSignal('all');
-    const [books, setBooks] = createSignal<Book[]>([]);
+    // Store (not signal) so star votes patch a book in place: <For> keys on
+    // item identity, and replacing the object would remount the card and
+    // make its cover image reload.
+    const [books, setBooks] = createStore<Book[]>([]);
     const [loading, setLoading] = createSignal(false);
     const [hasMore, setHasMore] = createSignal(true);
     const [offset, setOffset] = createSignal(0);
@@ -35,8 +39,8 @@ export default function HomePage() {
             setOffset(newBooks.length);
             setInitialLoad(false);
         } else {
-            setBooks(prev => [...prev, ...newBooks]);
-            setOffset(prev => prev + newBooks.length);
+            setBooks([...books, ...newBooks]);
+            setOffset(books.length + newBooks.length);
         }
         setHasMore(newBooks.length === limit);
         } catch (e) {
@@ -64,13 +68,13 @@ export default function HomePage() {
         window.removeEventListener('scroll', handleScroll);
     });
 
-    // Optimized upvote: update local state only
+    // Optimized upvote: patch the store in place so the card is not remounted
     const handleUpvote = async (id: string, currentStars: number) => {
         if (voting.has(id)) return;
         voting.add(id);
         try {
             const updated = await bookService.updateStars(id, currentStars);
-            setBooks(prev => prev.map(book => book.id === id ? { ...book, stars: updated.stars } : book));
+            setBooks(b => b.id === id, 'stars', updated.stars);
         } catch (e) {
             setError(e instanceof Error ? e.message : 'Could not add your star. Please try again.');
         } finally { voting.delete(id); }
@@ -79,10 +83,10 @@ export default function HomePage() {
 
     // Memoized filteredBooks
     const filteredBooks = createMemo(() => {
-        if (!books()) return [];
+        if (!books.length) return [];
         return selectedCategory() === 'all'
-            ? books()
-            : books().filter((book: Book) => Array.isArray(book.characters) && book.characters.includes(selectedCategory()));
+            ? books
+            : books.filter((book: Book) => Array.isArray(book.characters) && book.characters.includes(selectedCategory()));
     });
 
     return (

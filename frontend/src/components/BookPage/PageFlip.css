@@ -335,6 +335,14 @@
     border: none;
 }
 
+/* Clicks/taps on buttons inside a page must always target the button
+   itself — page-flip forwards a/button targets to the click handler,
+   but only when the event target IS the button (not an svg/span child). */
+.vote-button *,
+.page-content button * {
+    pointer-events: none;
+}
+
 /* Full screen ("Big screen") reading mode.
    position:fixed also powers the immersive fallback when the Fullscreen API
    is unavailable (iPhone Safari) or refuses the request. */

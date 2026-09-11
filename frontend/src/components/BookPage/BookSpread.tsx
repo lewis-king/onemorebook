@@ -42,7 +42,8 @@ export const BookSpread: Component<BookSpreadProps> = (props) => {
         usePortrait: true,
         flippingTime: 1000,
         drawShadow: true,
-        startZIndex: 0
+        startZIndex: 0,
+        clickEventForward: true
       });
 
       // Initialize pages
@@ -124,7 +125,7 @@ export const BookSpread: Component<BookSpreadProps> = (props) => {
                           <div class="flex flex-col justify-center items-center h-full">
                             <button
                                 onClick={() => props.onUpvote(props.bookId, props.stars)}
-                                class="group bg-kiddy-primary hover:bg-kiddy-secondary
+                                class="vote-button group bg-kiddy-primary hover:bg-kiddy-secondary
                                transition-all duration-300 rounded-2xl p-8
                                shadow-xl hover:shadow-2xl transform
                                hover:scale-105 active:scale-95 cursor-pointer"
