@@ -100,6 +100,9 @@ canonical characters and suggests the premise. Keep backgrounds subordinate to t
 
 Return exactly one JSON object containing story and production, matching the supplied schema.
 Number pageNumber consecutively from 1 through the actual chosen story length.
+metadata must include theme, title, ageRange, characters, bookSummary, storyPrompt,
+coverImagePrompt, styleReferencePrompt and mainCharacterDescriptivePrompt. The last field must
+be the full appearance of the one production character whose role is main.
 metadata.ageRange is {config['age_range']}; metadata.characters is an array of name strings.
 isMainCharacterPresent must agree with the named visible cast. Use stable lowercase private IDs;
 cover_character_ids must refer to the private cast. No new planning, reference or review fields

@@ -170,7 +170,9 @@ or still life in that style. Cover artwork uses the canonical cast and suggests 
 OUTPUT CONTRACT
 Return exactly TWO documents in one JSON object: story and production, matching the supplied schema.
 story is the existing public app contract. Number pageNumber 1 through {config['page_count']}.
-metadata.characters contains name strings; charactersPresent uses those exact names;
+metadata includes theme, title, ageRange, characters, bookSummary, storyPrompt, coverImagePrompt,
+styleReferencePrompt and mainCharacterDescriptivePrompt. The last field exactly describes the
+one production character whose role is main. metadata.characters contains name strings;
 isMainCharacterPresent agrees with the visible main character. metadata.ageRange is {config['age_range']}.
 production contains visual_bible, style_reference_prompt, characters with id/name/role/appearance/
 personality/height_cm, and cover_character_ids. Use stable lowercase IDs; cast names must match story.
