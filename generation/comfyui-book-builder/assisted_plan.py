@@ -36,12 +36,15 @@ def request(package, config=None):
     book = make_render_plan(package['story'], package['production'])
     prompt = '''Plan illustrations for this approved children's book. Return the private JSON plan.
 The story and canonical characters are fixed. A human will review this plan before any images.
-assets: create reusable references for recurring salient objects and locations. Describe permanent
-shape, material, colours and size relative to a character. Keep movable props and characters out of
-location reference designs. A prop reference depicts ONE object; a prop_state can depict an assembly
-of several existing objects as one unit. If a character's outfit or physical
-state changes, add a character_state reference with source_character set to its canonical ID and
-appearance describing the complete current design. Other kinds may omit source_character.
+assets: first scan the pages in order for every salient object that is built, broken, opened, filled,
+repaired, decorated, stacked or otherwise changes and is shown again later. Give each persistent form
+its own prop_state reference, including the incomplete/broken form where it first appears and the
+completed/repaired form after the change. If a needed component is not already an asset, add a prop
+for it before the state. Describe permanent shape, material, colours and size relative to a character.
+Keep movable props and characters out of location reference designs. A prop reference depicts ONE
+object; a prop_state depicts an assembly or changed object as one unit. If a character's outfit or
+physical state changes, add a character_state reference with source_character set to its canonical ID
+and appearance describing the complete current design. Other kinds may omit source_character.
 Use unique IDs distinct from canonical character IDs. Avoid decorative reference proliferation.
 scenes: page 0 is the cover, followed by every numbered page in order. Each moment is a concise
 positive visual description of ONE instant that directly illustrates the page's prose. Preserve
@@ -56,7 +59,10 @@ that change is active. It must match the approved page's charactersPresent exact
 asset_refs lists relevant prop/location IDs, with at most ONE location. FLUX.2.dev has a budget of
 SIX input reference images in total. Visible characters occupy ONE shared cast image, leaving
 FIVE prop/place images. A scene without characters can use SIX prop/place images. Each reference
-must be meaningful to that instant. Each prop/location is a separate input. Reference numbering is added
+must be meaningful to that instant. A scene that introduces a persistent object state must use that
+state reference immediately, and every later scene that shows the same state must use the same
+reference; never reconstruct it from a different form or from loose components. Each prop/location
+is a separate input. Reference numbering is added
 by code; do not write Image N yourself. continuity_notes briefly explains object/state progression.
 '''
     prompt += prop_states.GUIDANCE + SCENE_GUIDANCE

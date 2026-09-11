@@ -15,6 +15,10 @@ def effective_plan(state):
             raise ValueError('Invalid saved reference update ID.')
         update=json.loads((store.root(state['id'])/'creator/plan-updates'/f'{update_id}.json').read_text())
         plan['assets'].append(update['asset'])
+        for asset_id,pages in update.get('asset_visibility',{}).items():
+            existing=next((a for a in plan['assets'] if a['id']==asset_id),None)
+            if existing is not None:
+                existing['visible_pages']=pages
         scene=next(s for s in plan['scenes'] if s['page']==update['page'])
         scene.update(moment=update['moment'],asset_refs=update['asset_refs'])
     return plan
@@ -31,7 +35,18 @@ def add_prop_state(state, asset, *, scene_id, moment, asset_refs, source_scene=N
             raise store.Conflict('Add a prop state while its page is the current unapproved, idle step.')
         if asset.get('kind')!='prop_state' or asset.get('visible_pages')!=[current['page']]:
             raise ValueError('This addition must be a prop_state for the current page.')
-        plan=effective_plan(latest);plan['assets'].append(copy.deepcopy(asset))
+        plan=effective_plan(latest)
+        # When a new state supersedes an older state on this page, retire the
+        # older state's visibility here while preserving it for earlier scenes.
+        asset_visibility={}
+        for source_id in asset.get('source_assets',[]):
+            source=next((a for a in plan['assets'] if a['id']==source_id),None)
+            if source and source.get('kind')=='prop_state' and current['page'] in source.get('visible_pages',[]):
+                pages=[p for p in source['visible_pages'] if p!=current['page']]
+                if pages:
+                    asset_visibility[source_id]=pages
+                    source['visible_pages']=pages
+        plan['assets'].append(copy.deepcopy(asset))
         scene=next(s for s in plan['scenes'] if s['page']==current['page'])
         scene.update(moment=moment,asset_refs=asset_refs)
         expanded=assisted_plan.stages(engine.package(latest),plan)
@@ -55,7 +70,8 @@ def add_prop_state(state, asset, *, scene_id, moment, asset_refs, source_scene=N
         for sid in new_stage['references']:
             engine.approved(latest,sid)
         update_id=uuid.uuid4().hex
-        record={'id':update_id,'created_at':store.now(),'asset':asset,'page':current['page'],
+        record={'id':update_id,'created_at':store.now(),'asset':asset,'asset_visibility':asset_visibility,
+                'page':current['page'],
                 'moment':moment,'asset_refs':asset_refs,'source_scene':source,
                 'previous_scene':{k:copy.deepcopy(current.get(k)) for k in ('brief','references','prompt_base')},
                 'reason':'User-requested reusable prop state','previous_revision':latest['revision']}

@@ -125,6 +125,12 @@ class PropStateTests(unittest.TestCase):
         self.assertEqual(paths[-3:],['pages/page-001.png','pages/page-002.png','pages/page-003.png'])
         self.assertFalse(any(s['kind']=='prop_state' for s in planning.stages(engine.package(state),plan)))
 
+    def test_plan_prompt_requires_each_persistent_object_form(self):
+        state=self.approve(self.state())
+        prompt,_=planning.request(engine.package(state),state['config'])
+        self.assertIn('built, broken, opened, filled',prompt)
+        self.assertIn('must use the same',prompt)
+
     def test_non_character_references_need_no_character_source_field(self):
         state,plan=self.assembled_plan()
         for asset in plan['assets']:asset.pop('source_character',None)
