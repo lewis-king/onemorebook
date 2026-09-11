@@ -334,3 +334,29 @@
     background-color: transparent;
     border: none;
 }
+
+/* Full screen ("Big screen") reading mode.
+   position:fixed also powers the immersive fallback when the Fullscreen API
+   is unavailable (iPhone Safari) or refuses the request. */
+.reader-fullscreen {
+    position: fixed;
+    inset: 0;
+    z-index: 40;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    padding: 0.5rem;
+    overflow: hidden;
+    background:
+        radial-gradient(900px 500px at 50% -10%, rgba(255, 230, 109, 0.28), transparent 60%),
+        linear-gradient(160deg, #fff7ec 0%, #fdeef2 55%, #e6f6f5 100%);
+}
+
+.reader-fullscreen .book-container {
+    flex: 1 1 auto;
+    min-height: 0;
+    width: 100%;
+    max-width: none;
+    margin: 0;
+}

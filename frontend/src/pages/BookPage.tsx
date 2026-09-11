@@ -85,12 +85,64 @@ export default function BookPage() {
     const handleKeyDown = (e: KeyboardEvent) => {
         if (e.key === 'ArrowLeft') handlePrevious();
         else if (e.key === 'ArrowRight') handleNext();
+        else if (e.key === 'Escape' && isFullscreen()) exitReaderFullscreen();
     };
     onMount(() => window.addEventListener('keydown', handleKeyDown));
     onCleanup(() => window.removeEventListener('keydown', handleKeyDown));
 
+    // Full screen ("Big screen") reading mode
+    let readerRef: HTMLDivElement | undefined;
+    const [isFullscreen, setIsFullscreen] = createSignal(false);
+
+    const refreshBookSize = () => {
+        // Let the new layout settle, then re-measure the flipbook
+        setTimeout(() => pageFlipInstance()?.update?.(), 150);
+    };
+
+    const handleFullscreenChange = () => {
+        setIsFullscreen(!!document.fullscreenElement);
+        refreshBookSize();
+    };
+
+    const enterReaderFullscreen = async () => {
+        try {
+            if (readerRef?.requestFullscreen) {
+                await readerRef.requestFullscreen();
+            } else {
+                setIsFullscreen(true); // immersive fallback (e.g. iPhone Safari)
+                refreshBookSize();
+            }
+        } catch {
+            setIsFullscreen(true); // browser refused; still give the big view
+            refreshBookSize();
+        }
+    };
+
+    const exitReaderFullscreen = () => {
+        if (document.fullscreenElement) {
+            document.exitFullscreen().catch(() => {});
+        }
+        setIsFullscreen(false);
+        refreshBookSize();
+    };
+
+    const toggleFullscreen = () => {
+        if (isFullscreen()) exitReaderFullscreen();
+        else enterReaderFullscreen();
+    };
+
+    onMount(() => document.addEventListener('fullscreenchange', handleFullscreenChange));
+    onCleanup(() => {
+        document.removeEventListener('fullscreenchange', handleFullscreenChange);
+        // Leaving the book (e.g. Back to Stories) must not strand the browser in full screen
+        if (document.fullscreenElement) document.exitFullscreen().catch(() => {});
+    });
+
     return (
-        <div class="w-full max-w-[1600px] mx-auto px-1 md:px-4 lg:px-12 flex flex-col items-center justify-center">
+        <div
+            ref={readerRef}
+            class={`w-full flex flex-col items-center justify-center ${isFullscreen() ? 'reader-fullscreen' : 'max-w-[1600px] mx-auto px-1 md:px-4 lg:px-12'}`}
+        >
             <Show when={book.error}>
                 <div role="alert" class="rounded-xl bg-red-50 p-6 text-red-800">
                     <p>{book.error?.message || 'Could not load this book.'}</p>
@@ -110,6 +162,8 @@ export default function BookPage() {
                     totalPages={getPages().length}
                     onPrevious={handlePrevious}
                     onNext={handleNext}
+                    fullscreen={isFullscreen()}
+                    onToggleFullscreen={toggleFullscreen}
                 />
             </Show>
 
