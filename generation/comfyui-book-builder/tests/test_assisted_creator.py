@@ -61,6 +61,14 @@ class AssistedCreatorTests(unittest.TestCase):
         restored=store.read(state['id'])
         self.assertEqual(state,restored)
 
+    def test_assisted_cover_stage_carries_exact_title_typography_instruction(self):
+        state=self.prepare()
+        cover=store.stage(state,'cover.png')
+        self.assertIn('"The Borrowed Moonlight"',cover['brief'])
+        self.assertIn('readable lettering',cover['brief'])
+        self.assertIn('display font',cover['brief'])
+        self.assertIn('clear negative space',cover['brief'])
+
     def test_migrated_output_alias_preserves_references_and_comfy_preview(self):
         target=self.output/'generation/output/books';target.mkdir(parents=True)
         (self.output/'books').symlink_to(target,target_is_directory=True)

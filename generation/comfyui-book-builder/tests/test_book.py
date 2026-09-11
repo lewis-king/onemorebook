@@ -107,6 +107,17 @@ class BookTests(unittest.TestCase):
         self.assertEqual(specs, story.asset_specs(copy.deepcopy(self.project)))
         self.assertEqual(specs[-1]["references"], ["style.png"])
 
+    def test_cover_prompt_requests_exact_title_typography_but_pages_stay_unlettered(self):
+        specs = story.asset_specs(self.project)
+        cover = next(s for s in specs if s['name'] == 'cover.png')
+        page = next(s for s in specs if s['name'] == 'pages/page-001.png')
+        self.assertIn('"The Borrowed Moonlight"', cover['prompt'])
+        self.assertIn('readable lettering', cover['prompt'])
+        self.assertIn('display font', cover['prompt'])
+        self.assertIn('clear negative space', cover['prompt'])
+        self.assertIn('No text, captions', page['prompt'])
+        self.assertNotIn('The Borrowed Moonlight', page['prompt'])
+
     def test_original_app_contract_is_preserved(self):
         original_path = COMFY / "user/default/workflows/childrens-book-generator.json"
         workflow = json.loads(original_path.read_text())

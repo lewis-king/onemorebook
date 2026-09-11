@@ -1,3 +1,9 @@
+# Cover title typography — 2026-09-11 (latest)
+
+Cover prompts now request the exact book title in quotation marks as readable lettering, with a display font and placement chosen to suit the story mood and artwork. The instruction asks for thumbnail legibility, clear space away from faces and focal action, and no additional words. Interior page prompts retain the no-lettering rule. This is applied to the legacy/automatic prompt builder, the assisted planner's cover stage, and both story-craft prompt variants; the public story contract is unchanged.
+
+Focused automatic and assisted tests pass, and the full pinned creator suite passes **374 tests**. Source changes are currently uncommitted; commit and push them before shutdown. Existing saved books and immutable prompts are unchanged; the new rule applies to future story sessions and newly prepared cover prompts.
+
 # Broken-to-complete bridge state repair — 2026-09-11 (latest)
 
 Book `book-20260911164447-3eeb90ba81` is paused in the assisted creator at the new pending reference `props/bridge_complete_page3.png` (revision 83):

@@ -53,7 +53,8 @@ when first naming each actor. One instance of each required character; identify 
 Preserve recurring object designs and where a trapped object remains until freed.
 Do not illustrate multiple sequential events at once or turn metaphors into extra objects.
 Use natural prose, approximately 50–100 words per scene, not JSON/image-model instructions,
-negative lists, measurements, labels or quoted story dialogue. Typography is typeset separately.
+negative lists, measurements, labels or quoted story dialogue. The cover moment may describe the
+title's visual treatment, but the exact title instruction is added by the renderer.
 character_refs lists only visible canonical character IDs, substituting a character_state ID when
 that change is active. It must match the approved page's charactersPresent exactly.
 asset_refs lists relevant prop/location IDs, with at most ONE location. FLUX.2.dev has a budget of
@@ -122,6 +123,7 @@ def validate(package, plan):
 
 def stages(package, plan):
     from .assisted_store import new_stage
+    from .story import cover_title_instruction
     book = validate(package, plan)
     result = []
     def add(sid, kind, title, brief, refs, **extra):
@@ -153,8 +155,11 @@ def stages(package, plan):
                if asset['kind']=='prop_state' else {}))
     for scene in plan['scenes']:
         n = scene['page']
+        moment = scene['moment']
+        if n == 0:
+            moment = moment.rstrip() + ' ' + cover_title_instruction(book['title'])
         add('cover.png' if n==0 else f'pages/page-{n:03d}.png', 'scene', 'Cover' if n==0 else f'Page {n}',
-            scene['moment'], [paths[r] for r in scene['character_refs']+scene['asset_refs']],
+            moment, [paths[r] for r in scene['character_refs']+scene['asset_refs']],
             cast_refs=[paths[r] for r in scene['character_refs']],
             cast_ids=[next((a['source_character'] for a in plan['assets'] if a['id']==r),r)
                       for r in scene['character_refs']],

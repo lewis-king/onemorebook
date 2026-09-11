@@ -288,8 +288,11 @@ character is placed. Distinguish left/centre/right when three characters share a
 Use the characters' names in imagePrompt; their complete immutable appearances are already
 in production.characters and supplied as reference images. Do not repeat the full character
 description on every page. Spend the prompt on the page's actual action, framing and setting.
-The cover is artwork only; its title will be typeset separately. style_reference_prompt describes
-a beautiful EMPTY environment or still life from this world, with NO people, animals, faces,
+The coverImagePrompt must also specify the exact book title in quotation marks, with readable
+story-appropriate display lettering and a considered placement that suits the scene. Keep the
+title legible at thumbnail size, in clear space away from faces and the focal action, and include
+no other words. Page imagePrompts contain artwork only; their reading text is typeset separately.
+style_reference_prompt describes a beautiful EMPTY environment or still life from this world, with NO people, animals, faces,
 silhouettes or characters, to establish the art style without contaminating later references.
 Return an object with TWO SEPARATE documents: story and production.
 story MUST follow the app's original contract exactly:
@@ -410,9 +413,24 @@ def scene_prompt(project, scene):
         parts.append("This is a character-free scene: no people, animals, faces, figures or silhouettes.")
     else:
         parts.append("Include only the named characters in this scene, once each. Do not blend their identities or outfits, and do not add extra characters.")
-    parts.extend([scene_style_text(project), "Use a fresh scene composition, not the reference portrait pose or a collage. No text, captions, speech bubbles, borders, watermarks or lettering."])
+    cover = scene is project.get('book', {}).get('cover') or 'page_number' not in scene
+    if cover:
+        parts.append(cover_title_instruction(project['book']['title']))
+    else:
+        parts.append("No text, captions, speech bubbles, borders, watermarks or lettering.")
+    parts.append(scene_style_text(project))
+    parts.append("Use a fresh scene composition, not the reference portrait pose or a collage.")
     from .state_ledger import state_brief
     return "\n".join(parts) + state_brief(project, scene)
+
+
+def cover_title_instruction(title):
+    """Give the image model one exact, positive instruction for cover typography."""
+    quoted = json.dumps(title, ensure_ascii=False)
+    return (f'The cover includes the exact title {quoted} as readable lettering. Choose a display '
+            'font and placement that fit the story mood and artwork; keep it legible at thumbnail '
+            'size in clear negative space, away from faces and the focal action. Include only this '
+            'title as text.')
 
 
 def uses_cast_guide(project, scene):

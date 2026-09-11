@@ -96,7 +96,10 @@ establishes a change. Emotional expressions are poses, not new character designs
 visual_bible.style describes the chosen medium/rendering, palette its coordinated colours, and
 world the environment. style_reference_prompt depicts an unpopulated environment or still life.
 Make public style/main-character prompts agree with their private counterparts. The cover uses
-canonical characters and suggests the premise. Keep backgrounds subordinate to the focal action.
+canonical characters, suggests the premise, and includes the exact title in quotation marks with
+readable, story-appropriate display lettering placed in clear space away from faces and the focal
+action. Page artwork contains no lettering; reading text is typeset separately. Keep backgrounds
+subordinate to the focal action.
 
 Return exactly one JSON object containing story and production, matching the supplied schema.
 Number pageNumber consecutively from 1 through the actual chosen story length.

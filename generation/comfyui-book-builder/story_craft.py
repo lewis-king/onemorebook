@@ -165,7 +165,10 @@ not new character designs. Keep transformations simple enough to depict clearly.
 visual_bible.style contains medium and rendering technique only; palette holds coordinated colours;
 world holds environment only. Follow the requested art direction consistently, with focal contrast
 and enough quiet space to read the gesture. style_reference_prompt is an unpopulated environment
-or still life in that style. Cover artwork uses the canonical cast and suggests the premise.
+or still life in that style. Cover artwork uses the canonical cast, suggests the premise, and
+includes the exact title in quotation marks with readable, story-appropriate display lettering
+placed in clear space away from faces and the focal action. Page artwork contains no lettering;
+reading text is typeset separately.
 
 OUTPUT CONTRACT
 Return exactly TWO documents in one JSON object: story and production, matching the supplied schema.
