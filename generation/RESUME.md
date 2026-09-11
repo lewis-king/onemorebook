@@ -1,3 +1,12 @@
+# Broken-to-complete bridge state repair — 2026-09-11 (latest)
+
+Book `book-20260911164447-3eeb90ba81` is paused in the assisted creator at the new pending reference `props/bridge_complete_page3.png` (revision 83):
+http://127.0.0.1:8188/book-builder/create/book-20260911164447-3eeb90ba81
+
+The approved page 3 candidate is the arrangement source. The new reference preserves its exact Button-Bridge order, spacing, colours and alignment while completing the final gap with the Pearlescent Button. Page 11 is routed to this new state. The earlier `bridge_complete` state is retired from page 11 but retained for the cover; all original attempts and decisions remain immutable. Approve or regenerate this reference in the UI before page 11 resumes; no candidate was approved automatically.
+
+Generic workflow fix committed as `25dc968` and pushed: the private planner now scans for objects that are built, broken, repaired, stacked or otherwise changed and creates a reusable `prop_state` for each persistent form. A derived state can inherit an earlier state and retire only the superseded page visibility, preserving continuity across transitions. Full pinned suite: 371 tests pass. ComfyUI was safely restarted idle after the source update (queue empty).
+
 # Milo accepted; Cloudflare Pages preview deployed — 2026-09-11 (latest)
 
 Lewis completed and explicitly accepted **Milo and the Sun-Seeds**: "a successful finish of a book I'm happy with". Saved creator status complete, revision121, final page12; approved page11 is attempt4. Export: output/books/book-assisted-20260910213535-1b28c7aec5/export/. Preserve this accepted finish; the visual failures in earlier handovers describe older attempts. No generation, revisions or approvals are pending for this book.
