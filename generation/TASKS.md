@@ -1,8 +1,8 @@
-# Milo accepted; Cloudflare website prepared, deployment paused — 2026-09-11 (latest)
+# Milo accepted; Cloudflare Pages preview deployed — 2026-09-11 (latest)
 
 Lewis completed and explicitly accepted **Milo and the Sun-Seeds**: "a successful finish of a book I'm happy with". Saved creator status complete, revision121, final page12; approved page11 is attempt4. Export: output/books/book-assisted-20260910213535-1b28c7aec5/export/. Preserve this accepted finish; the visual failures in earlier handovers describe older attempts. No generation, revisions or approvals are pending for this book.
 
-Current requested work moved to the reader website in the parent onemorebook directory: replace Netlify/Render with Cloudflare Pages + Functions, retaining Supabase books/storage and stars. **Latest instruction: preparation only in this session; do not push, deploy, change DNS or make further remote writes.** See ../DEPLOYMENT.md for the full current handover and future commands. No Git push or Cloudflare site deployment occurred.
+Current requested work moved to the reader website in the parent onemorebook directory: replace Netlify/Render with Cloudflare Pages + Functions, retaining Supabase books/storage and stars. The code is pushed and the tested production preview is live at https://onemorebook.pages.dev. See ../DEPLOYMENT.md for the full handover. The custom domain remains on Netlify pending the Cloudflare zone and 123-reg nameserver change.
 
 Before that pause, the empty Cloudflare Pages project onemorebook was created and the approved Milo export was imported into Supabase as 21df2344-4b8e-5f14-b198-03ac4112f6e4. All 13 public image hashes matched the approved export before status complete. Do not import it again to deploy the site. Its publication checkpoint is ../.local/publications/21df2344-4b8e-5f14-b198-03ac4112f6e4/. No existing books or real votes changed.
 
