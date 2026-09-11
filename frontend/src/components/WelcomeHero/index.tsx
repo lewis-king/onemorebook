@@ -11,12 +11,11 @@ const WelcomeHero: Component = () => {
                 </h1>
 
                 <p class="text-sm sm:text-base md:text-lg text-white/90 font-rounded max-w-2xl mx-auto mb-6 md:mb-8 leading-relaxed px-4">
-                    Turn that familiar bedtime moment into endless adventures of your own creation!
-                    Craft tales where dragons soar through starlit skies, brave teddy bears explore secret treasure caves, or pirate cats sail across bubble-filled oceans. Every story you imagine becomes the next chapter in your collection.
+                    Find a story to share, meet some new friends, and make room for one more book before bedtime.
                 </p>
 
-                <HeroButton href="/create">
-                    Create Your Own Story!
+                <HeroButton href="#stories">
+                    Find a bedtime story
                     <span class="text-2xl">🌟</span>
                 </HeroButton>
             </div>

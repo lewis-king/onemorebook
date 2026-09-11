@@ -1,4 +1,4 @@
-import { createSignal, Show, For, onMount, createEffect } from "solid-js";
+import { createSignal, Show, For, onMount } from "solid-js";
 import { useNavigate, useParams } from "@solidjs/router";
 import { bookService } from "../services/api";
 
@@ -74,7 +74,14 @@ export default function UploadStoryPage() {
           // Build the story JSON from the book content
           const storyData = {
             pages: book.content.pages,
-            metadata: book.content.metadata
+            metadata: {
+              ...book.content.metadata,
+              theme: book.content.metadata.theme || '',
+              bookSummary: book.content.metadata.bookSummary || '',
+              mainCharacterDescriptivePrompt: book.content.metadata.mainCharacterDescriptivePrompt || '',
+              coverImagePrompt: book.content.metadata.coverImagePrompt || '',
+              styleReferencePrompt: book.content.metadata.styleReferencePrompt || '',
+            }
           };
           const jsonString = JSON.stringify(storyData, null, 2);
           setStoryJson(jsonString);
@@ -354,7 +361,7 @@ export default function UploadStoryPage() {
     }
   };
 
-  const getDisplayImage = (file: File | null, preview: string | null, existingUrl: string | null) => {
+  const getDisplayImage = (_file: File | null, preview: string | null, existingUrl: string | null) => {
     if (preview) return preview;
     if (existingUrl) return existingUrl;
     return null;

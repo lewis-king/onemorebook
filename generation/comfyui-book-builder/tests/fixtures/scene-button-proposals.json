@@ -1,0 +1,69 @@
+{
+  "source_sha256": "46faafee63d1c92514452af91c71136c7cb2ce5a22a8af9f35fcc869f29d3e2c",
+  "proposals": [
+    {
+      "bbox": [
+        59.00395202636719,
+        59.627132415771484,
+        83.05464935302734,
+        85.05164337158203
+      ],
+      "score": 0.4050016403198242,
+      "label": "a round blue sewing button",
+      "possible_ids": [
+        "part"
+      ],
+      "image_size": [
+        208,
+        180
+      ],
+      "box_id": "box-1",
+      "patch_box_within_actor": [
+        51,
+        51,
+        92,
+        94
+      ]
+    },
+    {
+      "bbox": [
+        7.432126045227051,
+        7.808156967163086,
+        206.578857421875,
+        172.69384765625
+      ],
+      "score": 0.35513168573379517,
+      "label": "a round blue sewing button",
+      "possible_ids": [
+        "part"
+      ],
+      "image_size": [
+        208,
+        180
+      ],
+      "box_id": "box-2"
+    },
+    {
+      "bbox": [
+        51.36720275878906,
+        105.54483032226562,
+        74.17692565917969,
+        130.32594299316406
+      ],
+      "score": 0.31220075488090515,
+      "label": "a round blue sewing button",
+      "possible_ids": [
+        "part"
+      ],
+      "image_size": [
+        208,
+        180
+      ],
+      "box_id": "box-3"
+    }
+  ],
+  "garment_size": [
+    208,
+    180
+  ]
+}

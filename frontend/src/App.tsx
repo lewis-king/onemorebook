@@ -1,9 +1,7 @@
-import { Router, Route } from "@solidjs/router";
+import { Router, Route, Navigate } from "@solidjs/router";
 // import Navbar from "./components/Navbar";
 import HomePage from "./pages/HomePage";
-import CreateStoryPage from "./pages/CreateStoryPage";
 import BookPage from "./pages/BookPage";
-import UploadStoryPage from "./pages/UploadStoryPage";
 
 function App() {
   return (
@@ -14,10 +12,10 @@ function App() {
     <Router>
       
               <Route path="/" component={HomePage} />
-              <Route path="/create" component={CreateStoryPage} />
+              <Route path="/create" component={() => <Navigate href="/" />} />
               <Route path="/book/:id" component={BookPage} />
-              <Route path="/book/upload" component={UploadStoryPage} />
-              <Route path="/book/:id/upload" component={UploadStoryPage} />
+              <Route path="/book/upload" component={() => <Navigate href="/" />} />
+              <Route path="/book/:id/upload" component={() => <Navigate href="/" />} />
           
     </Router>
             </main>

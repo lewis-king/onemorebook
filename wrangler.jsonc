@@ -1,0 +1,10 @@
+{
+  "$schema": "node_modules/wrangler/config-schema.json",
+  "name": "onemorebook",
+  "pages_build_output_dir": "./frontend/dist",
+  "compatibility_date": "2026-09-11",
+  "vars": {
+    "SUPABASE_URL": "https://kwhyhflyyjhtbvbmtdmt.supabase.co",
+    "SUPABASE_STORAGE_BUCKET": "book-imgs"
+  }
+}

@@ -1,24 +1,9 @@
-# Backend
+# Legacy Express backend
 
-The backend is built with:
+This TypeScript/Supabase backend is preserved for reference and rollback. The Cloudflare Pages website uses `../cloudflare/api.mjs` and `../functions/` instead and does not need a Render server.
 
-* TypeScript
-* Supabase for database, authentication, and file storage
+The local book publication script can read the existing private `backend/.env` for `SUPABASE_URL`, `SUPABASE_ANON_KEY` and `SUPABASE_STORAGE_BUCKET`. Do not commit that file.
 
-### Backend Features
+To run the legacy backend intentionally, install its dependencies and use `pnpm run dev:backend` from the repository root. It is no longer part of the default development/build commands. The old Render configuration is archived under `../docs/legacy-hosting/`.
 
-* API endpoints for generating children's books
-* Supabase PostgreSQL for storing book content and metadata
-* Supabase Storage for hosting book images
-* Authentication and user management via Supabase
-
-### Running the Backend
-
-```bash
-# Install dependencies
-pnpm install
-
-# Start the backend server
-cd backend
-pnpm run dev     # Runs on http://localhost:3000 by default
-```
+See [deployment instructions](../DEPLOYMENT.md) for the current website architecture.

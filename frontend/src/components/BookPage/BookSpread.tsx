@@ -46,7 +46,7 @@ export const BookSpread: Component<BookSpreadProps> = (props) => {
       });
 
       // Initialize pages
-      pageFlip.loadFromHTML(document.querySelectorAll(".page"));
+      pageFlip.loadFromHTML(bookElement.querySelectorAll(".page"));
 
       // Show book after initialization
       if (bookElement) {
@@ -64,7 +64,7 @@ export const BookSpread: Component<BookSpreadProps> = (props) => {
         if (resizeTimeout) clearTimeout(resizeTimeout);
         resizeTimeout = setTimeout(() => {
           if (pageFlip) {
-            pageFlip.updateFromState();
+            pageFlip.update();
           }
         }, 200); // 200ms debounce
       };
@@ -87,8 +87,6 @@ export const BookSpread: Component<BookSpreadProps> = (props) => {
   // Watch for currentPage prop changes and sync PageFlip
   createEffect(() => {
     if (pageFlip && typeof props.currentPage === 'number') {
-      const flipIndex = pageFlip.getCurrentPageIndex ? pageFlip.getCurrentPageIndex() : undefined;
-      console.log('BookSpread: currentPage prop', props.currentPage, 'PageFlip index', flipIndex);
       pageFlip.turnToPage(props.currentPage);
     }
   });
@@ -147,7 +145,7 @@ export const BookSpread: Component<BookSpreadProps> = (props) => {
                             <img
                                 src={props.coverImage}
                                 alt="Story cover"
-                                class="h-full w-full object-cover rounded-lg shadow-lg"
+                                class="h-full w-full object-contain rounded-lg shadow-lg"
                             />
                           </div>
                       ) : (

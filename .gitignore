@@ -3,3 +3,9 @@
 node_modules
 dist
 .idea
+.local/
+.wrangler/
+.dev.vars
+.dev.vars.*
+!.dev.vars.example
+*.tsbuildinfo

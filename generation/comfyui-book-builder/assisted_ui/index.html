@@ -1,0 +1,47 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+  <title>Book Creator</title>
+  <link rel="stylesheet" href="/book-builder/creator/static/creator.css">
+  <script defer src="/book-builder/creator/static/creator.js"></script>
+</head>
+<body>
+  <header class="masthead"><a class="brand" href="/book-builder/create"><span class="brand-mark" aria-hidden="true">B</span> Book Creator</a><span class="local">Local studio <span class="dot"></span></span><a href="/" class="comfy-link">Open ComfyUI ↗</a></header>
+  <div id="notice" role="alert" hidden></div>
+  <main id="home" hidden>
+    <div class="intro"><p class="eyebrow">YOUR STORY, ONE GOOD DECISION AT A TIME</p><h1>Let’s make a book.</h1><p>Start with an idea, or leave it to us.<br>Read the story and shape the pictures together.</p></div>
+    <div class="home-grid"><form id="new-book" class="setup">
+      <label for="idea">What shall our story be about? <span class="optional">optional</span></label>
+      <textarea id="idea" name="story_idea" rows="4" maxlength="5000" aria-describedby="idea-help" placeholder="A tiny dragon who loves rainy days… or anything you can imagine."></textarea>
+      <p id="idea-help" class="helper">Leave this blank for a surprise. If you have an idea, you can tell us about the characters, the pictures, or how the story should feel.</p>
+      <button type="submit" class="primary">Generate <span aria-hidden="true">→</span></button>
+      <p class="helper setup-note">Made for ages 4–7. First, a story for you to read together. Then, the pictures.</p>
+    </form><aside class="recent"><p class="eyebrow">YOUR BOOKS</p><div id="sessions">Loading saved books…</div><p class="helper">Progress, prompts, attempts and feedback are saved as you go. Reopen this page after a shutdown to continue.</p></aside></div>
+  </main>
+  <main id="studio" hidden>
+    <aside class="rail"><a href="/book-builder/create" class="back">← All books</a><h2 id="book-title">Your new book</h2><p id="overall" class="helper"></p><nav id="stages" aria-label="Book stages"></nav><a id="finished-link" class="primary" hidden target="_blank" rel="noopener">Read your book ↗</a></aside>
+    <section class="workspace"><div class="stage-heading"><div><p id="kind" class="eyebrow"></p><h1 id="stage-title"></h1></div><div id="status" role="status" aria-live="polite"></div></div>
+      <div id="work-status" class="work-status" hidden><span class="spinner" aria-hidden="true"></span><div class="work-body"><strong id="work-label"></strong><p id="work-detail"></p></div></div>
+      <div id="stage-error" class="error" hidden></div>
+      <div class="review-grid"><div class="candidate-panel"><p id="candidate-caption" class="helper" hidden></p><div id="candidate-view"></div><div id="attempts" class="attempts" aria-label="Saved attempts"></div>
+        <details id="prompt-details" hidden><summary>Prompt</summary><p id="prompt-help" class="helper"></p><pre id="prompt-text"></pre>
+          <div id="generation-context" hidden><p id="generation-label" class="helper"></p><div id="generation-model" class="helper"></div><div id="generation-references" class="references"></div></div>
+          <details id="override-details" hidden><summary>Edit prompt</summary><p class="helper">Optional: replace the complete prompt for your next attempt. Keep the reference image numbers correct. When supplied, this is used as written instead of rewriting your feedback.</p><label for="prompt-override">Your prompt</label><textarea id="prompt-override" rows="7"></textarea><button id="use-prompt" class="text-button">Copy prompt to edit</button></details>
+          <details id="attempt-details" hidden><summary id="attempt-details-label">Attempt details</summary><div id="model-info"></div><div id="attempt-prompt" hidden><p class="helper">Prompt used to create this saved attempt:</p><pre id="exact-prompt"></pre></div><div id="references" class="references"></div><a id="candidate-file" target="_blank" rel="noopener">Open saved candidate ↗</a></details>
+        </details>
+      </div><aside class="decision-panel"><div id="page-copy"></div><div id="decision-content">
+          <p class="eyebrow">YOUR REVIEW</p><h2>Does this feel right?</h2><p id="review-hint" class="helper">Check the action, characters and recurring details. Your decision controls what happens next.</p>
+          <div id="story-guide" hidden></div>
+          <label for="feedback">Feedback <span class="optional">optional for regeneration</span></label><textarea id="feedback" rows="5" placeholder="What should change? For example: keep the heron on the left; remove the extra heron on the right."></textarea>
+          <button id="approve" class="primary">Approve & continue →</button>
+          <button id="regenerate" class="secondary">Regenerate</button>
+          <button id="edit-image" class="secondary">Edit this image</button>
+          <button id="keep-original" class="text-button" hidden>Keep the original & return</button>
+          <details id="json-editor"><summary>Edit this draft directly</summary><p class="helper">Save a revised JSON candidate. It will be checked against the existing story contract and still needs your approval.</p><textarea id="draft-json" rows="16" spellcheck="false"></textarea><button id="save-draft" class="secondary">Save revised draft</button></details>
+          <p class="helper small">Every attempt stays available below the preview. You can revisit approved pages and the cover; story and reference approvals preserve the book’s continuity. Feedback is saved for future workflow improvements.</p>
+        </div><div id="locked" hidden><h2>Approved and saved.</h2><p>This exact candidate is used by later stages.</p><button id="reopen-page" class="secondary" hidden>Revise this page</button><p id="reopen-help" class="helper" hidden></p><button id="return-current" class="secondary">Go to the current step →</button></div>
+        <button id="resume" class="secondary" hidden>Resume saved step</button></aside></div>
+    </section>
+  </main>
+</body></html>

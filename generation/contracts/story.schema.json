@@ -1,0 +1,114 @@
+{
+  "type": "object",
+  "properties": {
+    "id": {
+      "type": "string",
+      "minLength": 1
+    },
+    "pages": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "properties": {
+          "text": {
+            "type": "string",
+            "minLength": 1
+          },
+          "pageNumber": {
+            "type": "integer",
+            "minimum": 1
+          },
+          "imagePrompt": {
+            "type": "string",
+            "minLength": 1
+          },
+          "charactersPresent": {
+            "type": "array",
+            "items": {
+              "type": "string",
+              "minLength": 1
+            },
+            "uniqueItems": true
+          },
+          "isMainCharacterPresent": {
+            "type": "boolean"
+          }
+        },
+        "required": [
+          "text",
+          "pageNumber",
+          "imagePrompt",
+          "charactersPresent",
+          "isMainCharacterPresent"
+        ],
+        "additionalProperties": false
+      }
+    },
+    "metadata": {
+      "type": "object",
+      "properties": {
+        "theme": {
+          "type": "string",
+          "minLength": 1
+        },
+        "title": {
+          "type": "string",
+          "minLength": 1
+        },
+        "ageRange": {
+          "type": "string",
+          "minLength": 1
+        },
+        "characters": {
+          "type": "array",
+          "items": {
+            "type": "string",
+            "minLength": 1
+          },
+          "uniqueItems": true,
+          "minItems": 1
+        },
+        "bookSummary": {
+          "type": "string",
+          "minLength": 1
+        },
+        "storyPrompt": {
+          "type": "string",
+          "minLength": 1
+        },
+        "coverImagePrompt": {
+          "type": "string",
+          "minLength": 1
+        },
+        "styleReferencePrompt": {
+          "type": "string",
+          "minLength": 1
+        },
+        "mainCharacterDescriptivePrompt": {
+          "type": "string",
+          "minLength": 1
+        }
+      },
+      "required": [
+        "theme",
+        "title",
+        "ageRange",
+        "characters",
+        "bookSummary",
+        "storyPrompt",
+        "coverImagePrompt",
+        "styleReferencePrompt",
+        "mainCharacterDescriptivePrompt"
+      ],
+      "additionalProperties": false
+    }
+  },
+  "required": [
+    "id",
+    "pages",
+    "metadata"
+  ],
+  "additionalProperties": false,
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "Original children\u2019s book story contract"
+}

@@ -1,5 +1,2 @@
-// src/config.ts
-
-const isLocalhost = window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1';
-
-export const API_BASE_URL = isLocalhost ? 'http://localhost:3000/api' : import.meta.env.VITE_API_URL + '/api';
+// Pages serves the UI and API on the same origin. Vite proxies /api locally.
+export const API_BASE_URL = '/api';

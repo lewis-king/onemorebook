@@ -14,11 +14,14 @@ export default function BookPage() {
     const [error, setError] = createSignal<string | null>(null);
     const [pageFlipInstance, setPageFlipInstance] = createSignal<any>(null);
     const [stars, setStars] = createSignal<number>(0);
+    let voting = false;
 
     // Sync stars signal with book data when book loads/changes
     createEffect(() => {
-        if (book() && typeof book().stars === 'number') {
-            setStars(book().stars);
+        if (book.error) return;
+        const current = book();
+        if (current && typeof current.stars === 'number') {
+            setStars(current.stars);
         }
     });
 
@@ -44,17 +47,19 @@ export default function BookPage() {
     };
     const getCoverImage = () => {
         const b = book();
-        return `https://kwhyhflyyjhtbvbmtdmt.supabase.co/storage/v1/object/public/book-imgs/${b?.id ?? ''}/cover.jpg`;
+        return b?.cover_image_url || `https://kwhyhflyyjhtbvbmtdmt.supabase.co/storage/v1/object/public/book-imgs/${b?.id ?? ''}/cover.jpg`;
     };
 
     const handleUpvote = async (id: string, currentStars: number) => {
+        if (voting) return;
+        voting = true;
         try {
             const updated = await bookService.updateStars(id, currentStars);
             setStars(updated.stars);
         } catch (e) {
             console.error('Error updating stars:', e);
             setError(e instanceof Error ? e.message : 'Failed to update stars');
-        }
+        } finally { voting = false; }
     };
 
 
@@ -78,6 +83,12 @@ export default function BookPage() {
 
     return (
         <div class="w-full max-w-[1600px] mx-auto px-1 md:px-4 lg:px-12 flex flex-col items-center justify-center">
+            <Show when={book.error}>
+                <div role="alert" class="rounded-xl bg-red-50 p-6 text-red-800">
+                    <p>{book.error?.message || 'Could not load this book.'}</p>
+                    <a href="/" class="underline">Back to stories</a>
+                </div>
+            </Show>
             <Show when={error()}>
                 <div class="bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded mb-4">
                     {error()}
@@ -85,7 +96,7 @@ export default function BookPage() {
             </Show>
 
             {/* Add PageControls above the book */}
-            <Show when={!book.loading && book()}>
+            <Show when={!book.error && !book.loading && book()}>
                 <PageControls
                     currentPage={currentPage()}
                     totalPages={getPages().length}
@@ -95,10 +106,10 @@ export default function BookPage() {
             </Show>
 
             <Show
-                when={!book.loading && book()}
+                when={!book.error && !book.loading && book()}
                 fallback={
                     <div class="text-center py-8">
-                        Loading book...
+                        {book.error ? '' : 'Loading book...'}
                     </div>
                 }
             >

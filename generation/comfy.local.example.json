@@ -1,0 +1,8 @@
+{
+  "comfyui": "~/comfy/ComfyUI",
+  "python": "~/comfy/comfy-env/bin/python",
+  "mcp_python": "~/comfy/mcp/official-env/bin/python",
+  "mcp_server": "~/comfy/mcp/official-env/bin/comfy-mcp",
+  "comfy_bin": "~/comfy/mcp/bin/comfy",
+  "comfy_url": "http://127.0.0.1:8188"
+}

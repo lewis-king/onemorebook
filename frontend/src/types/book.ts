@@ -12,6 +12,10 @@ export interface BookContentMetadata {
     characters: string[];
     storyPrompt: string;
     theme?: string;
+    bookSummary?: string;
+    mainCharacterDescriptivePrompt?: string;
+    coverImagePrompt?: string;
+    styleReferencePrompt?: string;
 }
 
 export interface BookContent {
@@ -25,6 +29,7 @@ export interface Book {
     title: string;
     book_summary: string;
     cover_image_prompt: string;
+    cover_image_url?: string;
     content: BookContent;
     age_range: string;
     theme?: string;

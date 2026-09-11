@@ -1,121 +1,50 @@
 # OneMoreBook
 
-A full-stack application for generating children's books using LLMs. This project combines both frontend and backend components in a monorepo structure.
+A bedtime-story library built with SolidJS, Cloudflare Pages Functions and Supabase. The public site browses completed books, displays their illustrations and accepts stars. Book creation runs separately on your own machine through the assisted creator.
 
-### Homepage
-![homepage](./imgs/homepage.png)
+The Cloudflare migration is prepared locally. **It has not been deployed.** See [deployment and current status](DEPLOYMENT.md) before publishing.
 
-### Book Content (mobile responsive)
-![book1](./imgs/book1.png)
+| Directory | Purpose |
+| --- | --- |
+| `frontend/` | SolidJS/Vite library and responsive book reader |
+| `functions/`, `cloudflare/` | Cloudflare Pages API for reading books and adding stars |
+| `generation/` | Local assisted creator, ComfyUI workflows and saved books; [setup](generation/README.md) |
+| `scripts/` | Explicit publication of approved local exports to Supabase |
+| `backend/` | Preserved Express backend; not required by the Pages website |
+| `docs/legacy-hosting/` | Previous Netlify/Render configuration for rollback |
 
-### Book Content (desktop)
-![book2](./imgs/book2.png)
-![book2_content](./imgs/book2_content.png)
+## Local preview
 
-
-## Project Structure
-
-* **`/backend`**: Supabase backend built with TypeScript
-* **`/frontend`**: SolidJS frontend application with TailwindCSS
-
-## Prerequisites
-
-* Node.js (v18+)
-* pnpm package manager
-* Supabase account (for backend services)
-
-## Getting Started
-
-### Installation
-
-1. Clone the repository
-2. Install dependencies for both projects:
+Use Node.js 22 or newer and pnpm. From the repository root:
 
 ```bash
-# Install backend dependencies
-cd backend
-pnpm install
-
-# Install frontend dependencies
-cd ../frontend
-pnpm install
+pnpm install --frozen-lockfile
+pnpm --dir frontend install --frozen-lockfile
+cp .dev.vars.example .dev.vars  # only when .dev.vars does not already exist
+# Set SUPABASE_ANON_KEY in .dev.vars using your existing Supabase configuration.
+pnpm run build:pages
+pnpm run dev:pages
 ```
 
-### Running the Development Environment
+Open http://localhost:8788. It runs the static site and API in Cloudflare’s local runtime, connecting to the existing Supabase project. Clicking a star in this preview changes a real vote. Automated tests mock writes.
 
-You can run both the frontend and backend servers concurrently using the following commands:
+For frontend hot reload, `pnpm run dev` runs Vite on http://localhost:5173 with `/api` proxied to the local Pages runtime on port 8788. Stop an already running preview first to free that port.
+
+## Verify and publish
 
 ```bash
-# Start the backend server
-cd backend
-pnpm run dev     # Runs on http://localhost:3000 by default
-
-# In a separate terminal window
-cd frontend
-pnpm run dev     # Runs on http://localhost:5173 by default
+pnpm run check:pages
 ```
 
-### Building for Production
+This checks the API, type-checks/builds the frontend and compiles Pages Functions locally. It does not deploy or import books. The Supabase key belongs in server settings, never a `VITE_` variable.
+
+Deployment and book publication are separate, explicit actions described in [DEPLOYMENT.md](DEPLOYMENT.md). A Git push does not deploy the current Direct Upload Pages project.
+
+## Book creator
 
 ```bash
-# Build the backend
-cd backend
-pnpm run build
-
-# Build the frontend
-cd ../frontend
-pnpm run build
+cd generation
+python run.py start
 ```
 
-## Backend
-
-The backend is built with:
-
-* TypeScript
-* Supabase for database, authentication, and file storage
-* PostgreSQL for data storage
-* LangChain for LLM integrations
-
-### Backend Features
-
-* API endpoints for generating children's books
-* Supabase PostgreSQL for storing book content and metadata
-* Supabase Storage for hosting book images
-* Authentication and user management via Supabase
-
-## Frontend
-
-The frontend is built with:
-
-* SolidJS
-* TypeScript
-* TailwindCSS for styling
-* Responsive design for both mobile and desktop
-
-### Frontend Features
-
-* Interactive book creation interface
-* Beautiful book reader with page flip animations
-* Responsive layout for all devices
-
-## Deployment
-
-### Backend Deployment
-
-The backend connects to Supabase services, which handle hosting and infrastructure:
-
-```bash
-cd backend
-pnpm run build
-# Deploy to your hosting service of choice
-```
-
-### Frontend Deployment
-
-The frontend can be deployed to any static hosting service:
-
-```bash
-cd frontend
-pnpm run build
-# Deploy the contents of the dist folder
-```
+Open http://127.0.0.1:8188/book-builder/create. Human approval remains part of this workflow. Existing attempts, reference images and immutable exports stay local. See [generation/README.md](generation/README.md).

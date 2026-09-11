@@ -1,7 +1,7 @@
 {
   "name": "onemorebook",
   "version": "1.0.0",
-  "description": "Full-stack application for generating children's books using LLMs",
+  "description": "A children\u2019s book library on Cloudflare Pages, with local assisted creation and Supabase storage",
   "private": true,
   "workspaces": [
     "backend",
@@ -11,12 +11,19 @@
     "install:all": "pnpm install && cd backend && pnpm install && cd ../frontend && pnpm install",
     "dev:backend": "cd backend && pnpm run dev",
     "dev:frontend": "cd frontend && pnpm run dev",
-    "dev": "concurrently \"pnpm run dev:backend\" \"pnpm run dev:frontend\"",
+    "dev": "pnpm run build:pages && concurrently \"pnpm run dev:pages\" \"pnpm run dev:frontend\"",
     "build:backend": "cd backend && pnpm install && pnpm run build",
     "build:frontend": "cd frontend && pnpm install && pnpm run build",
-    "build": "pnpm run build:backend && pnpm run build:frontend"
+    "build": "pnpm run build:pages",
+    "build:pages": "pnpm --dir frontend build",
+    "dev:pages": "wrangler pages dev frontend/dist --port 8788",
+    "deploy:pages": "pnpm run check:pages && wrangler pages deploy frontend/dist --project-name onemorebook --branch main",
+    "test:pages": "node --test cloudflare/api.test.mjs scripts/publish-book.test.mjs",
+    "publish:book": "node scripts/publish-book.mjs",
+    "check:pages": "pnpm run test:pages && pnpm run build:pages && wrangler pages functions build --outdir .wrangler/functions-build"
   },
   "devDependencies": {
-    "concurrently": "^8.2.2"
+    "concurrently": "^8.2.2",
+    "wrangler": "4.131.1"
   }
 }

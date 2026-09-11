@@ -1,0 +1,40 @@
+{
+  "source": "/home/lewis/comfy/ComfyUI/output/books/book-2026090817-fbc55ce7f7/renders/79e2897fa112/quality/pages/page-006/attempt-01.png",
+  "sha256": "653f91538ab62a797f091d8107793b38c17a6125284103a513fd6e8c39faa473",
+  "query": "a girl. a fox.",
+  "image_size": [
+    1024,
+    1024
+  ],
+  "boxes": [
+    [
+      539.8433227539062,
+      342.7215270996094,
+      922.0537719726562,
+      928.9107666015625
+    ],
+    [
+      100.57591247558594,
+      213.133056640625,
+      457.3377685546875,
+      935.263427734375
+    ],
+    [
+      534.0203247070312,
+      337.3199157714844,
+      1005.7129516601562,
+      936.1160888671875
+    ]
+  ],
+  "scores": [
+    0.3870246708393097,
+    0.7717647552490234,
+    0.4729994833469391
+  ],
+  "labels": [
+    "a fox",
+    "a girl",
+    "a fox"
+  ],
+  "scope": "Detection experiment only. Inspect exact boxes before extracting a reference."
+}

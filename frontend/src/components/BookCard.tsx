@@ -12,7 +12,7 @@ interface BookCardProps extends Book {
 
 const BookCard: Component<BookCardProps> = (props) => {
     // Compute cover image path from supabase
-    const coverImgPath = `${SUPABASE_IMG_URL}/${props.id}/cover.jpg`;
+    const coverImgPath = () => props.cover_image_url || `${SUPABASE_IMG_URL}/${props.id}/cover.jpg`;
     return (
         <div class="book-card bg-white rounded-2xl overflow-hidden shadow-xl
                 hover:shadow-2xl transition-all duration-300
@@ -21,7 +21,7 @@ const BookCard: Component<BookCardProps> = (props) => {
             <A href={`/book/${props.id}`} class="flex flex-col h-full">
                 <div class="relative aspect-[4/3] overflow-hidden">
                     <img
-                        src={coverImgPath}
+                        src={coverImgPath()}
                         alt={props.title}
                         class="w-full h-full object-cover bg-gray-50"
                     />

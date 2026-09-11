@@ -21,10 +21,14 @@ export default function HomePage() {
     const [hasMore, setHasMore] = createSignal(true);
     const [offset, setOffset] = createSignal(0);
     const [initialLoad, setInitialLoad] = createSignal(true);
+    const [error, setError] = createSignal('');
+    const voting = new Set<string>();
     const limit = 9;
 
     const fetchBooks = async (reset = false) => {
         setLoading(true);
+        setError('');
+        try {
         const newBooks = await bookService.listBooks({ limit, offset: reset ? 0 : offset() });
         if (reset) {
             setBooks(newBooks);
@@ -35,12 +39,17 @@ export default function HomePage() {
             setOffset(prev => prev + newBooks.length);
         }
         setHasMore(newBooks.length === limit);
-        setLoading(false);
+        } catch (e) {
+            setError(e instanceof Error ? e.message : 'Could not load the library. Please try again.');
+        } finally {
+            setLoading(false);
+            setInitialLoad(false);
+        }
     };
 
     // Debounced scroll handler
     const handleScroll = debounce(() => {
-        if (loading() || !hasMore()) return;
+        if (loading() || !hasMore() || error()) return;
         if (window.innerHeight + window.scrollY >= document.body.offsetHeight - 300) {
             fetchBooks();
         }
@@ -57,8 +66,14 @@ export default function HomePage() {
 
     // Optimized upvote: update local state only
     const handleUpvote = async (id: string, currentStars: number) => {
-        const updated = await bookService.updateStars(id, currentStars);
-        setBooks(prev => prev.map(book => book.id === id ? { ...book, stars: updated.stars } : book));
+        if (voting.has(id)) return;
+        voting.add(id);
+        try {
+            const updated = await bookService.updateStars(id, currentStars);
+            setBooks(prev => prev.map(book => book.id === id ? { ...book, stars: updated.stars } : book));
+        } catch (e) {
+            setError(e instanceof Error ? e.message : 'Could not add your star. Please try again.');
+        } finally { voting.delete(id); }
     };
 
 
@@ -84,16 +99,19 @@ export default function HomePage() {
             /> */}
             
 
-            <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
+            <Show when={error()}>
+                <div role="alert" class="rounded-xl bg-red-50 p-4 text-red-800">
+                    <p>{error()}</p>
+                    <button onClick={() => fetchBooks(true)} class="mt-2 underline">Try again</button>
+                </div>
+            </Show>
+            <div id="stories" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
                 <Show when={!initialLoad()} fallback={<div class="text-center text-lg font-comic text-gray-400 py-12 animate-pulse">Loading books...</div>}>
                     <Show when={filteredBooks().length > 0} fallback={
                         <div class="col-span-full flex flex-col items-center justify-center py-16">
                           <div class="text-5xl mb-4 animate-bounce">🦄</div>
                           <div class="text-2xl font-comic text-kiddy-primary mb-2">No stories yet!</div>
-                          <div class="text-lg text-gray-500 mb-6">Be the first to create an adventure.</div>
-                          <a href="/create" class="bg-gradient-to-r from-kiddy-accent to-yellow-300 text-kiddy-primary font-comic text-lg px-8 py-4 rounded-full shadow-lg hover:scale-105 transition-transform duration-300 flex items-center gap-2">
-                            <span>➕</span> <span>Create Your Story</span>
-                          </a>
+                          <div class="text-lg text-gray-500 mb-6">New bedtime adventures will appear here.</div>
                         </div>
                     }>
                         <For each={filteredBooks()}>{book => <BookCard {...book} onUpvote={handleUpvote} />}</For>
@@ -107,10 +125,6 @@ export default function HomePage() {
                 </Show>
             </div>
 
-            {/* Floating Create Story Button for mobile */}
-            <a href="/create" class="fixed bottom-8 right-8 z-50 bg-gradient-to-r from-kiddy-accent to-yellow-300 text-kiddy-primary font-comic text-lg px-6 py-4 rounded-full shadow-xl hover:scale-110 transition-transform duration-300 flex items-center gap-2 md:hidden">
-              <span>➕</span> <span>Create Story</span>
-            </a>
         </div>
     );
 }

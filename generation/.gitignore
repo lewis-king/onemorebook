@@ -1,0 +1,6 @@
+__pycache__/
+*.py[cod]
+.local/
+comfy.local.json
+output/
+book-workflow-v2/

@@ -1,0 +1,66 @@
+{
+  "last_node_id": 2,
+  "last_link_id": 0,
+  "nodes": [
+    {
+      "id": 1,
+      "type": "BookAssistedStart",
+      "pos": [
+        120,
+        160
+      ],
+      "size": [
+        570,
+        405
+      ],
+      "flags": {},
+      "order": 0,
+      "mode": 0,
+      "inputs": [],
+      "outputs": [
+        {
+          "name": "creator_url",
+          "type": "STRING",
+          "links": null,
+          "slot_index": 0
+        }
+      ],
+      "properties": {
+        "Node name for S&R": "BookAssistedStart"
+      },
+      "widgets_values": [
+        "",
+        12,
+        "4\u20136",
+        3,
+        "",
+        731011,
+        "randomize"
+      ]
+    },
+    {
+      "id": 2,
+      "type": "Note",
+      "pos": [
+        120,
+        20
+      ],
+      "size": [
+        570,
+        110
+      ],
+      "flags": {},
+      "order": 1,
+      "mode": 0,
+      "properties": {},
+      "widgets_values": [
+        "Run once to start a NEW assisted book. Open http://127.0.0.1:8188/book-builder/create to review it. Approve, regenerate with feedback, or edit the chosen image. To resume a book, use its saved creator page instead of running this starter again."
+      ]
+    }
+  ],
+  "links": [],
+  "groups": [],
+  "config": {},
+  "extra": {},
+  "version": 0.4
+}

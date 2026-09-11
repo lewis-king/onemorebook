@@ -1,0 +1,2 @@
+# Server-side only. Never prefix this key with VITE_.
+SUPABASE_ANON_KEY=your-existing-supabase-anon-key

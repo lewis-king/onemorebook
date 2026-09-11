@@ -1,0 +1,79 @@
+[
+  {
+    "name": "baseline-button",
+    "image_sha256": "fd75cdb96fe64f604d4eb12f206dc74f22b18ff59b1ef7723557ebf5e39936c3",
+    "result": {
+      "kind": "sewing_button",
+      "observed_shape": "round solid disc with a rim and central holes",
+      "observed_material": "plastic or resin",
+      "uncertain": false
+    },
+    "expected_material_approval": false
+  },
+  {
+    "name": "failed-dark-dot",
+    "image_sha256": "9368d92bea8da108ae563a3c980685dc8de2fd3fe16040cca365bd78f6e34554",
+    "result": {
+      "kind": "button_like_dot",
+      "observed_shape": "small round solid disc",
+      "observed_material": "dark pigment or material on fabric",
+      "uncertain": false
+    },
+    "expected_material_approval": false
+  },
+  {
+    "name": "failed-round-button",
+    "image_sha256": "7793a8b8ac4056b3cfe6b315d0eea8acd1925c9ac6cdc0e375e3743e6a389354",
+    "result": {
+      "kind": "sewing_button",
+      "observed_shape": "round solid disc with a central hole and outer rim",
+      "observed_material": "plastic or hard synthetic",
+      "uncertain": false
+    },
+    "expected_material_approval": false
+  },
+  {
+    "name": "successful-cross-thread",
+    "image_sha256": "80016209808b94cade2d17fa41b40b0ee5998cbf15828db9615261947b12be4a",
+    "result": {
+      "kind": "loose_thread",
+      "observed_shape": "crossed fine lines forming a small X or star-like shape",
+      "observed_material": "flexible fiber/thread",
+      "uncertain": false
+    },
+    "expected_material_approval": true
+  },
+  {
+    "name": "plain-blue-cloth",
+    "image_sha256": "fbd0dcff679552d90e7e7a4d988bf246983987beac7100c91dccd972af338fc9",
+    "result": {
+      "kind": "plain_cloth",
+      "observed_shape": "continuous textile surface",
+      "observed_material": "blue woven fabric",
+      "uncertain": false
+    },
+    "expected_material_approval": true
+  },
+  {
+    "name": "control",
+    "image_sha256": "735c9ab24ca8a567e359627bd9143b42295cf3ac43872bb279ea941411b4489f",
+    "result": {
+      "kind": "button_like_dot",
+      "observed_shape": "small round dot",
+      "observed_material": "dark pigment or mark on fabric",
+      "uncertain": false
+    },
+    "expected_material_approval": false
+  },
+  {
+    "name": "affirmative",
+    "image_sha256": "dbab18ad463374306dd075a2bb0711bf735184bd76d993326987b448346d415c",
+    "result": {
+      "kind": "button_like_dot",
+      "observed_shape": "small, dark, oval-shaped mark",
+      "observed_material": "dark pigment or fiber on blue textile",
+      "uncertain": true
+    },
+    "expected_material_approval": false
+  }
+]

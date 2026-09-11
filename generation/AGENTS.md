@@ -1,0 +1,15 @@
+# Book generation
+
+- Read `TASKS.md`, `RESUME.md` and `README.md` first. The assisted creator is the current user-selected mode. Do not restart full automatic book experiments or Rainbow without Lewis's instruction.
+- Source and all book outputs now live in this directory. ComfyUI at `/home/lewis/comfy/ComfyUI` is the rendering engine; `python run.py start` starts/reuses it from here.
+- Preserve original workflows, story schema, every candidate, exact graph/seed and human decision. Never approve a real candidate on Lewis's behalf without explicit acceptance.
+- `contracts/story.schema.json` is the original public app contract. Production, references, review records and execution details belong in separate manifests. App import remains manual; do not change the reader/backend as part of generation work unless requested.
+- Check saved state and the live queue before submitting/resuming. Avoid duplicate jobs. Do not interrupt unrelated work.
+- Use the official local MCP for workflow validation and generation. Call `server_info` first. The adapter is `mcp/call.py`, run with `/home/lewis/comfy/mcp/official-env/bin/python`. Actual schemas remain at `/home/lewis/comfy/mcp/official-migration/tools.json`.
+- All inference stays local. Consult official model documentation before changing image graphs. Human review replaces automatic quality gates in the assisted path only.
+- Outputs live in `output/books/`. Legacy results live in `output/codex/books/`. Compatibility symlinks in ComfyUI preserve old paths and URLs; do not remove them or rewrite saved provenance to new paths.
+- Source and workflow copies can be committed with the app. Large outputs, old experiments and local settings are ignored by Git but must remain on disk. Preserve saved checkpoints under `book-workflow-v2/`.
+- Approved pages and the cover can now be reopened by the user for revision; `page_revision` saves the previous approval and return point. Never discard parked work or approve the replacement on the user's behalf. Story/shared references stay fixed. Completed-book revisions produce immutable versioned exports, preserving original book links.
+- New sessions use `book-<14-digit timestamp>-<10-hex hash>`. Older `book-assisted-…` IDs and short creator URL aliases resolve the original directory; preserve canonical saved IDs, paths and job identity.
+- Private plans support `prop_state` assets with `source_assets` and `visible_pages`. Generate source props before their derived state; scenes must use the scheduled state without also supplying its component references. `assisted_prop_states.py` owns these checks. Human approval remains required for every new reference.
+- Explicit corrections to an already reviewed plan are immutable `creator/plan-updates/` amendments, applied by `assisted_reference_updates.effective_plan` for export. Preserve the original plan, old prompts and candidates. A new scene reference invalidates its saved base prompt; never approve an old candidate rendered with obsolete references. Source scenes used to extract a new reference are dependencies and remain protected from independent revision.

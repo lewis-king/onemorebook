@@ -1,6 +1,13 @@
 import { Book, CreateBookParams, UploadStoryParams, UpdateStoryParams } from '../types/book';
 import { API_BASE_URL } from '../config';
 
+async function readResponse<T>(response: Response): Promise<T> {
+  const data = await response.json().catch(() => null);
+  if (!response.ok) throw new Error(typeof data?.error === 'string' ? data.error : 'The library is unavailable. Please try again.');
+  if (data === null) throw new Error('The library returned an unreadable response. Please try again.');
+  return data as T;
+}
+
 export const bookService = {
   async listBooks({ limit = 9, offset = 0, sortBy = 'stars', order = 'desc' } = {}): Promise<Book[]> {
     const params = new URLSearchParams({
@@ -10,7 +17,7 @@ export const bookService = {
       order,
     });
     const response = await fetch(`${API_BASE_URL}/books?${params.toString()}`);
-    const data = await response.json();
+    const data = await readResponse<Book[]>(response);
     // Optionally, ensure all fields are present and fallback if needed
     return data.map((book: any) => ({
       ...book,
@@ -27,12 +34,12 @@ export const bookService = {
 
   async getTopBooks(): Promise<Book[]> {
     const response = await fetch(`${API_BASE_URL}/books/top`);
-    return response.json();
+    return readResponse<Book[]>(response);
   },
 
   async getBook(id: string): Promise<Book> {
     const response = await fetch(`${API_BASE_URL}/books/${id}`);
-    return response.json();
+    return readResponse<Book>(response);
   },
 
   async createBook(params: CreateBookParams): Promise<Book> {
@@ -46,18 +53,15 @@ export const bookService = {
     return response.json();
   },
 
-  async updateStars(id: string, currentStars: number): Promise<Book> {
+  async updateStars(id: string, _currentStars?: number): Promise<Pick<Book, 'id' | 'stars'>> {
     const response = await fetch(`${API_BASE_URL}/books/${id}/stars`, {
       method: 'PUT',
       headers: {
         'Content-Type': 'application/json',
       },
-      body: JSON.stringify({
-        id,
-        stars: currentStars + 1
-      }),
+      body: '{}',
     });
-    return response.json();
+    return readResponse<Pick<Book, 'id' | 'stars'>>(response);
   },
 
   async uploadStory(params: UploadStoryParams): Promise<{ bookId: string; book: Book }> {
