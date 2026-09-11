@@ -17,7 +17,7 @@
     "build": "pnpm run build:pages",
     "build:pages": "pnpm --dir frontend build",
     "dev:pages": "wrangler pages dev frontend/dist --port 8788",
-    "deploy:pages": "pnpm run check:pages && wrangler pages deploy frontend/dist --project-name onemorebook --branch main",
+    "deploy:pages": "pnpm run check:pages && wrangler pages deploy frontend/dist --project-name onemorebook --branch main --commit-dirty=true",
     "test:pages": "node --test cloudflare/api.test.mjs scripts/publish-book.test.mjs",
     "publish:book": "node scripts/publish-book.mjs",
     "check:pages": "pnpm run test:pages && pnpm run build:pages && wrangler pages functions build --outdir .wrangler/functions-build"
