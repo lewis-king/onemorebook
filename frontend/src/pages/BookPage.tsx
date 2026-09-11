@@ -1,4 +1,4 @@
-import { createResource, createSignal, Show, createEffect } from "solid-js";
+import { createResource, createSignal, Show, createEffect, onMount, onCleanup } from "solid-js";
 import { useParams } from "@solidjs/router";
 import { bookService } from "../services/api";
 import { BookSpread } from "../components/BookPage/BookSpread";
@@ -81,6 +81,14 @@ export default function BookPage() {
         }
     };
 
+    // Flip pages with the keyboard arrow keys too
+    const handleKeyDown = (e: KeyboardEvent) => {
+        if (e.key === 'ArrowLeft') handlePrevious();
+        else if (e.key === 'ArrowRight') handleNext();
+    };
+    onMount(() => window.addEventListener('keydown', handleKeyDown));
+    onCleanup(() => window.removeEventListener('keydown', handleKeyDown));
+
     return (
         <div class="w-full max-w-[1600px] mx-auto px-1 md:px-4 lg:px-12 flex flex-col items-center justify-center">
             <Show when={book.error}>
@@ -108,8 +116,11 @@ export default function BookPage() {
             <Show
                 when={!book.error && !book.loading && book()}
                 fallback={
-                    <div class="text-center py-8">
-                        {book.error ? '' : 'Loading book...'}
+                    <div class="text-center py-20">
+                        <Show when={!book.error}>
+                            <div class="text-6xl mb-4 animate-bounce">📖</div>
+                            <div class="text-xl font-comic text-kiddy-primary animate-pulse">Opening your story...</div>
+                        </Show>
                     </div>
                 }
             >

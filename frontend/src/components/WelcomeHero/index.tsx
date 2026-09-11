@@ -6,7 +6,7 @@ const WelcomeHero: Component = () => {
     return (
         <div class="relative overflow-hidden rounded-3xl bg-gradient-to-br from-kiddy-primary via-[#FF8E8E] to-kiddy-secondary p-4 md:p-8 lg:p-12">
             <div class="relative z-10 max-w-3xl mx-auto text-center py-8 md:py-12">
-                <h1 class="text-3xl sm:text-4xl md:text-5xl lg:text-6xl font-comic text-white mb-4 md:mb-6 leading-tight">
+                <h1 class="text-3xl sm:text-4xl md:text-5xl lg:text-6xl font-comic text-white mb-4 md:mb-6 leading-tight drop-shadow-sm">
                     Welcome to Your Story Adventure! ✨
                 </h1>
 

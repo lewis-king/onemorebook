@@ -14,16 +14,18 @@ const BookCard: Component<BookCardProps> = (props) => {
     // Compute cover image path from supabase
     const coverImgPath = () => props.cover_image_url || `${SUPABASE_IMG_URL}/${props.id}/cover.jpg`;
     return (
-        <div class="book-card bg-white rounded-2xl overflow-hidden shadow-xl
+        <div class="book-card bg-white rounded-2xl overflow-hidden shadow-xl shadow-kiddy-primary/10
+                border border-kiddy-primary/5
                 hover:shadow-2xl transition-all duration-300
                 transform hover:-translate-y-2 hover:rotate-2
                 flex flex-col h-full">
-            <A href={`/book/${props.id}`} class="flex flex-col h-full">
+            <A href={`/book/${props.id}`} class="group flex flex-col h-full">
                 <div class="relative aspect-[4/3] overflow-hidden">
                     <img
                         src={coverImgPath()}
                         alt={props.title}
-                        class="w-full h-full object-cover bg-gray-50"
+                        class="w-full h-full object-cover bg-gray-50
+                               transition-transform duration-500 ease-out group-hover:scale-105"
                     />
                     <div class="absolute top-3 right-3">
                         <StarRating
@@ -53,8 +55,8 @@ const BookCard: Component<BookCardProps> = (props) => {
                     </div>
 
                     <button class="mt-6 w-full bg-kiddy-accent text-kiddy-primary
-                         font-comic py-2 rounded-full transform
-                         transition-transform hover:scale-105
+                         font-comic text-lg py-2.5 rounded-full transform
+                         transition-all hover:scale-105 active:scale-95
                          shadow-md hover:shadow-lg">
                         Read Now! 📖
                     </button>

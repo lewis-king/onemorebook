@@ -127,13 +127,13 @@ export const BookSpread: Component<BookSpreadProps> = (props) => {
                                 class="group bg-kiddy-primary hover:bg-kiddy-secondary
                                transition-all duration-300 rounded-2xl p-8
                                shadow-xl hover:shadow-2xl transform
-                               hover:scale-105 cursor-pointer"
+                               hover:scale-105 active:scale-95 cursor-pointer"
                             >
                               <div class="text-4xl font-comic text-white mb-4">
                                 Did you love this story? 📚
                               </div>
                               <div class="flex items-center justify-center gap-3">
-                                <TbStarFilled class="text-yellow-400 w-12 h-12" />
+                                <TbStarFilled class="text-yellow-400 w-12 h-12 group-hover:animate-wiggle" />
                                 <span class="text-3xl font-comic text-white">
                             {props.stars}
                           </span>

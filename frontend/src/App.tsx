@@ -6,7 +6,7 @@ import BookPage from "./pages/BookPage";
 function App() {
   return (
     <div class="min-h-screen bg-dragons-pattern bg-cover bg-fixed bg-center">
-        <div class="min-h-screen bg-white/90 backdrop-blur-sm">
+        <div class="min-h-screen bg-white/80 backdrop-blur-sm">
           
           <main class="container mx-auto px-4 py-8">
     <Router>
