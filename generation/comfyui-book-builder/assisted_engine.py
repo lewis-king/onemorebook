@@ -323,7 +323,9 @@ def advance(state,candidate,record):
     elif index+1<len(state['stages']):
         state['current_stage']=state['stages'][index+1]['id'];state['status']='ready'
     else:
-        state['status']='exporting'
+        # A replacement of a previously published page creates a new immutable
+        # export and therefore needs an explicit publication of that revision.
+        state['status']='exporting';state.pop('publication',None)
     state['revision']+=1;store.save(state)
     return state
 

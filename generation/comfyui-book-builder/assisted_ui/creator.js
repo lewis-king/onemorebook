@@ -130,6 +130,14 @@ function render(){
   $('resume').hidden=!isCurrent||!['error','queued','generating','exporting'].includes(state.status);
   $('resume').disabled=busy;
   $('finished-link').hidden=!state.book_url;$('finished-link').href=state.book_url||'#';
+  const publication=state.publication||{};
+  const published=publication.status==='complete'&&publication.url;
+  $('publish-book').hidden=state.status!=='complete'||Boolean(published);
+  $('publish-book').disabled=busy;
+  $('publish-book').textContent=publication.status==='publishing'?'Publishing to library…':publication.status==='error'?'Retry publish to library ↗':'Publish to library ↗';
+  $('published-link').hidden=!published;$('published-link').href=publication.url||'#';
+  $('publish-status').hidden=!publication.status||publication.status==='complete';
+  $('publish-status').textContent=publication.status==='publishing'?'Uploading the approved export to Supabase. You can leave this page open; the upload is resumable.':publication.error||'';
 }
 async function act(action){
   if(busy)return;
@@ -143,6 +151,7 @@ async function act(action){
 }
 $('approve').onclick=()=>act('approve');$('regenerate').onclick=()=>act('regenerate');$('edit-image').onclick=()=>act('edit');$('save-draft').onclick=()=>act('save_draft');$('resume').onclick=()=>act('resume');
 $('reopen-page').onclick=()=>act('reopen');$('keep-original').onclick=()=>act('keep_original');
+$('publish-book').onclick=()=>act('publish');
 $('use-prompt').onclick=()=>{$('prompt-override').value=promptView().text;renderPrompt();$('prompt-override').focus();};
 $('prompt-override').oninput=()=>renderPrompt();
 $('override-details').ontoggle=()=>{if(state)renderPrompt();};

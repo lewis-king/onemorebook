@@ -1,7 +1,9 @@
 """Local UI routes and crash-aware MCP coordination, one job per review stage."""
 import asyncio
+import hashlib
 import json
 from pathlib import Path
+import re
 import sys
 import traceback
 import jsonschema
@@ -9,12 +11,71 @@ from aiohttp import web, ClientSession
 
 from . import assisted_store as store
 from . import assisted_engine as engine
-from .storage import write_json
+from .storage import write_exclusive, write_json
 from .runtime import generation_root, settings
 
 ACTIVE={}
+PUBLICATIONS={}
 BASE=generation_root()
 STATIC=Path(__file__).parent/'assisted_ui'
+
+
+async def run_publisher(state):
+    """Run the hash-checked publisher for a completed assisted export."""
+    relative=Path('exports')/state['export_revision'] if state.get('export_revision') else Path('export')
+    export=(store.root(state['id'])/relative).resolve()
+    if not export.is_relative_to(store.root(state['id']).resolve()):
+        raise ValueError('The saved export is outside this book.')
+    script=BASE.parent/'scripts'/'publish-book.mjs'
+    if not script.is_file():
+        raise RuntimeError('The Supabase publisher is not installed.')
+    process=await asyncio.create_subprocess_exec(
+        'node',str(script),'--export',str(export),'--publish',
+        cwd=str(BASE.parent),stdout=asyncio.subprocess.PIPE,stderr=asyncio.subprocess.PIPE)
+    stdout,stderr=await process.communicate()
+    output=(stdout+stderr).decode(errors='replace')
+    log_dir=store.root(state['id'])/'creator'/'publication-history'
+    log_name=hashlib.sha256(output.encode()).hexdigest()+'.log'
+    write_exclusive(log_dir/log_name,output.encode())
+    if process.returncode:
+        detail=next((line.strip() for line in reversed(output.splitlines()) if line.strip()),'Publisher exited with an error.')
+        raise RuntimeError(f'Publication failed: {detail[:400]}')
+    match=re.search(r'Published:\s*(https?://[^\s]+)',output)
+    if not match:
+        raise RuntimeError('Publication finished without returning a public book URL.')
+    return match.group(1).rstrip('.,)')
+
+
+async def _publish(sid):
+    state=store.read(sid)
+    try:
+        url=await run_publisher(state)
+    except Exception as exc:
+        with store.LOCK:
+            current=store.read(sid)
+            current['publication']={'status':'error','error':str(exc)[:500],'finished_at':store.now()}
+            current['revision']+=1
+            store.save(current)
+        return
+    with store.LOCK:
+        current=store.read(sid)
+        current['publication']={'status':'complete','url':url,'finished_at':store.now()}
+        current['revision']+=1
+        store.save(current)
+
+
+async def publish_session(sid):
+    task=PUBLICATIONS.get(sid)
+    if task and not task.done():
+        await task
+        return
+    task=asyncio.create_task(_publish(sid))
+    PUBLICATIONS[sid]=task
+    try:
+        await task
+    finally:
+        if PUBLICATIONS.get(sid) is task:
+            PUBLICATIONS.pop(sid,None)
 
 
 async def mcp(name,args):
@@ -210,6 +271,7 @@ async def api(request):
                 _,job_status=await locate(pending['job'])
                 if job_status=='active':
                     raise store.Conflict('This saved job is still running in ComfyUI. Wait for it to finish before changing pages.')
+        publish_requested=False
         with store.LOCK:
             if not sid:
                 state=store.create(data);sid=state['id']
@@ -219,7 +281,19 @@ async def api(request):
                 feedback=str(data.get('feedback','')).strip()
                 override=str(data.get('prompt_override','')).strip()
                 if len(feedback)>5000 or len(override)>6000:raise ValueError('Please keep feedback and prompts under 5,000 / 6,000 characters.')
-                if action=='reopen':
+                if state.get('publication',{}).get('status')=='publishing' and action!='publish':
+                    raise store.Conflict('Finish publishing this book before changing its approved export.')
+                if action=='publish':
+                    if state['status']!='complete' or not state.get('book_url'):
+                        raise store.Conflict('Finish and approve every page before publishing this book.')
+                    if state.get('publication',{}).get('status')!='complete':
+                        # A server shutdown can leave this durable marker behind;
+                        # publish_session will resume the same publisher checkpoint.
+                        if state.get('publication',{}).get('status')!='publishing':
+                            state['publication']={'status':'publishing','started_at':store.now()}
+                            state['revision']+=1;store.save(state)
+                        publish_requested=True
+                elif action=='reopen':
                     from .assisted_revision import begin
                     stage_id=data.get('stage_id')
                     if not isinstance(stage_id,str) or not stage_id:
@@ -264,6 +338,9 @@ async def api(request):
                                                   source_candidate=candidate['id'] if candidate else None,prompt_override=override)
                         state=store.read(sid)
                 else:raise ValueError('Unknown creator action.')
+        if publish_requested:
+            await publish_session(sid)
+            return web.json_response(public_state(store.read(sid)),headers={'Cache-Control':'no-store'})
         if (data.get('action') not in ('reopen','keep_original')
                 and state['status'] not in ('awaiting_review','complete')
                 and (state['status']!='error' or data.get('action')=='resume')):

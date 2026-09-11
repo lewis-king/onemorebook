@@ -368,5 +368,27 @@ class AssistedAPITests(AssistedCreatorTests,unittest.IsolatedAsyncioTestCase):
                 self.assertEqual(response.status,409)
                 self.assertEqual(launch.call_count,1)
 
+    async def test_publish_api_runs_resumable_publisher_after_export(self):
+        from aiohttp import web
+        from aiohttp.test_utils import TestClient,TestServer
+        from unittest.mock import AsyncMock
+        api=importlib.import_module('book_test_pack.assisted_web')
+        state=self.prepare()
+        while state['status']!='exporting':
+            state=self.approve(self.png(state))
+        state=engine.export_session(state);sid=state['id']
+        public_url='https://onemorebook.pages.dev/book/test-publication'
+        app=web.Application();app.router.add_post('/api/{sid}',api.api)
+        async with TestClient(TestServer(app)) as client:
+            with patch.object(api,'run_publisher',new=AsyncMock(return_value=public_url)) as publisher:
+                response=await client.post('/api/'+sid,headers={'X-Book-Creator':'1'},json={
+                    'action':'publish','revision':state['revision']})
+                self.assertEqual(response.status,200,await response.text())
+                self.assertEqual((await response.json())['publication']['url'],public_url)
+                publisher.assert_awaited_once()
+        saved=store.read(sid)
+        self.assertEqual(saved['status'],'complete')
+        self.assertEqual(saved['publication']['status'],'complete')
+
 
 if __name__=='__main__':unittest.main()

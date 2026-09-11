@@ -40,6 +40,7 @@ def finish(state):
         # An immutable new export keeps the previously finished book accessible.
         state['export_revision'] = digest([
             [s['id'], s['selected'], s['decision_id']] for s in state['stages']])[:16]
+        state.pop('publication',None)
         state.update(status='exporting', job=None, error=None)
 
 

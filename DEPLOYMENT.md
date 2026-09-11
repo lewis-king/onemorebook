@@ -102,6 +102,8 @@ pnpm run publish:book --export generation/output/books/BOOK_ID/export --publish
 
 The script reads `SUPABASE_URL`, `SUPABASE_ANON_KEY` and optional `SUPABASE_STORAGE_BUCKET` from the environment or private `backend/.env`. It validates approval hashes, creates a pending row, uploads originals without overwriting, verifies every public image, then marks the row complete. An interrupted upload stays hidden from the reader until resumed successfully. Rerunning the same export uses the same deterministic book ID; a revised export gets a different ID. Checkpoints are atomically saved under `.local/publications/`.
 
+The assisted creator also exposes this as **Publish to library** after the final page is approved. It calls the same publisher and keeps its own per-session publication history, so no export copying or manual upload is needed. Public links default to `https://onemorebook.pages.dev`; set `PUBLIC_BOOK_BASE_URL` in the publisher environment when the custom domain is ready.
+
 **Milo is already imported; do not republish it just to deploy the website.** Its export digest is `95a33e508031705b6ae5b66bd27091ad21482a8d636cea90ebc0581ee1c1b076`.
 
 ## Recovery and evidence

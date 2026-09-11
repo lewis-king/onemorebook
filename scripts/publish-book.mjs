@@ -107,5 +107,6 @@ if (existing[0]?.status !== 'complete') {
   })).json();
   if (!result.length) throw Error('Publication status changed; inspect the saved row before resuming.');
 }
-state.status = 'complete'; state.url = `https://onemorebook.ai/book/${id}`; await save();
+const publicBookBase = (process.env.PUBLIC_BOOK_BASE_URL || 'https://onemorebook.pages.dev').replace(/\/$/, '');
+state.status = 'complete'; state.url = `${publicBookBase}/book/${id}`; await save();
 console.log(`Published: ${state.url}`);
