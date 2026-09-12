@@ -211,3 +211,18 @@ Gemma4's editorial review now records a separate `ending_closure` check alongsid
 This keeps a concrete plot consequence and the reader's sense of completion as two related but
 independent checks. QA schema versions were bumped to 1.43/1.12 (production) and 1.40/1.11
 (preview). The regression suite passes 375 tests. No image generation or book approval was performed.
+
+# Pocket-Sized Lion closure revision — 2026-09-12
+
+Lewis asked for the final page to make the ending unmistakable. Attempt 3 is a saved human text
+revision of attempt 2; attempts 1 and 2 remain preserved. Its final page now shows the seeds settling,
+a tiny dandelion blooming beside the page-one mossy rock, Pip's smallest roar, Arthur's slow clap and
+Leo's smile, followed by the closing line: “From then on, whenever the jungle heard a little roar, it
+knew a dandelion was growing nearby.” This adds aftermath, shared reaction, a callback and a clear
+read-aloud ending signal without changing the comic premise.
+
+The revised candidate is awaiting human review at `http://127.0.0.1:8188/book-builder/create/book-20260912065334-b03404f8db`.
+Gemma4's full text review and continuity audit are saved at
+`output/books/book-20260912065334-b03404f8db/creator/stages/story/attempt-0003/editorial-review.json`;
+both passed, including `specific_payoff` and `ending_closure`. No artwork was generated and no
+approval was made.
