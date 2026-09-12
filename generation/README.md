@@ -6,15 +6,31 @@ Create books locally, reviewing each step before the next one runs. This directo
 
 ```bash
 cd ~/Workspace/onemorebook/generation
-python run.py start
+/home/lewis/comfy/comfy-env/bin/python run.py start
 ```
 
 Open **http://127.0.0.1:8188/book-builder/create**. The command starts the existing ComfyUI with its Python environment, or reuses it if the creator is already available. It does not start a book or submit any generation jobs. Logs are in `.local/comfyui.log`.
 
 ```bash
-python run.py status
-python run.py check
+/home/lewis/comfy/comfy-env/bin/python run.py status
+/home/lewis/comfy/comfy-env/bin/python run.py check
 ```
+
+### After a reboot
+
+Run this single command from any terminal:
+
+```bash
+cd ~/Workspace/onemorebook/generation && /home/lewis/comfy/comfy-env/bin/python run.py start
+```
+
+Then open:
+
+```text
+http://127.0.0.1:8188/book-builder/create
+```
+
+The launcher starts ComfyUI and the local Book Creator together, reuses an already-running instance, and records its PID and log in `generation/.local/`. Use `status` to check whether it is running and `check` to verify the migrated paths and pinned MCP installation. Do not start a second `main.py` process on port 8188.
 
 The same creator is available when ComfyUI is started normally with `../comfy-env/bin/python main.py` from its checkout. The app frontend/backend do not need to be running.
 

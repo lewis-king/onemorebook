@@ -43,8 +43,15 @@ Deployment and book publication are separate, explicit actions described in [DEP
 ## Book creator
 
 ```bash
-cd generation
-python run.py start
+cd ~/Workspace/onemorebook/generation
+/home/lewis/comfy/comfy-env/bin/python run.py start
 ```
 
 Open http://127.0.0.1:8188/book-builder/create. Human approval remains part of this workflow. Existing attempts, reference images and immutable exports stay local. See [generation/README.md](generation/README.md).
+
+After a reboot, the same command starts both the local ComfyUI engine and Book Creator, or reuses them if they are already running. To check the setup without starting anything:
+
+```bash
+/home/lewis/comfy/comfy-env/bin/python ~/Workspace/onemorebook/generation/run.py status
+/home/lewis/comfy/comfy-env/bin/python ~/Workspace/onemorebook/generation/run.py check
+```
