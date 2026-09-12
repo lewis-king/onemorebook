@@ -197,3 +197,17 @@ Lewis supplied a weak 12-page candidate, **The Pocket-Sized Lion**, whose ending
 A text-only regeneration was requested with feedback requiring a 14-page arc, a concrete consequence of Leo's dandelion identity, Pip's choice, Arthur's reaction and a callback. Attempt 2 is now awaiting human review at `http://127.0.0.1:8188/book-builder/create/book-20260912065334-b03404f8db`; it has 14 pages/373 words. Pages 13–14 have Leo shaking his mane to “spread seeds”, bouncing Pip and Arthur onto the mossy rock from page 1, with Arthur's closing reaction. No images or approvals were made.
 
 The full Gemma4 editorial review was run separately and saved at `creator/stages/story/attempt-0002/editorial-review.json`. It passed all checks, including `specific_payoff`, `character_name_quality`, `cast_variety`, page-by-page action/cast checks and continuity. This is evidence for the text candidate only; Lewis's approval is still required before planning or artwork.
+
+# Ending-closure pass — 2026-09-12
+
+Lewis identified the remaining weakness precisely: a final page can contain a valid consequence yet
+still feel as though the book simply stops. New story prompts now require a recognisable closing beat
+after the resolution: a visible aftermath or settling image, a shared final reaction or emotional
+landing, and a final sentence with satisfying read-aloud cadence. They explicitly reject stopping
+mid-action or on ordinary small talk. The legacy, picturebook-1 and picturebook-2 writers all carry
+the same guidance so future books receive it regardless of saved craft version.
+
+Gemma4's editorial review now records a separate `ending_closure` check alongside `specific_payoff`.
+This keeps a concrete plot consequence and the reader's sense of completion as two related but
+independent checks. QA schema versions were bumped to 1.43/1.12 (production) and 1.40/1.11
+(preview). The regression suite passes 375 tests. No image generation or book approval was performed.

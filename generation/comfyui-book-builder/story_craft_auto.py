@@ -50,7 +50,10 @@ announces a new belief, repeats the premise, says a generic thank-you or receive
 magic fix. Give the reader one last earned beat: show what the choice causes, echo an earlier
 detail with a fresh twist, or let the protagonist's new understanding alter what they do. If the
 story is comic, make the final reversal have a concrete consequence and let the other characters
-react. A book can be joyful or funny without teaching a lesson. Where a theme emerges, let the
+react. Then give the reader a recognisable ending beat: show the aftermath or a settling image, let the
+characters share a final reaction, and land on a last sentence with satisfying read-aloud cadence. The
+final page should feel unmistakably finished while leaving a pleasant echo; do not end on ordinary small
+talk or halfway through an action. A book can be joyful or funny without teaching a lesson. Where a theme emerges, let the
 reader experience it through events.
 
 CAST AND NAMING

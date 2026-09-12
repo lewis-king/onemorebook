@@ -123,6 +123,9 @@ final page must show a specific consequence of the protagonist's choice and pay 
 planted earlier. Do not stop after a character simply announces a new identity, repeats the
 premise, says a generic thank-you or gets an unexplained magic fix. Give a comic reversal a
 concrete result and reaction, or give a tender ending a visible choice that changes what happens.
+After the resolution, show a clear aftermath or settling image, a shared final reaction and a last
+line with satisfying read-aloud cadence. The final page should feel unmistakably finished while
+leaving a pleasant echo; do not end on ordinary small talk or in the middle of motion.
 Gentle themes may emerge through consequences and relationships. Pure silliness is also worthwhile.
 Allow support without making the protagonist a spectator. Keep surprises fair and stakes suitable
 for the chosen age. Convey feelings through behaviour as well as occasional direct naming.

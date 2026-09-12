@@ -8,14 +8,14 @@ import urllib.request
 from .story import digest, object_schema
 from .reasoning import story_reasoning_options
 
-QA_VERSION = "1.42"
-STORY_QA_VERSION = "1.11"
+QA_VERSION = "1.43"
+STORY_QA_VERSION = "1.12"
 DEFAULT_REVIEW_MODEL = "gemma4:31b"
 TEXT_CHECKS = ("coherent_arc", "age_appropriate", "read_aloud", "continuity", "distinct_pages",
                "drawable_scenes", "cast_matches_scenes", "unambiguous_character_designs",
                "engaging_hook", "character_agency", "earned_resolution", "concrete_language",
                "distinct_character_designs", "specific_payoff", "character_name_quality",
-               "cast_variety", "user_constraints")
+               "cast_variety", "ending_closure", "user_constraints")
 VISUAL_CHECKS = ("scene_matches", "style_matches", "anatomy_sound", "no_unwanted_text", "reference_background_ok")
 
 
@@ -179,7 +179,11 @@ def review_story(package, config, generate=json_model):
               "reaction; a tender ending needs a visible choice or changed situation. Set specific_payoff "
               "false when the last beat would still work after removing the story's setup. Generic warm sentiments or "
               "a magic fix without an established rule are not enough. Reject filler metaphors children "
-              "cannot understand, repeated static scenes, and design specifications inserted into prose. "
+              "cannot understand, repeated static scenes, and design specifications inserted into prose. Check "
+              "ending_closure separately: after the problem is solved, the final page needs a clear aftermath or "
+              "settling image, a shared final reaction or emotional landing, and a last sentence with satisfying "
+              "read-aloud cadence. It should feel unmistakably finished while leaving a pleasant echo; reject an "
+              "ending that stops mid-action or on ordinary small talk. "
               "For a two-page test, allow a compressed arc but still require a meaningful event/payoff. "
               "In your evidence name the actual action that solves the problem and why a child wants the next page. "
               "Give page numbers and concrete evidence for failures. Mark uncertain when unsure. "

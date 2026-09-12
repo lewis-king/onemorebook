@@ -7,14 +7,14 @@ import urllib.request
 
 from .story import digest, object_schema
 
-QA_VERSION = "1.39-qwen-preview"
-STORY_QA_VERSION = "1.10"
+QA_VERSION = "1.40-qwen-preview"
+STORY_QA_VERSION = "1.11"
 DEFAULT_REVIEW_MODEL = "gemma4:31b"
 TEXT_CHECKS = ("coherent_arc", "age_appropriate", "read_aloud", "continuity", "distinct_pages",
                "drawable_scenes", "cast_matches_scenes", "unambiguous_character_designs",
                "engaging_hook", "character_agency", "earned_resolution", "concrete_language",
                "distinct_character_designs", "specific_payoff", "character_name_quality",
-               "cast_variety", "user_constraints")
+               "cast_variety", "ending_closure", "user_constraints")
 VISUAL_CHECKS = ("scene_matches", "style_matches", "anatomy_sound", "no_unwanted_text", "reference_background_ok")
 
 
@@ -92,6 +92,10 @@ Require a hook, clear character want, consequential choices, distinct page event
 The final page must show a specific consequence of the protagonist's choice and pay off a detail
 planted earlier; reject premise repetition, a new-identity announcement, generic thanks or an
 unexplained magic fix. Check pronounceable, distinct names and a varied cast when the premise allows.
+Check ending_closure separately: after the problem is solved, the final page needs a clear aftermath
+or settling image, a shared final reaction or emotional landing, and a last sentence with satisfying
+read-aloud cadence. It should feel unmistakably finished while leaving a pleasant echo; reject an
+ending that stops mid-action or on ordinary small talk.
 Name the action resolving the problem and why the child wants the next page. Accept a compressed arc
 for short books. Reject unexplained magic, abstract filler, repeated static scenes and design measurements
 in prose. Check age suitability, natural read-aloud language, dialogue punctuation/speech marks, causality,

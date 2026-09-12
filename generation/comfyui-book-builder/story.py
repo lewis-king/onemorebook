@@ -225,7 +225,10 @@ Write a coherent beginning, small problem, meaningful actions and a satisfying e
 page must show a specific consequence of the protagonist's choice and pay off a detail planted
 earlier. Do not stop after a character announces a new identity, repeats the premise, says a
 generic thank-you or receives an unexplained magic fix. Give a comic reversal a concrete result
-and reaction, or a tender ending a visible choice that changes what happens next. Test the last
+and reaction, or a tender ending a visible choice that changes what happens next. Follow the resolution
+with a clear aftermath or settling image, a shared reaction and a final line that sounds finished when
+read aloud while leaving a pleasant echo. Do not end on ordinary small talk or in the middle of motion.
+Test the last
 two pages against the original want/problem, decisive choice, immediate consequence and final
 image or callback; if the ending would work after removing the setup, rewrite it.
 Make the ending compatible with each participant's earlier actions, location and knowledge.
