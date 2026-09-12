@@ -189,3 +189,11 @@ New books now default to a 14-page starting point while retaining the open 8–1
 Story-writing prompts now require a specific final consequence and an earlier planted payoff/callback. They explicitly reject premise repetition, identity announcements, generic thank-yous and unexplained magic fixes, and ask for a final two-page self-check. New prompts also ask for pronounceable, distinct names and varied species/roles when the premise allows, without forcing exotic casts or rejecting deliberate same-species stories.
 
 The Gemma4 automatic editorial review now has private checks for `specific_payoff`, `character_name_quality` and `cast_variety`; a failed review remains fail-closed and the automatic writer retries with the concrete review report. The assisted creator still pauses for Lewis's human approval by design. No book was generated, approved or altered for this change.
+
+# Pocket-Sized Lion ending revision — 2026-09-12
+
+Lewis supplied a weak 12-page candidate, **The Pocket-Sized Lion**, whose ending stopped at Leo and Pip chatting about the weather. The original candidate remains unchanged at `output/books/book-20260912065334-b03404f8db/creator/stages/story/attempt-0001/`.
+
+A text-only regeneration was requested with feedback requiring a 14-page arc, a concrete consequence of Leo's dandelion identity, Pip's choice, Arthur's reaction and a callback. Attempt 2 is now awaiting human review at `http://127.0.0.1:8188/book-builder/create/book-20260912065334-b03404f8db`; it has 14 pages/373 words. Pages 13–14 have Leo shaking his mane to “spread seeds”, bouncing Pip and Arthur onto the mossy rock from page 1, with Arthur's closing reaction. No images or approvals were made.
+
+The full Gemma4 editorial review was run separately and saved at `creator/stages/story/attempt-0002/editorial-review.json`. It passed all checks, including `specific_payoff`, `character_name_quality`, `cast_variety`, page-by-page action/cast checks and continuity. This is evidence for the text candidate only; Lewis's approval is still required before planning or artwork.
