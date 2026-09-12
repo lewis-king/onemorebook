@@ -37,6 +37,12 @@ class StoryCraftTests(fixtures.unittest.TestCase):
         self.assertIn('British English', fixtures.story.writing_prompt(state['config']))
         self.assertIn('British English', fixtures.story.writing_prompt({**state['config'], 'story_craft_version': 'picturebook-2'}))
 
+    def test_new_craft_requires_specific_payoff_and_varied_distinct_cast(self):
+        prompt = fixtures.story.writing_prompt(store.config({'seed': 73420}))
+        for phrase in ('specific, visible way', 'pays off something deliberately planted', 'generic thank-you',
+                       'Choose names that are easy to say aloud', 'Vary species'):
+            self.assertIn(phrase, prompt)
+
     def test_custom_art_replaces_preset_and_choices_fail_explicitly(self):
         cfg = store.config({'art_preset': 'graphic', 'art_style': '  Blue pencil on cream paper. '})
         self.assertEqual(cfg['art_style'], 'Blue pencil on cream paper.')

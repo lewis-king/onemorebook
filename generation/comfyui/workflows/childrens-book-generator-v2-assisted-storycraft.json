@@ -30,8 +30,8 @@
       },
       "widgets_values": [
         "",
-        12,
-        "4\u20137",
+        14,
+        "4–7",
         3,
         "",
         202609110407,
@@ -57,7 +57,7 @@
       "mode": 0,
       "properties": {},
       "widgets_values": [
-        "Run once to start a NEW assisted book, ages 4\u20137 by default. Choose story_flavour, read_aloud and art_preset below, or use http://127.0.0.1:8188/book-builder/create. Each stage pauses for your approval. Resume an existing book in its saved creator page."
+        "Run once to start a NEW assisted book, ages 4–7 by default. Choose story_flavour, read_aloud and art_preset below, or use http://127.0.0.1:8188/book-builder/create. Each stage pauses for your approval. Resume an existing book in its saved creator page."
       ]
     }
   ],

@@ -37,7 +37,7 @@ class FlexibleStoryTests(unittest.TestCase):
         self.assertEqual(cfg['story_craft_version'], 'picturebook-2')
         self.assertEqual(cfg['age_range'], '4–7')
         self.assertEqual(length.page_bounds(cfg), (8, 16))
-        self.assertEqual(cfg['page_count_target'], 12)
+        self.assertEqual(cfg['page_count_target'], 14)
         self.assertTrue(set(cfg).isdisjoint({'story_flavour', 'art_preset', 'read_aloud'}))
         intent = store.next_attempt(state)
         with patch.object(engine, 'draft_json', return_value=manuscript(9)) as writer:

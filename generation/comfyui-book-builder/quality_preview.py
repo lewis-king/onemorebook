@@ -7,13 +7,14 @@ import urllib.request
 
 from .story import digest, object_schema
 
-QA_VERSION = "1.38-qwen-preview"
-STORY_QA_VERSION = "1.9"
+QA_VERSION = "1.39-qwen-preview"
+STORY_QA_VERSION = "1.10"
 DEFAULT_REVIEW_MODEL = "gemma4:31b"
 TEXT_CHECKS = ("coherent_arc", "age_appropriate", "read_aloud", "continuity", "distinct_pages",
                "drawable_scenes", "cast_matches_scenes", "unambiguous_character_designs",
                "engaging_hook", "character_agency", "earned_resolution", "concrete_language",
-               "distinct_character_designs", "user_constraints")
+               "distinct_character_designs", "specific_payoff", "character_name_quality",
+               "cast_variety", "user_constraints")
 VISUAL_CHECKS = ("scene_matches", "style_matches", "anatomy_sound", "no_unwanted_text", "reference_background_ok")
 
 
@@ -88,6 +89,9 @@ def review_story(package, config, generate=json_model):
                                'evidence': 'Generated scene actor names checked before visual production.', 'issues': missing}}
     prompt = ("""Audit the whole story and private art plan as an independent picture-book editor; do not rewrite it.
 Require a hook, clear character want, consequential choices, distinct page events and an earned ending.
+The final page must show a specific consequence of the protagonist's choice and pay off a detail
+planted earlier; reject premise repetition, a new-identity announcement, generic thanks or an
+unexplained magic fix. Check pronounceable, distinct names and a varied cast when the premise allows.
 Name the action resolving the problem and why the child wants the next page. Accept a compressed arc
 for short books. Reject unexplained magic, abstract filler, repeated static scenes and design measurements
 in prose. Check age suitability, natural read-aloud language, dialogue punctuation/speech marks, causality,

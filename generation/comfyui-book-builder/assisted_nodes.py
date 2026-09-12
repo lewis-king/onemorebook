@@ -12,7 +12,7 @@ class BookAssistedStart:
     def INPUT_TYPES(cls):
         from .story_craft import DEFAULT_AGE, FLAVOURS, LANGUAGE, ART
         return {'required': {'story_idea':('STRING',{'multiline':True,'default':''}),
-                             'page_count':('INT',{'default':12,'min':2,'max':24}),
+                             'page_count':('INT',{'default':14,'min':2,'max':24}),
                              'age_range':('STRING',{'default':DEFAULT_AGE}),
                              'max_characters':('INT',{'default':3,'min':1,'max':6}),
                              'art_style':('STRING',{'multiline':True,'default':''}),

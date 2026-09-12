@@ -117,3 +117,7 @@ cd ~/Workspace/onemorebook/generation
 ```
 
 The suite covers the public contract, saved approvals/feedback, reference integrity, export, path aliases, bounded writer recovery and concurrent Resume submissions. Full automatic quality experiments and Rainbow Paint by Numbers remain deferred while we use the assisted creator.
+
+### New-book defaults and editorial review
+
+New books start from a 14-page target and may settle anywhere from 8–16 pages when the story needs it. The writer and Gemma4 editorial gate require an earned ending with a visible consequence and specific payoff, plus a distinctive, readable cast; failed automatic reviews are retried with their concrete issues. Existing saved books/configurations retain their original settings.

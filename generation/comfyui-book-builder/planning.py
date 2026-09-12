@@ -42,9 +42,13 @@ and why the next action follows. The resolution must solve the ORIGINAL problem,
 For a mystery or surprise reveal, trace the implicated characters backwards through the plot.
 If someone caused the problem then helped investigate it, explain their pretence or confusion.
 Establish important departures, return trips or concealed actions needed to understand the ending.
-A final callback must refer to something actually established earlier. Avoid thank-you messages
-written before the action they thank someone for, inexplicable forgotten items, or an unrelated
-accident that fixes everything. Each supporting character contributes to the solution.
+A final callback must refer to something actually established earlier. The last beat must show a
+specific consequence of the protagonist's choice, so it cannot be replaced by “and then everyone
+was happy”, a repeated premise, a new identity announcement, a generic thank-you or an unrelated
+accident. Avoid thank-you messages written before the action they thank someone for, inexplicable
+forgotten items, or an unrelated accident that fixes everything. Each supporting character
+contributes to the solution. Leave room for the prose writer to choose names that are easy to say
+aloud, clearly distinct and suited to the species and world; vary the cast when the premise allows.
 The cast limit includes unnamed insects or animals who act in a scene; do not introduce a
 last-minute beetle, bird or stranger beyond the requested cast. Use the established team.
 Plan readable illustrations with a small, visually distinctive cast. Unless miniature characters
@@ -75,7 +79,9 @@ def review_outline(outline, config, generate=None):
         "from a plausible action the final prose or illustration can clarify. Do not invent spatial "
         "constraints, restrict a tool beyond the stated facts, or silently expand a world rule. "
         "For a rule violation, quote the exact rule and the exact conflicting event, then explain "
-        "why the reader cannot reconcile them. Read named surfaces literally: a rule about leaves "
+        "why the reader cannot reconcile them. Require a concrete final consequence and a callback or "
+        "fresh image rooted in an earlier detail; a generic happy ending or premise repetition is a "
+        "blocking defect. Read named surfaces literally: a rule about leaves "
         "does not automatically cover a trunk. Prioritize the reader's understanding of cause, "
         "motivation and consequence. Do not reject minor omissions or an opportunity to improve a joke. "
         "Return an empty issues list when there is no story-blocking defect. If you report a blocking "

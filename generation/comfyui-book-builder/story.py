@@ -221,7 +221,13 @@ Write all story prose and metadata in British English (UK spelling and vocabular
 colour, favourite, centre and organise. Keep dialogue natural for children in the UK; do not
 switch to American spellings.
 
-Write a coherent beginning, small problem, meaningful actions and a satisfying ending.
+Write a coherent beginning, small problem, meaningful actions and a satisfying ending. The final
+page must show a specific consequence of the protagonist's choice and pay off a detail planted
+earlier. Do not stop after a character announces a new identity, repeats the premise, says a
+generic thank-you or receives an unexplained magic fix. Give a comic reversal a concrete result
+and reaction, or a tender ending a visible choice that changes what happens next. Test the last
+two pages against the original want/problem, decisive choice, immediate consequence and final
+image or callback; if the ending would work after removing the setup, rewrite it.
 Make the ending compatible with each participant's earlier actions, location and knowledge.
 Explain any important departure, return trip, pretence or confusion needed for a surprise reveal;
 the child should not have to invent those connecting events to understand the resolution.
@@ -235,6 +241,11 @@ occasional surprise. Let the protagonist make choices and solve the problem thro
 Avoid generic filler ('quiet joy', 'tail wrapped like a promise', 'their hearts filled with warmth'),
 explicit moral lessons and unexplained magic that resolves the plot. Do not put character
 measurements, design specifications or repeated outfit descriptions into page text.
+Choose names that are easy to say aloud, clearly distinct and suited to each character's species,
+personality and world. Avoid defaulting to the same familiar names or the same small set of animal
+species in every book. Vary species, sounds and roles when the premise allows; if two characters
+share a species, make their silhouettes, colours or clothing unmistakable. Avoid confusingly
+similar names or initials.
 Each page's imagePrompt must depict an actual moment from THAT page's prose. If the mouse
 is in a hand in the prose, do not place it on the grass in the imagePrompt. Include key held
 objects, actions and expressions. Do not replace an active scene with everybody facing forward.

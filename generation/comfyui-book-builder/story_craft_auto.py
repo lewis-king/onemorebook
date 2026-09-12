@@ -14,7 +14,7 @@ def writing_prompt(config):
     length = (f'Exactly {low} illustrated story pages.' if low == high else
               f'Choose {low}–{high} illustrated story pages while planning the manuscript. '
               'Choose the count for its natural pacing: give a meaningful beat room, combine '
-              'redundant beats and stop at the earned ending. Do not pad to twelve or to the '
+              'redundant beats and stop at the earned ending. Do not pad to fourteen or to the '
               'maximum. These are reading screens with one illustration each, not printed leaves.')
     if low != high and config.get('page_count_target'):
         length += (f" Use {config['page_count_target']} pages as the starting point, then use fewer "
@@ -41,9 +41,24 @@ a published story or a named creator's voice.
 Open with something specific that invites curiosity. Give the reader a want, belief, question
 or feeling to follow. Build useful connections between events, choices and consequences.
 Every page contributes, whether through action, discovery, an exchange, anticipation or a
-quiet moment. Not every page needs a mishap or cliffhanger. Plant what an ending will need;
-finish with a satisfying action, image, surprise or callback. A book can be joyful or funny
-without teaching a lesson. Where a theme emerges, let the reader experience it through events.
+quiet moment. Not every page needs a mishap or cliffhanger. Plant what the ending will need;
+finish with a satisfying action, image, surprise or callback. A good final page changes the
+situation or characters in a specific, visible way and pays off something deliberately planted.
+It may be funny, tender, wondrous or gently puzzling, but it must resolve the original want or
+problem through a character's choice or a consequence. Do not end immediately after a character
+announces a new belief, repeats the premise, says a generic thank-you or receives a convenient
+magic fix. Give the reader one last earned beat: show what the choice causes, echo an earlier
+detail with a fresh twist, or let the protagonist's new understanding alter what they do. If the
+story is comic, make the final reversal have a concrete consequence and let the other characters
+react. A book can be joyful or funny without teaching a lesson. Where a theme emerges, let the
+reader experience it through events.
+
+CAST AND NAMING
+Choose names that are easy to say aloud, clearly different from one another and suited to each
+character's species, personality and world. Do not default to the same familiar names or the same
+small set of animals in every book. Vary species, sounds and roles when the premise allows, while
+keeping the cast small and readable. Two characters can share a species only when their silhouettes,
+colours or clothing make them unmistakable; avoid names with confusingly similar sounds or initials.
 
 Choose a natural read-aloud voice for this premise. Repetition, dialogue, wordplay and rhyme
 are techniques to use where they help; none is mandatory. Repetition should invite a child
@@ -68,6 +83,11 @@ Revise for read-aloud flow, emotional truth, originality and causal sense. Check
 who acts, how they arrive, and where objects are. If someone protects what they tried to destroy,
 establish why their goal changed or revise the action. Establish useful tools or fantastical rules
 before they solve a problem. Cut padding, needless explanation and repeated inventories.
+Before returning the manuscript, test the last two pages: can you name the original want/problem,
+the protagonist's decisive choice, its immediate consequence and the final image or callback? If
+the final page would work unchanged after removing the story's specific setup, rewrite it. Check
+that the ending is not merely a restatement of the title or premise and that each named character
+has a purposeful, non-generic contribution or reaction.
 Return only the finished manuscript and private production document, not reasoning or a score.
 
 WORDS AND PICTURES
@@ -120,5 +140,6 @@ def review_guide(package, config):
             'page_count': len(counts), 'words': sum(p['words'] for p in counts), 'pages': counts,
             'questions': ['Does this feel like a story your child would want to hear again?',
                           'Read it aloud: does it flow, with space to notice, wonder or join in?',
-                          'Does each page earn its place, and is the ending satisfying?',
-                          'Do choices and feelings make sense, with pictures that support the story?']}
+                          'Does each page earn its place, and does the final choice create a specific, earned payoff?',
+                          'Do choices and feelings make sense, with pictures that support the story?',
+                          'Are the names easy to say and the animal cast distinctive for this story?']}

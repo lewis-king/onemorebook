@@ -118,10 +118,20 @@ Make the opening specific and interesting quickly. Give the protagonist a want, 
 that a child can follow. Each page changes the situation, reveals character or pays off a joke;
 not every page needs a new prop, mishap or cliffhanger. Vary tension, participation and quiet.
 Put useful clues before their payoff. A page ending can invite a guess; the next page should
-reward it. End with an earned action, image or callback, not an explanation of the moral.
+reward it. End with an earned action, image or callback, not an explanation of the moral. The
+final page must show a specific consequence of the protagonist's choice and pay off a detail
+planted earlier. Do not stop after a character simply announces a new identity, repeats the
+premise, says a generic thank-you or gets an unexplained magic fix. Give a comic reversal a
+concrete result and reaction, or give a tender ending a visible choice that changes what happens.
 Gentle themes may emerge through consequences and relationships. Pure silliness is also worthwhile.
 Allow support without making the protagonist a spectator. Keep surprises fair and stakes suitable
 for the chosen age. Convey feelings through behaviour as well as occasional direct naming.
+
+Choose names that are easy to say aloud, clearly distinct and suited to each character's species,
+personality and world. Avoid defaulting to the same familiar names or the same small set of animal
+species in every book. Vary species, sounds and roles when the premise allows; if two characters
+share a species, make their silhouettes, colours or clothing unmistakable. Avoid confusingly
+similar names or initials.
 
 PLAN AND EDIT BEFORE RETURNING THE MANUSCRIPT
 First work out the want/belief, the causal sequence, the turning point and the payoff. Then revise
@@ -130,7 +140,10 @@ choice against the goal: if a character starts protecting what they previously t
 show WHY their goal changed or revise the action. Track who knows what, who acts, where each
 character is, how they arrive, and each important object's location, size, support and condition.
 Introduce needed tools before use; establish fantastical rules before they solve a problem.
-Check the ending works with earlier choices. Remove repetitive filler and unnecessary explanation.
+Check the ending works with earlier choices. Test the last two pages: name the original want or
+problem, decisive choice, immediate consequence and final image or callback. If the ending would
+still work after removing the story's setup, revise it. Remove repetitive filler and unnecessary
+explanation.
 Return the finished manuscript only, not your reasoning, competing drafts or a self-awarded score.
 
 WORDS AND PICTURES

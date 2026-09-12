@@ -181,3 +181,11 @@ Records are in `.local/migration-20260911/`:
 The original automatic generator is still unaccepted. Assisted human review is the active mode. Preserve the older accepted book and all rejected candidates. Rainbow remains deferred. Feedback is stored for future generic improvements, not automatic model training.
 
 Final migration checks: 9,252 historical output files unchanged, 76 old page/image URLs pass, four assisted sessions unchanged through restart, real saved image pixels and fetched file match. The twelve-page draft passes the app backend's actual `UploadStorySchema.shape.story` validator. Live browser shows the new story with approval enabled; no decisions submitted. Queue empty. See `.local/migration-20260911/verification.json`.
+
+# Story ending and cast-quality pass — 2026-09-12
+
+New books now default to a 14-page starting point while retaining the open 8–16 page range; the writer may choose fewer or more when the arc earns it. Existing saved configurations are unchanged. The Comfy starter node and legacy fixed-length node default are also 14 for newly created runs.
+
+Story-writing prompts now require a specific final consequence and an earlier planted payoff/callback. They explicitly reject premise repetition, identity announcements, generic thank-yous and unexplained magic fixes, and ask for a final two-page self-check. New prompts also ask for pronounceable, distinct names and varied species/roles when the premise allows, without forcing exotic casts or rejecting deliberate same-species stories.
+
+The Gemma4 automatic editorial review now has private checks for `specific_payoff`, `character_name_quality` and `cast_variety`; a failed review remains fail-closed and the automatic writer retries with the concrete review report. The assisted creator still pauses for Lewis's human approval by design. No book was generated, approved or altered for this change.

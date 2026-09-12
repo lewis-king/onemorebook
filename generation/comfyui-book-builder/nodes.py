@@ -261,7 +261,7 @@ class BookV2Story:
         return {"required": {
             "story_idea": ("STRING", {"multiline": True, "default": DEFAULT_IDEA, "tooltip": "Your premise, themes and special requests. Leave blank for a completely invented idea."}),
             "age_range": ("STRING", {"default": "4–6"}),
-            "page_count": ("INT", {"default": 12, "min": 2, "max": 24}),
+            "page_count": ("INT", {"default": 14, "min": 2, "max": 24}),
             "max_characters": ("INT", {"default": 4, "min": 1, "max": 6, "tooltip": "Maximum total named cast. A scene can show at most three characters."}),
             "art_style": ("STRING", {"multiline": True, "default": DEFAULT_STYLE}),
             "seed": ("INT", {"default": 20260907, "min": 0, "max": 2 ** 53 - 1, "control_after_generate": True, "tooltip": "Randomize for a new book. Fixed seed and unchanged settings resume an interrupted book."}),
@@ -376,7 +376,7 @@ class BookV2Story:
                 except (ValueError, json.JSONDecodeError) as exc:
                     error = str(exc)
                     logging.warning("Book v2: story validation failed (attempt %s/%s): %s", attempt + 1, story_attempts, error)
-                    prompt = base_prompt + f"\nYour previous response failed validation: {error}\nCorrect the following JSON and return the entire valid book:\n{raw[:50000]}"
+                    prompt = base_prompt + f"\nAn independent Gemma4 editorial review rejected the previous draft. Address every concrete issue in the review before returning a new book; preserve successful setup and continuity, but replace a weak ending or repetitive cast rather than explaining it away. Review details: {error}\nCorrect the following JSON and return the entire valid book:\n{raw[:50000]}"
             else:
                 raise ValueError(f"Story failed validation after {story_attempts} attempts: {error}. Drafts: {root / 'quality/story'}")
             write_json(root / "story-quality.json", approval)

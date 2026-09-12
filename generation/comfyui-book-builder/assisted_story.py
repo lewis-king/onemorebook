@@ -3,7 +3,10 @@ from .story import book_schema, validate_package
 
 AUTO_MIN = 8
 AUTO_MAX = 16
-AUTO_TARGET = 12
+# New open-ended books start from fourteen reading screens.  The range stays
+# deliberately broad so the writer can finish when the story has earned its
+# ending rather than padding to a fixed length.
+AUTO_TARGET = 14
 
 
 def page_bounds(config):

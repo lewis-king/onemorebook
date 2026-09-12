@@ -8,13 +8,14 @@ import urllib.request
 from .story import digest, object_schema
 from .reasoning import story_reasoning_options
 
-QA_VERSION = "1.41"
-STORY_QA_VERSION = "1.10"
+QA_VERSION = "1.42"
+STORY_QA_VERSION = "1.11"
 DEFAULT_REVIEW_MODEL = "gemma4:31b"
 TEXT_CHECKS = ("coherent_arc", "age_appropriate", "read_aloud", "continuity", "distinct_pages",
                "drawable_scenes", "cast_matches_scenes", "unambiguous_character_designs",
                "engaging_hook", "character_agency", "earned_resolution", "concrete_language",
-               "distinct_character_designs", "user_constraints")
+               "distinct_character_designs", "specific_payoff", "character_name_quality",
+               "cast_variety", "user_constraints")
 VISUAL_CHECKS = ("scene_matches", "style_matches", "anatomy_sound", "no_unwanted_text", "reference_background_ok")
 
 
@@ -163,10 +164,20 @@ def review_story(package, config, generate=json_model):
               "is a defect. Check supporting characters just as strictly as the lead. "
               "Every cast member must have a distinct visual identity; two same-species characters need "
               "clear fixed differences in silhouette, colour or clothing, not just personality or names. "
+              "Check character_name_quality: names should be pronounceable, clearly distinct when read aloud, "
+              "and suited to the characters and world. Check cast_variety: do not penalise a deliberate same-species "
+              "cast or a familiar animal, but reject an unmotivated repetitive/default cast that makes this book "
+              "feel interchangeable with recent children's books. Look for varied species, sounds and roles when "
+              "the premise allows; this is a quality signal, not a demand for exotic animals. "
               "Only visual technique and palette belong in visual_bible.style, not people or clothing. "
               "style_reference_prompt must be empty of characters. "
               "Evaluate storytelling, not only correctness. Require a hook, an identifiable character want, "
-              "choices/actions that change the situation, and an earned ending. Generic warm sentiments or "
+              "choices/actions that change the situation, and an earned ending. The final page must show "
+              "a specific consequence of the protagonist's choice and pay off a detail planted earlier. "
+              "Reject an ending that merely repeats the premise, announces a new identity, gives a generic "
+              "thank-you, or uses an unexplained magic fix. A comic reversal needs a concrete result and "
+              "reaction; a tender ending needs a visible choice or changed situation. Set specific_payoff "
+              "false when the last beat would still work after removing the story's setup. Generic warm sentiments or "
               "a magic fix without an established rule are not enough. Reject filler metaphors children "
               "cannot understand, repeated static scenes, and design specifications inserted into prose. "
               "For a two-page test, allow a compressed arc but still require a meaningful event/payoff. "

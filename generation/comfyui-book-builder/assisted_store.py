@@ -68,7 +68,7 @@ def config(values):
     result = {'story_idea': str(values.get('story_idea', '')).strip(),
               'art_style': str(values.get('art_style') or '').strip() or (ART_DIRECTION if automatic else ART[craft['art_preset']][1]),
               'age_range': str(values.get('age_range', DEFAULT_AGE)),
-              'page_count': int(values.get('page_count', 0 if automatic else 12)),
+              'page_count': int(values.get('page_count', 0 if automatic else 14)),
               'max_characters': int(values.get('max_characters', 3)),
               'seed': int(values.get('seed', int(datetime.datetime.now().timestamp() * 1000))),
               'ollama_url': 'http://127.0.0.1:11434', 'ollama_model': DEFAULT_WRITER_MODEL,
