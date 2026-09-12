@@ -2,7 +2,7 @@
 
 Cover prompts now request the exact book title in quotation marks as readable lettering, with a display font and placement chosen to suit the story mood and artwork. The instruction asks for thumbnail legibility, clear space away from faces and focal action, and no additional words. Interior page prompts retain the no-lettering rule. This is applied to the legacy/automatic prompt builder, the assisted planner's cover stage, and both story-craft prompt variants; the public story contract is unchanged.
 
-Focused automatic and assisted tests pass, and the full pinned creator suite passes **374 tests**. Source changes are currently uncommitted; commit and push them before shutdown. Existing saved books and immutable prompts are unchanged; the new rule applies to future story sessions and newly prepared cover prompts.
+Focused automatic and assisted tests pass, and the full pinned creator suite passes **374 tests**. Source is committed and pushed as `ca7d319`; startup commands are documented in `README.md` and the parent project README. Existing saved books and immutable prompts are unchanged; the new rule applies to future story sessions and newly prepared cover prompts.
 
 # Broken-to-complete bridge state repair — 2026-09-11 (latest)
 
