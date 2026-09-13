@@ -166,13 +166,15 @@ $('stages').onclick=e=>{const b=e.target.closest('[data-stage]');if(b&&!b.disabl
 $('attempts').onclick=e=>{const b=e.target.closest('[data-attempt]');if(b){choice=b.dataset.attempt;renderKey='';render();}};
 const MAX_PHOTOS=14;
 function momentRows(){return [...document.querySelectorAll('.photo-row')];}
+function updateOrder(){momentRows().forEach((row,i)=>{row.querySelector('.photo-order').textContent=i+1;
+  const [up,down]=row.querySelectorAll('.photo-move');up.disabled=i===0;down.disabled=i===momentRows().length-1;});}
 function refreshPhotoAdd(){const rows=momentRows();$('add-photo').disabled=rows.length>=MAX_PHOTOS;
-  $('add-photo').textContent=rows.length?'Add more photographs':'Add photographs';}
+  $('add-photo').textContent=rows.length?'Add more photographs':'Add photographs';updateOrder();}
 function photoRow(file){
   const row=document.createElement('div');row.className='photo-row';
-  row.innerHTML='<div class="photo-picker"><img class="photo-thumb" alt="Photograph preview" hidden><button type="button" class="photo-zoom" hidden>View larger</button></div>'
+  row.innerHTML='<span class="photo-order" aria-hidden="true"></span><div class="photo-picker"><img class="photo-thumb" alt="Photograph preview" hidden><button type="button" class="photo-zoom" hidden>View larger</button></div>'
     +'<input type="text" class="photo-caption" maxlength="500" placeholder="Caption — who or what is in this photo? For example: Esme blowing out the candles on the tractor cake.">'
-    +'<button type="button" class="photo-remove text-button">Remove</button>';
+    +'<div class="photo-row-actions"><button type="button" class="photo-move text-button">Move up</button><button type="button" class="photo-move text-button">Move down</button><button type="button" class="photo-remove text-button">Remove</button></div>';
   const thumb=row.querySelector('.photo-thumb'),zoom=row.querySelector('.photo-zoom');
   const setFile=chosen=>{if(row._photo)URL.revokeObjectURL(row._photo.url);
     const url=URL.createObjectURL(chosen);row._photo={file:chosen,url};
@@ -180,6 +182,9 @@ function photoRow(file){
   if(file)setFile(file);
   const open=()=>{if(row._photo)openLightbox(row._photo.url);};
   thumb.onclick=open;zoom.onclick=open;
+  const [up,down]=row.querySelectorAll('.photo-move');
+  up.onclick=()=>{const previous=row.previousElementSibling;if(previous){row.parentNode.insertBefore(row,previous);updateOrder();}};
+  down.onclick=()=>{const next=row.nextElementSibling;if(next){row.parentNode.insertBefore(next,row);updateOrder();}};
   row.querySelector('.photo-remove').onclick=()=>{if(row._photo)URL.revokeObjectURL(row._photo.url);row.remove();refreshPhotoAdd();};
   return row;
 }

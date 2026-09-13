@@ -131,15 +131,35 @@ def validate(package, plan, moment_ids=None):
         prop_states.validate_scene(scene,assets)
     if moment_ids:
         # The book exists to keep the real day: every uploaded photograph must
-        # illustrate the cover or a page. Citation is read from the scenes, so a
-        # moment listed as an asset but never cited still counts as unused.
-        used = {r for s in plan['scenes'] for r in s['asset_refs']
-                if r in assets and assets[r]['kind'] == 'moment'}
-        unused = sorted(set(moment_ids) - used)
+        # illustrate the cover or a page, one photograph per page, in the order
+        # the photographs were uploaded (the order of the day). Citation is read
+        # from the scenes, so a moment listed as an asset but never cited still
+        # counts as unused.
+        order = {mid: i for i, mid in enumerate(moment_ids)}
+        cited = {}
+        for scene in plan['scenes']:
+            moments_here = [r for r in scene['asset_refs']
+                            if r in assets and assets[r]['kind'] == 'moment']
+            if len(moments_here) > 1:
+                raise ValueError(f'Page {scene["page"]}: give this page one moment only '
+                                 f'({", ".join(moments_here)}). Each memory deserves its own page.')
+            if moments_here:
+                mid = moments_here[0]
+                if mid in cited:
+                    raise ValueError(f'{mid} illustrates two pages ({cited[mid]} and {scene["page"]}). '
+                                     'Give each photograph one page.')
+                cited[mid] = scene['page']
+        unused = sorted(set(moment_ids) - set(cited), key=order.get)
         if unused:
             raise ValueError('Photographs without a page: ' + ', '.join(unused) + '. '
                              'Every uploaded moment should illustrate the cover or a page so the book '
                              'keeps the real day; cite each in a scene, or remove it from the book.')
+        numbered = [(cited[mid], mid) for mid in moment_ids if mid in cited and cited[mid] > 0]
+        for (previous_page, previous), (page, mid) in zip(numbered, numbered[1:]):
+            if page < previous_page:
+                raise ValueError(f'Pages should follow your photograph order: {mid} is on page {page} '
+                                 f'but {previous} is on page {previous_page}. Reorder the scenes to '
+                                 'match the order of the day.')
     return book
 
 

@@ -13,7 +13,7 @@
 .mode-choice input:focus-visible+span{outline:2px solid #b9ccbb;outline-offset:2px}
 #moment-fields textarea{margin-bottom:12px}
 .moment-photos-label{margin:24px 0 12px}
-.photo-row{display:grid;grid-template-columns:96px minmax(0,1fr) auto;gap:14px;align-items:start;margin-bottom:14px;padding:14px;border:1px solid var(--line);border-radius:9px;background:#f4f6ef}
+.photo-row{display:grid;grid-template-columns:auto 96px minmax(0,1fr) auto;gap:14px;align-items:start;margin-bottom:14px;padding:14px;border:1px solid var(--line);border-radius:9px;background:#f4f6ef}
 .photo-picker{position:relative;width:96px;height:96px}
 .photo-file{position:absolute;inset:0;opacity:0;cursor:pointer;height:100%}
 .photo-thumb{width:96px;height:96px;object-fit:cover;border-radius:6px;border:1px solid var(--line);display:block}
@@ -24,7 +24,7 @@
 .moment-compare figure{margin:0;min-width:0}
 .moment-compare img{width:100%;height:auto;display:block}
 .moment-compare figcaption{font-size:11px;color:var(--muted);padding:10px 14px;border-top:1px solid var(--line)}
-@media(max-width:600px){.mode-toggle{grid-template-columns:1fr}.moment-compare{grid-template-columns:1fr}.photo-row{grid-template-columns:80px minmax(0,1fr)}.photo-picker,.photo-thumb{width:80px;height:80px}}
+@media(max-width:600px){.mode-toggle{grid-template-columns:1fr}.moment-compare{grid-template-columns:1fr}.photo-row{grid-template-columns:auto 80px minmax(0,1fr) auto}.photo-picker,.photo-thumb{width:80px;height:80px}}
 .photo-thumb{cursor:zoom-in}
 .photo-picker .photo-zoom{position:absolute;right:4px;bottom:4px;padding:3px 9px;min-height:0;font-size:10px;font-weight:600;background:rgba(20,28,20,.78);color:#fff;border:0;border-radius:5px}
 .photo-picker .photo-zoom:hover{background:rgba(20,28,20,.95)}
@@ -33,3 +33,6 @@
 .photo-lightbox-close{position:absolute;top:18px;right:22px;width:44px;height:44px;padding:0;min-height:0;border-radius:50%;background:rgba(255,255,255,.12);color:#fff;border:1px solid rgba(255,255,255,.4);font-size:15px}
 .photo-lightbox-close:hover{background:rgba(255,255,255,.24)}
 body.photo-lightbox-open{overflow:hidden}
+.photo-order{align-self:center;width:22px;text-align:center;font:600 14px Georgia,serif;color:var(--muted)}
+.photo-row-actions{display:flex;flex-direction:column;gap:4px;align-self:center}
+.photo-row-actions .text-button{font-size:11px;min-height:0;padding:2px 0;white-space:nowrap}

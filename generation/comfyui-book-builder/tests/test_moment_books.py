@@ -159,6 +159,29 @@ class MomentBookTests(unittest.TestCase):
         scratch = self.approve(self.add(store.create({'page_count': 3}), manuscript()))
         planning.validate(engine.package(scratch), self.plan(scratch))
 
+    def test_pages_follow_photograph_order(self):
+        state = self.approve(self.add(self.moment_state(), manuscript()))
+        package = engine.package(state)
+        moment_ids = [p['id'] for p in state['config']['moment']['photos']]
+        # Swapped: the donkey ride (uploaded second) cannot come before the cake.
+        swapped = copy.deepcopy(self.moment_plan(state))
+        swapped['scenes'][1]['asset_refs'] = ['garden', 'moment_02']
+        swapped['scenes'][2]['asset_refs'] = ['garden', 'moment_01']
+        with self.assertRaisesRegex(ValueError, 'photograph order'):
+            planning.validate(package, swapped, moment_ids)
+        # Two moments on one page is not allowed either.
+        crowded = copy.deepcopy(self.moment_plan(state))
+        crowded['scenes'][1]['asset_refs'] = ['garden', 'moment_01', 'moment_02']
+        with self.assertRaisesRegex(ValueError, 'one moment only'):
+            planning.validate(package, crowded, moment_ids)
+        # The same moment on two pages is not allowed.
+        repeated = copy.deepcopy(self.moment_plan(state))
+        repeated['scenes'][3]['asset_refs'] = ['moment_01']
+        with self.assertRaisesRegex(ValueError, 'two pages'):
+            planning.validate(package, repeated, moment_ids)
+        # A later photograph on a later page is fine.
+        planning.validate(package, self.moment_plan(state), moment_ids)
+
     def test_plan_schema_accepts_only_configured_moments(self):
         state = self.approve(self.add(self.moment_state(), manuscript()))
         book_plan = self.moment_plan(state)
