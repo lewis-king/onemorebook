@@ -223,9 +223,10 @@ def public_state(state):
         if stage['kind']=='moment' and stage.get('source_photo'):
             stage['source_photo_url']=f"/book-builder/books/{state['id']}/{stage['source_photo']['path']}"
         for candidate in stage['candidates']:
-            if stage['id']==state['current_stage'] and stage['kind'] in ('story','plan'):
+            if stage['kind'] in ('story','plan'):
                 # Validation is a derived view, not a human decision. Recheck the
-                # unchanged draft after validator fixes; retain its original report.
+                # unchanged draft after validator fixes, on every story/plan stage
+                # — an approved stage viewed later must not show a stale failure.
                 info=candidate['metadata']
                 info['validation_error_at_generation']=info.get('validation_error')
                 try:
