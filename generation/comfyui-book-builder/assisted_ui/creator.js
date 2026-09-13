@@ -116,16 +116,17 @@ function render(){
   $('page-copy').innerHTML=stage.text?'<p class="eyebrow">ON THIS PAGE</p><p>'+esc(stage.text)+'</p>':'';
   const locked=stage.status==='approved';$('locked').hidden=!locked&&isCurrent;$('decision-content').hidden=locked||!isCurrent;
   $('locked').querySelector('h2').textContent=c?.id===stage.selected?'Approved and saved.':'Earlier attempt';
-  $('locked').querySelector('p').textContent=c?.id===stage.selected?(stage.kind==='scene'?'This is the approved image. You can revise it and approve a replacement.':'This exact reference is kept fixed for the rest of the book.'):'This attempt was kept for comparison. The candidate marked ✓ is the approved version.';
+  $('locked').querySelector('p').textContent=c?.id===stage.selected?(stage.kind==='scene'?'This is the approved image. You can revise it and approve a replacement.':'This is the approved version. You can revise it any time; steps that use it will be regenerated with the replacement.'):'This attempt was kept for comparison. The candidate marked ✓ is the approved version.';
   if(!locked&&!isCurrent){
     $('locked').querySelector('h2').textContent='Saved for later.';
     $('locked').querySelector('p').textContent='Finish the step you are working on, or keep its original, to continue here.';
   }
-  $('reopen-page').hidden=!state.can_revise_pages||!locked||stage.kind!=='scene';
-  $('reopen-page').textContent=stage.id==='cover.png'?'Revise this cover':'Revise this page';
+  const revisable=['scene','style','character','character_state','moment','prop','prop_state','location'].includes(stage.kind);
+  $('reopen-page').hidden=!state.can_revise_pages||!locked||!revisable;
+  $('reopen-page').textContent=stage.kind==='scene'?(stage.id==='cover.png'?'Revise this cover':'Revise this page'):'Revise this reference';
   $('reopen-page').disabled=busy||Boolean(state.page_revision)||!['awaiting_review','error','ready','complete'].includes(state.status);
-  $('reopen-help').hidden=$('reopen-page').hidden||!$('reopen-page').disabled;
-  $('reopen-help').textContent=state.page_revision?'Finish the page you are revising, or keep its original, before reopening another.':'Wait for the current generation to finish, then reopen this page.';
+  $('reopen-help').hidden=$('reopen-page').hidden||($('reopen-page').disabled?false:stage.kind==='scene');
+  $('reopen-help').textContent=state.page_revision?'Finish the step you are revising, or keep its original, before reopening another.':stage.kind!=='scene'?'Revise with feedback as usual. Approving the replacement marks every approved step that uses this reference — moments, portraits, pages — for regeneration with the new version.':'Wait for the current generation to finish, then reopen this page.';
   const canDecide=isCurrent&&['awaiting_review','error','ready'].includes(state.status)&&!busy;
   $('approve').disabled=!canDecide||!c;$('regenerate').disabled=!canDecide;
   $('approve').textContent=original?'Approve replacement & return →':'Approve & continue →';

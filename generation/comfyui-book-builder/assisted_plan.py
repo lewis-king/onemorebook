@@ -184,19 +184,19 @@ def stages(package, plan, moment=None):
     add('style.png', 'style', 'Art style',
         'An inviting unoccupied landscape with simple vegetation and an open path. '+style+
         ' Clean unmarked artwork surfaces.', [])
-    if moment:
-        # Every uploaded photograph gets its own restyle stage, right after the
-        # art style exists: photo as Image 1, style as Image 2. The scenes cite
-        # the approved restyled versions through ordinary asset references.
-        for photo in moment['photos']:
-            short = photo['caption'] if len(photo['caption']) <= 42 else photo['caption'][:42].rstrip() + '…'
-            add(f"moments/{photo['id']}.png", 'moment', short,
-                restyle_brief(photo), ['style.png'], source_photo=photo)
     for char in book['characters']:
         add('characters/'+char['id']+'.png', 'character', char['name'],
             f"A single full-body portrait of {char['name']}, {char['appearance']}. "
             'Relaxed upright pose, feet visible, flat warm ivory background. '+style,
             ['style.png'], character_id=char['id'])
+    if moment:
+        # Every uploaded photograph gets its own restyle stage once the art
+        # style exists: photo as Image 1, style as Image 2. The canonical cast
+        # comes first — they anchor every scene the moments feed.
+        for photo in moment['photos']:
+            short = photo['caption'] if len(photo['caption']) <= 42 else photo['caption'][:42].rstrip() + '…'
+            add(f"moments/{photo['id']}.png", 'moment', short,
+                restyle_brief(photo), ['style.png'], source_photo=photo)
     paths = {a['id']: ('states' if a['kind']=='character_state' else 'props' if a['kind'] in ('prop','prop_state') else 'locations')+'/'+a['id']+'.png'
              for a in plan['assets']}
     paths.update({a['id']: 'moments/'+a['id']+'.png' for a in plan['assets'] if a['kind']=='moment'})

@@ -263,7 +263,12 @@ class MomentBookTests(unittest.TestCase):
         state = self.approve(self.add(self.moment_state(), moment_manuscript()))
         state = self.approve(self.add(state, self.moment_plan(state)))
         ids = [s['id'] for s in state['stages']]
-        self.assertEqual(ids[:4], ['story', 'plan', 'style.png', 'moments/moment_01.png'])
+        # Cast first: the canonical portraits anchor every scene the moments feed.
+        self.assertEqual(ids[:3], ['story', 'plan', 'style.png'])
+        characters = [s['id'] for s in state['stages'] if s['id'].startswith('characters/')]
+        self.assertEqual(characters, ['characters/mira.png', 'characters/pip.png', 'characters/fern.png'])
+        self.assertEqual(ids[3 + len(characters)], 'moments/moment_01.png')
+        self.assertEqual(ids.index('moments/moment_01.png'), ids.index('moments/moment_02.png') - 1)
         stage = store.stage(state, 'moments/moment_01.png')
         self.assertEqual(stage['kind'], 'moment')
         self.assertEqual(stage['references'], ['style.png'])
@@ -282,6 +287,9 @@ class MomentBookTests(unittest.TestCase):
         state = self.approve(self.add(self.moment_state(), moment_manuscript()))
         state = self.approve(self.add(state, self.moment_plan(state)))
         state = self.approve(self.png(state))  # style.png
+        # The cast comes first; walk through the portraits to the moments.
+        while state['current_stage'].startswith('characters/'):
+            state = self.approve(self.png(state))
         self.assertEqual(state['current_stage'], 'moments/moment_01.png')
         intent = store.next_attempt(state)
         current = store.stage(state)

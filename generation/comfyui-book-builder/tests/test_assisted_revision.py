@@ -94,7 +94,7 @@ class PageRevisionTests(RevisionFixtures,unittest.TestCase):
     def test_busy_reference_and_nested_revision_rejections_do_not_mutate(self):
         state=self.reviewing_second_page()
         before=copy.deepcopy(state)
-        with self.assertRaisesRegex(ValueError,'Only an approved'):revision.begin(state,'story')
+        with self.assertRaisesRegex(ValueError,'stay fixed'):revision.begin(state,'story')
         self.assertEqual(state,before)
         for status in ['queued','generating','exporting']:
             state['status']=status
@@ -201,3 +201,58 @@ class PageRevisionApiTests(RevisionFixtures,unittest.IsolatedAsyncioTestCase):
                 self.assertEqual(r.status,200,await r.text())
                 launch.assert_called_once_with(legacy,resume=False)
                 self.assertEqual((await r.json())['creator_url'],'/book-builder/create/'+sid)
+
+
+class ReferenceRevisionTests(RevisionFixtures, unittest.TestCase):
+    def approved_through_first_character(self):
+        state = self.prepare()  # story + plan approved, current stage style.png
+        state = self.approve(self.png(state))            # style.png
+        state = self.approve(self.png(state))            # characters/mira.png
+        state = self.approve(self.png(state))            # characters/pip.png
+        return state                                       # current: characters/fern.png
+
+    def test_replacing_style_invalidates_everything_downstream(self):
+        state = self.approved_through_first_character()
+        old_style = engine.selected(state, 'style.png')
+        old_pip = engine.selected(state, 'characters/pip.png')
+        state = revision.begin(state, 'style.png')
+        self.assertEqual(state['current_stage'], 'style.png')
+        self.assertEqual(store.stage(state, 'style.png')['status'], 'awaiting_review')
+        state = self.png(state)
+        state = self.approve(state)
+        # The pipeline resumes right after the style with dependents reset.
+        self.assertEqual(state['current_stage'], 'characters/mira.png')
+        self.assertEqual(state['status'], 'ready')
+        self.assertNotIn('page_revision', state)
+        self.assertEqual(store.stage(state, 'style.png')['status'], 'approved')
+        for dependent in ('characters/mira.png', 'characters/pip.png'):
+            self.assertEqual(store.stage(state, dependent)['status'], 'pending')
+        # Old attempts survive for comparison; story and plan stay approved.
+        self.assertNotEqual(engine.selected(state, 'style.png')['id'], old_style['id'])
+        pip = store.stage(state, 'characters/pip.png')
+        self.assertEqual([c['id'] for c in pip['candidates']], [old_pip['id']])
+        self.assertEqual(store.stage(state, 'story')['status'], 'approved')
+        self.assertEqual(store.stage(state, 'plan')['status'], 'approved')
+
+    def test_keep_original_after_reference_revision_restores_downstream(self):
+        state = self.approved_through_first_character()
+        prior = copy.deepcopy(state)
+        state = revision.begin(state, 'style.png')
+        state = self.png(state)
+        state = revision.keep_original(store.read(state['id']))
+        self.assertEqual(state['status'], prior['status'])
+        self.assertEqual(state['current_stage'], prior['current_stage'])
+        self.assertEqual(store.stage(state, 'style.png')['status'], 'approved')
+        self.assertEqual(store.stage(state, 'characters/mira.png')['status'], 'approved')
+        self.assertEqual(store.stage(state, 'characters/pip.png')['status'], 'approved')
+
+    def test_pending_downstream_is_not_reset_and_scenes_still_guard_references(self):
+        state = self.approved_through_first_character()
+        # Nothing approved downstream of fern yet: revising fern's neighbour
+        # prop-style is covered above; a never-approved stage cannot be reopened.
+        with self.assertRaisesRegex(ValueError, 'Only an approved'):
+            revision.begin(state, 'characters/fern.png')
+        store.stage(state, 'locations/garden.png')['status'] = 'pending'
+        state = revision.begin(state, 'style.png')
+        state = self.approve(self.png(state))
+        self.assertEqual(store.stage(state, 'locations/garden.png')['status'], 'pending')

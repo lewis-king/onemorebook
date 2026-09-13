@@ -1,3 +1,11 @@
+# References revisable; cast before moments — 2026-09-13 (latest)
+
+Lewis asked to change the art style a few generations in and found only pages could be reopened. Any approved reference (style, character, moment, prop, place, state) can now be reopened with **Revise this reference**; approving the replacement recomputes dependents from the stage reference graph and resets every approved downstream stage (moments, portraits, pages…) to pending, resuming generation from the next stage — old attempts stay visible for comparison, and Keep the original restores everything. Pages that supply an extracted reference stay protected; story and plan stay fixed. In moment books the canonical cast is now generated immediately after the art style, before the photograph restyles, so the characters exist before any scene that needs them.
+
+Source: `assisted_revision.py` (revisable kinds, transitive `_dependents`, reference `finish` with invalidation), `assisted_plan.stages` ordering, `assisted_ui` reopen button for reference kinds with a downstream-regeneration warning. Verification: full pinned suite **391 tests pass**, including new reference-revision tests (style replacement invalidates approved portraits and resumes; keep-original restores downstream approvals; pending stages untouched) and updated moment-ordering tests. ComfyUI restarted idle; existing saved sessions unchanged (stage order is fixed at plan approval).
+
+---
+
 # From-a-moment books implemented — 2026-09-13 (latest)
 
 Feature request: generate a book from a real day, not only from an idea. Implemented in the assisted creator and awaiting Lewis's first real try.
