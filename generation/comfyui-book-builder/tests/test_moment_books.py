@@ -65,10 +65,10 @@ class MomentBookTests(unittest.TestCase):
         one = self.stage_upload()
         with self.assertRaisesRegex(ValueError, 'Describe the day'):
             store.config(self.submission([one], description='  '))
-        with self.assertRaisesRegex(ValueError, 'one to 6 photographs'):
+        with self.assertRaisesRegex(ValueError, 'one to 14 photographs'):
             store.config({'mode': 'moment', 'moment': {'description': DESCRIPTION, 'photos': []}})
-        with self.assertRaisesRegex(ValueError, 'one to 6 photographs'):
-            store.config(self.submission([self.stage_upload() for _ in range(7)]))
+        with self.assertRaisesRegex(ValueError, 'one to 14 photographs'):
+            store.config(self.submission([self.stage_upload() for _ in range(15)]))
         with self.assertRaisesRegex(ValueError, 'short caption'):
             store.config(self.submission([one], captions=('',)))
         with self.assertRaisesRegex(ValueError, 'under 500'):

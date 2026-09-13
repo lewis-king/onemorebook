@@ -164,7 +164,7 @@ $('override-details').ontoggle=()=>{if(state)renderPrompt();};
 $('return-current').onclick=()=>{viewStage=state.current_stage;choice=null;renderKey='';render();};
 $('stages').onclick=e=>{const b=e.target.closest('[data-stage]');if(b&&!b.disabled){viewStage=b.dataset.stage;choice=null;renderKey='';render();}};
 $('attempts').onclick=e=>{const b=e.target.closest('[data-attempt]');if(b){choice=b.dataset.attempt;renderKey='';render();}};
-const MAX_PHOTOS=6;
+const MAX_PHOTOS=14;
 function photoRow(){
   const row=document.createElement('div');row.className='photo-row';
   row.innerHTML='<div class="photo-picker"><img class="photo-thumb" alt="Chosen photograph preview" hidden><input type="file" accept="image/*" class="photo-file" aria-label="Choose a photograph"></div>'

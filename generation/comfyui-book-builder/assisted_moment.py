@@ -11,7 +11,7 @@ from pathlib import Path
 
 from .storage import books_root, write_exclusive
 
-MAX_PHOTOS = 6
+MAX_PHOTOS = 14
 MAX_DESCRIPTION = 2000
 MAX_CAPTION = 500
 MAX_UPLOAD_BYTES = 25 * 1024 * 1024
