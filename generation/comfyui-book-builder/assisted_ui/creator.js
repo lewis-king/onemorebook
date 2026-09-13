@@ -247,7 +247,7 @@ $('new-book').onsubmit=async e=>{e.preventDefault();const b=e.submitter;b.disabl
         b.textContent=`Uploading photograph ${index+1} of ${rows.length}…`;
         photos.push({upload_id:await uploadPhoto(photo.file),caption});
       }
-      data={mode:'moment',story_idea:'',moment:{description,photos}};
+      data={mode:'moment',story_idea:'',moment:{description,photos},art_inspiration:$('moment-art-inspiration').value.trim()};
     }else{
       data=Object.fromEntries(new FormData(e.target));data.mode='scratch';
     }

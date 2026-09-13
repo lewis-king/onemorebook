@@ -86,6 +86,11 @@ def config(values):
         result['page_count'] = len(result['moment']['photos'])
     elif values.get('moment'):
         raise ValueError('Photographs only belong in a from-a-moment book.')
+    inspiration = str(values.get('art_inspiration', '')).strip()
+    if len(inspiration) > 300:
+        raise ValueError('Keep the art inspiration under 300 characters.')
+    if inspiration:
+        result['art_inspiration'] = inspiration
     if result['page_count'] == 0 and automatic:
         result.update(page_count_min=AUTO_MIN, page_count_max=AUTO_MAX, page_count_target=AUTO_TARGET)
     elif result.get('mode') != 'moment' and not 2 <= result['page_count'] <= 24:

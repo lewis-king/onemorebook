@@ -8,6 +8,13 @@ store = importlib.import_module('book_test_pack.assisted_store')
 engine = importlib.import_module('book_test_pack.assisted_engine')
 
 
+def manuscript():
+    value = fixtures.package_fixture()
+    for c, h in zip(value['production']['characters'], [100, 50, 65]):
+        c['height_cm'] = h
+    return value
+
+
 class StyleTakeTests(unittest.TestCase):
     setUp = fixtures.BookTests.setUp
     restore_module = fixtures.BookTests.restore_module
@@ -72,6 +79,37 @@ class StyleTakeTests(unittest.TestCase):
         deciding['status'] = 'awaiting_review'
         deciding['job'] = None
         self.assertFalse(engine.continue_style_variations(deciding))
+
+    def test_art_inspiration_config_validation(self):
+        with self.assertRaisesRegex(ValueError, 'under 300'):
+            store.config({'art_inspiration': 'x' * 301})
+        kept = store.config({'art_inspiration': '  demon hunters  '})
+        self.assertEqual(kept['art_inspiration'], 'demon hunters')
+        self.assertNotIn('art_inspiration', store.config({}))
+
+    def test_style_prompt_carries_inspiration_on_every_take(self):
+        state = store.create({'art_inspiration': 'demon hunters', 'page_count': 3})
+        state = self.approve(self.add(state, manuscript()))
+        state = self.approve(self.add(state, self.plan(state)))
+        current = store.stage(state)
+        prompts = []
+        for attempt in (1, 2, 3, 4):
+            intent = {'session_id': state['id'], 'stage_id': 'style.png', 'attempt': attempt,
+                      'mode': 'fresh', 'feedback': ''}
+            prompt, _, _ = engine.image_inputs(state, current, intent)
+            prompts.append(prompt)
+        self.assertIn('Art inspiration from the reader', prompts[0])
+        self.assertIn('demon hunters', prompts[0])
+        self.assertIn('never scary or dark', prompts[0])
+        for prompt in prompts[1:]:
+            self.assertIn('demon hunters', prompt)
+
+    def test_style_prompt_without_inspiration_stays_plain(self):
+        state = self.prepare()
+        current = store.stage(state)
+        intent = {'session_id': state['id'], 'stage_id': 'style.png', 'attempt': 2, 'mode': 'fresh', 'feedback': ''}
+        prompt, _, _ = engine.image_inputs(state, current, intent)
+        self.assertNotIn('Art inspiration', prompt)
 
 
 if __name__ == '__main__':

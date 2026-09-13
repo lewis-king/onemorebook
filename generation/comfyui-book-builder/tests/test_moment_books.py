@@ -133,7 +133,9 @@ class MomentBookTests(unittest.TestCase):
         self.assertIn('asset_refs', guidance)
 
     def test_story_prompt_includes_moment_brief(self):
-        state = self.moment_state()
+        uploads = [self.stage_upload(), self.stage_upload()]
+        state = store.create({**self.submission(uploads), 'art_inspiration': 'demon hunters'})
+        state = store.read(state['id'])
         intent = store.next_attempt(state)
         with patch.object(engine, 'draft_json', return_value=moment_manuscript()) as writer:
             engine.text_step(state, intent)
@@ -143,6 +145,7 @@ class MomentBookTests(unittest.TestCase):
         self.assertIn(CAPTION_1, prompt)
         self.assertIn(CAPTION_2, prompt)
         self.assertIn('exactly 2 pages', prompt)
+        self.assertIn('demon hunters', prompt)
         self.assertEqual(writer.call_args.args[1], 'story')
 
     def moment_plan(self, state):

@@ -129,6 +129,11 @@ def text_step(state, intent):
         if state['config'].get('moment'):
             from .assisted_moment import writer_brief
             prompt += '\n' + writer_brief(state['config']['moment'])
+        if state['config'].get('art_inspiration'):
+            prompt += ('\nArt inspiration the reader asked to weave into the book\'s look: '
+                       + state['config']['art_inspiration']
+                       + '. Let it colour the visual style and world details, interpreted cutely and '
+                         'age-appropriately for young children — colourful and gentle, never scary or dark.')
     else:
         prompt, schema = assisted_plan.request(package(state), state['config'])
     if intent['feedback']:
@@ -275,6 +280,12 @@ def image_inputs(state, current, intent):
             prompt+=' Keep the identity of the character in Image 1 with the described current appearance.'
         if current['kind']=='prop_state' and not current.get('source_scene'):
             prompt+=' Use the referenced props as the parts of this single result, preserving their materials, colours and shapes in the described arrangement.'
+    if current['id']=='style.png':
+        inspiration=state['config'].get('art_inspiration','').strip()
+        if inspiration:
+            prompt+=(' Art inspiration from the reader\'s world: '+inspiration+
+                     '. Interpret it as a cute, colourful, age-appropriate storybook style — gentle and '
+                     'friendly, never scary or dark.')
     take=style_take(state,intent)
     if take is not None:
         prompt+=' '+STYLE_TAKES[take]

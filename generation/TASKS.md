@@ -1,3 +1,11 @@
+# Art inspiration field — 2026-09-13 (latest)
+
+Both creation forms gain an optional **Inspire the art** box (≤300 characters): anything the child loves right now — a show, a game, a toy ("she's loving demon hunters at the moment"). It is stored as `config.art_inspiration`, reaches the story writer (which may let it colour the visual bible and world details) and is injected into every art-style take with a fixed guardrail: *cute, colourful, age-appropriate storybook interpretation — gentle and friendly, never scary or dark*. Books already underway can add inspiration through the style step's Regenerate feedback instead.
+
+Source: `assisted_store.config` (validation), `assisted_engine.text_step/image_inputs`, `assisted_ui` form fields. Verification: full pinned suite **397 tests pass**, including new coverage (config cap/trim, style prompts carry the inspiration on takes 1–4, plain prompts untouched, writer prompt receives it). ComfyUI restarted idle.
+
+---
+
 # Four art-style takes per book — 2026-09-13 (latest)
 
 The art style anchors every later stage, so its stage now presents four distinct takes instead of one: attempt 1 is the story's planned direction; attempts 2–4 append seeded medium/mood emphases (bold flat cartoon, watercolour, crayon, storybook realism, minimalist, gouache — distinct per book via `config.seed`). After each fresh style attempt lands, `continue_style_variations` queues the next take until four candidates exist, so the filmstrip fills itself while the reader watches; any human decision (approve, regenerate with feedback, revise) stops the chain, and revision of an already-approved style also walks through four takes. The reader approves exactly one candidate as before.
