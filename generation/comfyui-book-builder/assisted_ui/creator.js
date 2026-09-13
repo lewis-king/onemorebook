@@ -165,20 +165,31 @@ $('return-current').onclick=()=>{viewStage=state.current_stage;choice=null;rende
 $('stages').onclick=e=>{const b=e.target.closest('[data-stage]');if(b&&!b.disabled){viewStage=b.dataset.stage;choice=null;renderKey='';render();}};
 $('attempts').onclick=e=>{const b=e.target.closest('[data-attempt]');if(b){choice=b.dataset.attempt;renderKey='';render();}};
 const MAX_PHOTOS=14;
-function photoRow(){
+function momentRows(){return [...document.querySelectorAll('.photo-row')];}
+function refreshPhotoAdd(){const rows=momentRows();$('add-photo').disabled=rows.length>=MAX_PHOTOS;
+  $('add-photo').textContent=rows.length?'Add more photographs':'Add photographs';}
+function photoRow(file){
   const row=document.createElement('div');row.className='photo-row';
-  row.innerHTML='<div class="photo-picker"><img class="photo-thumb" alt="Chosen photograph preview" hidden><input type="file" accept="image/*" class="photo-file" aria-label="Choose a photograph"></div>'
+  row.innerHTML='<div class="photo-picker"><img class="photo-thumb" alt="Photograph preview" hidden><button type="button" class="photo-zoom" hidden>View larger</button></div>'
     +'<input type="text" class="photo-caption" maxlength="500" placeholder="Caption — who or what is in this photo? For example: Esme blowing out the candles on the tractor cake.">'
     +'<button type="button" class="photo-remove text-button">Remove</button>';
-  const file=row.querySelector('.photo-file'),thumb=row.querySelector('.photo-thumb');
-  file.onchange=()=>{const chosen=file.files[0];if(!chosen){thumb.hidden=true;return;}
-    thumb.src=URL.createObjectURL(chosen);thumb.hidden=false;};
-  row.querySelector('.photo-remove').onclick=()=>{
-    if(document.querySelectorAll('.photo-row').length<=1){notice('Keep at least one photograph.');return;}
-    row.remove();$('add-photo').disabled=document.querySelectorAll('.photo-row').length>=MAX_PHOTOS;};
+  const thumb=row.querySelector('.photo-thumb'),zoom=row.querySelector('.photo-zoom');
+  const setFile=chosen=>{if(row._photo)URL.revokeObjectURL(row._photo.url);
+    const url=URL.createObjectURL(chosen);row._photo={file:chosen,url};
+    thumb.src=url;thumb.hidden=false;zoom.hidden=false;};
+  if(file)setFile(file);
+  const open=()=>{if(row._photo)openLightbox(row._photo.url);};
+  thumb.onclick=open;zoom.onclick=open;
+  row.querySelector('.photo-remove').onclick=()=>{if(row._photo)URL.revokeObjectURL(row._photo.url);row.remove();refreshPhotoAdd();};
   return row;
 }
-function momentRows(){return [...document.querySelectorAll('.photo-row')];}
+const lightbox=document.createElement('div');lightbox.className='photo-lightbox';lightbox.hidden=true;
+lightbox.innerHTML='<img alt="Photograph, enlarged"><button type="button" class="photo-lightbox-close" aria-label="Close enlarged view">✕</button>';
+document.body.appendChild(lightbox);
+function openLightbox(url){lightbox.querySelector('img').src=url;lightbox.hidden=false;document.body.classList.add('photo-lightbox-open');}
+function closeLightbox(){lightbox.hidden=true;lightbox.querySelector('img').src='';document.body.classList.remove('photo-lightbox-open');}
+lightbox.onclick=event=>{if(event.target===lightbox||event.target.closest('.photo-lightbox-close'))closeLightbox();};
+document.addEventListener('keydown',event=>{if(event.key==='Escape'&&!lightbox.hidden)closeLightbox();});
 async function uploadPhoto(file){
   const body=new FormData();body.append('file',file);
   const response=await fetch('/book-builder/creator/upload',{method:'POST',headers:{'X-Book-Creator':'1'},body});
@@ -190,8 +201,13 @@ function selectedMode(){return document.querySelector('input[name="mode"]:checke
 document.querySelectorAll('input[name="mode"]').forEach(radio=>radio.onchange=()=>{
   const moment=selectedMode()==='moment';
   $('moment-fields').hidden=!moment;$('idea-fields').hidden=moment;notice('');});
-$('add-photo').onclick=()=>{if(momentRows().length>=MAX_PHOTOS)return;$('photo-rows').appendChild(photoRow());
-  $('add-photo').disabled=momentRows().length>=MAX_PHOTOS;};
+const photoPicker=$('photo-picker');
+$('add-photo').onclick=()=>{if(momentRows().length<MAX_PHOTOS)photoPicker.click();};
+photoPicker.onchange=()=>{
+  for(const file of photoPicker.files){
+    if(momentRows().length>=MAX_PHOTOS){notice(`Up to ${MAX_PHOTOS} photographs.`);break;}
+    $('photo-rows').appendChild(photoRow(file));}
+  photoPicker.value='';refreshPhotoAdd();};
 $('new-book').onsubmit=async e=>{e.preventDefault();const b=e.submitter;b.disabled=true;notice('');
   try{
     let data;
@@ -202,12 +218,12 @@ $('new-book').onsubmit=async e=>{e.preventDefault();const b=e.submitter;b.disabl
       if(!rows.length){notice('Add at least one photograph.');b.disabled=false;return;}
       const photos=[];
       for(const [index,row] of rows.entries()){
-        const file=row.querySelector('.photo-file').files[0];
+        const photo=row._photo;
         const caption=row.querySelector('.photo-caption').value.trim();
-        if(!file){notice(`Choose photograph ${index+1}.`);row.querySelector('.photo-file').focus();b.disabled=false;return;}
+        if(!photo||!photo.file){notice(`Choose photograph ${index+1}.`);b.disabled=false;return;}
         if(!caption){notice(`Give photograph ${index+1} a short caption.`);row.querySelector('.photo-caption').focus();b.disabled=false;return;}
         b.textContent=`Uploading photograph ${index+1} of ${rows.length}…`;
-        photos.push({upload_id:await uploadPhoto(file),caption});
+        photos.push({upload_id:await uploadPhoto(photo.file),caption});
       }
       data={mode:'moment',story_idea:'',moment:{description,photos}};
     }else{
@@ -216,7 +232,6 @@ $('new-book').onsubmit=async e=>{e.preventDefault();const b=e.submitter;b.disabl
     b.textContent='Starting your book…';
     const result=await request(api,data);location.href='/book-builder/create/'+result.id;
   }catch(error){notice(error.message);b.disabled=false;b.textContent='Generate →';}};
-if($('photo-rows'))$('photo-rows').appendChild(photoRow());
 async function poll(){if(busy)return;try{state=await request(api+'/'+sid);if(offline){notice('');offline=false;}render();}catch(error){offline=true;notice('Cannot reach the book creator. Your saved work stays on disk. Reconnect to ComfyUI to continue.');}}
 async function init(){if(sid){await poll();setInterval(poll,3000);}else{$('home').hidden=false;try{const sessions=await request(api);$('sessions').innerHTML=sessions.length?sessions.map(s=>`<a class="session" href="${esc(s.creator_url||'/book-builder/create/'+s.id)}"><strong>${esc(s.title||'Untitled book')}</strong><span>${esc(s.status.replaceAll('_',' '))} · ${esc(new Date(s.updated_at).toLocaleString())}</span></a>`).join(''):'<p class="helper">Your books will appear here.</p>';}catch(error){notice(error.message);}}}
 init();
