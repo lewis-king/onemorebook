@@ -30,7 +30,10 @@ def schema(book, moment_ids=None):
                             'then':{'properties':{'id':{'enum':list(moment_ids)}}}})
     asset['allOf']=constraints
     return obj({
-        'assets': {'type': 'array', 'maxItems': 24, 'items':asset},
+        # The designed-reference budget stays 24; moment references are the
+        # reader's own photographs (at most 14, one per page) and lift the
+        # list by exactly their count.
+        'assets': {'type': 'array', 'maxItems': 24 + (len(moment_ids) if moment_ids else 0), 'items':asset},
         'scenes': {'type': 'array', 'minItems': len(book['pages'])+1, 'maxItems': len(book['pages'])+1,
                    'items': obj({'page': {'type': 'integer', 'minimum': 0},
                                  'moment': TEXT, 'character_refs': IDS, 'asset_refs': IDS})},

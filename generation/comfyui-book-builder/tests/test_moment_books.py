@@ -42,6 +42,14 @@ def moment_manuscript():
     return value
 
 
+def moment_manuscript_n(count):
+    value = manuscript()
+    pages = value['story']['pages']
+    value['story']['pages'] = [dict(copy.deepcopy(pages[i % len(pages)]), pageNumber=i + 1)
+                               for i in range(count)]
+    return value
+
+
 class MomentBookTests(unittest.TestCase):
     setUp = fixtures.BookTests.setUp
     restore_module = fixtures.BookTests.restore_module
@@ -197,6 +205,32 @@ class MomentBookTests(unittest.TestCase):
             planning.validate(package, cover, moment_ids)
         # A later photograph on a later page is fine.
         planning.validate(package, self.moment_plan(state), moment_ids)
+
+    def test_full_size_party_book_fits_the_asset_list(self):
+        # Fourteen photographs -> fourteen pages -> 25 assets (14 moments plus
+        # the party references): the list limit must grow by the moment count.
+        uploads = [self.stage_upload() for _ in range(14)]
+        state = store.create(self.submission(
+            uploads, captions=[f'Party moment {i}' for i in range(1, 15)], description=DESCRIPTION))
+        value = moment_manuscript_n(14)
+        state = self.approve(self.add(state, value))
+        package = engine.package(state)
+        moment_ids = [p['id'] for p in state['config']['moment']['photos']]
+        book = fixtures.story.make_render_plan(package['story'], package['production'])
+        self.assertEqual(planning.schema(book)['properties']['assets']['maxItems'], 24)
+        self.assertEqual(planning.schema(book, moment_ids)['properties']['assets']['maxItems'], 38)
+        book_plan = self.plan(state)
+        for i in range(1, 15):
+            book_plan['assets'].append({'id': f'moment_{i:02d}', 'kind': 'moment',
+                                        'name': f'Party moment {i}',
+                                        'appearance': f'What happened in photograph {i}.',
+                                        'source_character': ''})
+            book_plan['scenes'][i]['asset_refs'].append(f'moment_{i:02d}')
+        for j, extra in enumerate(['kite', 'ladder', 'banner', 'jug', 'bunting', 'table', 'tap']):
+            book_plan['assets'].append({'id': extra, 'kind': 'prop', 'name': extra.title(),
+                                        'appearance': 'A bright party prop.', 'source_character': ''})
+            book_plan['scenes'][1 + j % 14]['asset_refs'].append(extra)
+        planning.validate(package, book_plan, moment_ids)
 
     def test_plan_schema_accepts_only_configured_moments(self):
         state = self.approve(self.add(self.moment_state(), moment_manuscript()))
