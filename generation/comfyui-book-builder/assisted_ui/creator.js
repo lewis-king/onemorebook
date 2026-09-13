@@ -59,7 +59,13 @@ function renderStoryGuide(guide){
 }
 function renderContent(stage,c){
   if(!c)return '<div class="placeholder"><div><h2>Your next chapter starts here.</h2><p>The next candidate will appear here as soon as it is saved.</p></div></div>';
-  if(!['story','plan'].includes(stage.kind))return `<a href="${esc(c.url)}" target="_blank" rel="noopener" aria-label="Open full-size image"><img class="art" src="${esc(c.url)}" alt="${esc(stage.title)} — attempt ${c.attempt}"></a>`;
+  if(!['story','plan'].includes(stage.kind)){
+    if(stage.kind==='moment'&&stage.source_photo_url){
+      return '<div class="moment-compare"><figure><img src="'+esc(stage.source_photo_url)+'" alt="The original photograph"><figcaption>The photograph</figcaption></figure>'
+        +'<figure><a href="'+esc(c.url)+'" target="_blank" rel="noopener" aria-label="Open full-size restyled image"><img class="art" src="'+esc(c.url)+'" alt="Storybook restyle — attempt '+c.attempt+'"></a><figcaption>Storybook restyle · attempt '+c.attempt+'</figcaption></figure></div>';
+    }
+    return `<a href="${esc(c.url)}" target="_blank" rel="noopener" aria-label="Open full-size image"><img class="art" src="${esc(c.url)}" alt="${esc(stage.title)} — attempt ${c.attempt}"></a>`;
+  }
   const value=c.metadata.content;
   if(c.metadata.validation_error)return '<div class="text-preview"><h2>This draft needs a correction</h2><div class="error">'+esc(c.metadata.validation_error)+'</div><p>You can regenerate with feedback or edit the JSON below. It must satisfy the story contract before approval.</p><pre>'+esc(JSON.stringify(value,null,2))+'</pre></div>';
   if(!value)return '<div class="text-preview">Open the saved candidate to read this draft.</div>';
@@ -76,7 +82,7 @@ function render(){
   const approved=state.stages.filter(s=>s.status==='approved').length;
   $('overall').textContent=`${approved} of ${state.stages.length} steps approved · Saved locally`;
   $('stages').innerHTML=state.stages.map(s=>`<button class="stage-nav ${s.id===stage.id?'viewing':''} ${s.id===state.current_stage?'active':''}" data-stage="${esc(s.id)}" ${s.status==='pending'&&s.id!==state.current_stage?'disabled':''}><span class="mark">${s.status==='approved'?'✓':s.id===state.current_stage?'◉':'○'}</span>${esc(s.title)}</button>`).join('');
-  $('stage-title').textContent=stage.title;$('kind').textContent=stage.kind==='scene'?'MAKE THE STORY VISIBLE':stage.kind==='story'?'BEGIN WITH A STORY':stage.kind==='plan'?'PLAN THE WORLD':'BUILD YOUR REFERENCE LIBRARY';
+  $('stage-title').textContent=stage.title;$('kind').textContent=stage.kind==='scene'?'MAKE THE STORY VISIBLE':stage.kind==='story'?'BEGIN WITH A STORY':stage.kind==='plan'?'PLAN THE WORLD':stage.kind==='moment'?'YOUR MOMENTS, STORYBOOK STYLE':'BUILD YOUR REFERENCE LIBRARY';
   $('status').textContent=stage.status==='approved'?'Approved':state.status==='complete'?'Book complete':isCurrent?state.status.replaceAll('_',' '):stage.status.replaceAll('_',' ');
   const working=isCurrent&&['queued','generating','exporting','ready'].includes(state.status);
   const job=runningJob();
@@ -96,7 +102,7 @@ function render(){
     const info=c?.metadata||{};$('exact-prompt').textContent=info.prompt||'No model prompt: this candidate was edited directly.';
     $('story-guide').hidden=stage.kind!=='story'||!info.story_guide;
     $('story-guide').innerHTML=stage.kind==='story'?renderStoryGuide(info.story_guide):'';
-    $('review-hint').textContent=stage.kind==='story'?'Try a few pages aloud. Look for a story your child can follow, join in with and want to hear again. You decide when it is ready.':stage.kind==='plan'?'Check each scene against the page text, including the joke or feeling and what must stay consistent.':'Check the action, characters and recurring details. Your decision controls what happens next.';
+    $('review-hint').textContent=stage.kind==='story'?'Try a few pages aloud. Look for a story your child can follow, join in with and want to hear again. You decide when it is ready.':stage.kind==='plan'?'Check each scene against the page text, including the joke or feeling and what must stay consistent.':stage.kind==='moment'?'Check that the day is still recognisable — the people, the moment, the feeling — now drawn in the book\'s art style.':'Check the action, characters and recurring details. Your decision controls what happens next.';
     $('feedback').placeholder=stage.kind==='story'?'What would make this more engaging? Point to a page, an awkward line or a choice that does not make sense.':stage.kind==='plan'?'Which moment should we show? Mention any recurring object, action or visual joke that needs attention.':'What should change? For example: keep the heron on the left; remove the extra heron on the right.';
     $('model-info').textContent=modelDetails(info);
     renderReferences('references',info.reference_images);
@@ -158,7 +164,59 @@ $('override-details').ontoggle=()=>{if(state)renderPrompt();};
 $('return-current').onclick=()=>{viewStage=state.current_stage;choice=null;renderKey='';render();};
 $('stages').onclick=e=>{const b=e.target.closest('[data-stage]');if(b&&!b.disabled){viewStage=b.dataset.stage;choice=null;renderKey='';render();}};
 $('attempts').onclick=e=>{const b=e.target.closest('[data-attempt]');if(b){choice=b.dataset.attempt;renderKey='';render();}};
-$('new-book').onsubmit=async e=>{e.preventDefault();const b=e.submitter;b.disabled=true;notice('');const data=Object.fromEntries(new FormData(e.target));try{const result=await request(api,data);location.href='/book-builder/create/'+result.id;}catch(error){notice(error.message);b.disabled=false;}};
+const MAX_PHOTOS=6;
+function photoRow(){
+  const row=document.createElement('div');row.className='photo-row';
+  row.innerHTML='<div class="photo-picker"><img class="photo-thumb" alt="Chosen photograph preview" hidden><input type="file" accept="image/*" class="photo-file" aria-label="Choose a photograph"></div>'
+    +'<input type="text" class="photo-caption" maxlength="500" placeholder="Caption — who or what is in this photo? For example: Esme blowing out the candles on the tractor cake.">'
+    +'<button type="button" class="photo-remove text-button">Remove</button>';
+  const file=row.querySelector('.photo-file'),thumb=row.querySelector('.photo-thumb');
+  file.onchange=()=>{const chosen=file.files[0];if(!chosen){thumb.hidden=true;return;}
+    thumb.src=URL.createObjectURL(chosen);thumb.hidden=false;};
+  row.querySelector('.photo-remove').onclick=()=>{
+    if(document.querySelectorAll('.photo-row').length<=1){notice('Keep at least one photograph.');return;}
+    row.remove();$('add-photo').disabled=document.querySelectorAll('.photo-row').length>=MAX_PHOTOS;};
+  return row;
+}
+function momentRows(){return [...document.querySelectorAll('.photo-row')];}
+async function uploadPhoto(file){
+  const body=new FormData();body.append('file',file);
+  const response=await fetch('/book-builder/creator/upload',{method:'POST',headers:{'X-Book-Creator':'1'},body});
+  const result=await response.json().catch(()=>({}));
+  if(!response.ok)throw Error(result.error||`Upload failed (${response.status})`);
+  return result.upload_id;
+}
+function selectedMode(){return document.querySelector('input[name="mode"]:checked')?.value||'scratch';}
+document.querySelectorAll('input[name="mode"]').forEach(radio=>radio.onchange=()=>{
+  const moment=selectedMode()==='moment';
+  $('moment-fields').hidden=!moment;$('idea-fields').hidden=moment;notice('');});
+$('add-photo').onclick=()=>{if(momentRows().length>=MAX_PHOTOS)return;$('photo-rows').appendChild(photoRow());
+  $('add-photo').disabled=momentRows().length>=MAX_PHOTOS;};
+$('new-book').onsubmit=async e=>{e.preventDefault();const b=e.submitter;b.disabled=true;notice('');
+  try{
+    let data;
+    if(selectedMode()==='moment'){
+      const description=$('moment-description').value.trim();
+      if(!description){notice('Tell us about the day this book should remember.');$('moment-description').focus();b.disabled=false;return;}
+      const rows=momentRows();
+      if(!rows.length){notice('Add at least one photograph.');b.disabled=false;return;}
+      const photos=[];
+      for(const [index,row] of rows.entries()){
+        const file=row.querySelector('.photo-file').files[0];
+        const caption=row.querySelector('.photo-caption').value.trim();
+        if(!file){notice(`Choose photograph ${index+1}.`);row.querySelector('.photo-file').focus();b.disabled=false;return;}
+        if(!caption){notice(`Give photograph ${index+1} a short caption.`);row.querySelector('.photo-caption').focus();b.disabled=false;return;}
+        b.textContent=`Uploading photograph ${index+1} of ${rows.length}…`;
+        photos.push({upload_id:await uploadPhoto(file),caption});
+      }
+      data={mode:'moment',story_idea:'',moment:{description,photos}};
+    }else{
+      data=Object.fromEntries(new FormData(e.target));data.mode='scratch';
+    }
+    b.textContent='Starting your book…';
+    const result=await request(api,data);location.href='/book-builder/create/'+result.id;
+  }catch(error){notice(error.message);b.disabled=false;b.textContent='Generate →';}};
+if($('photo-rows'))$('photo-rows').appendChild(photoRow());
 async function poll(){if(busy)return;try{state=await request(api+'/'+sid);if(offline){notice('');offline=false;}render();}catch(error){offline=true;notice('Cannot reach the book creator. Your saved work stays on disk. Reconnect to ComfyUI to continue.');}}
 async function init(){if(sid){await poll();setInterval(poll,3000);}else{$('home').hidden=false;try{const sessions=await request(api);$('sessions').innerHTML=sessions.length?sessions.map(s=>`<a class="session" href="${esc(s.creator_url||'/book-builder/create/'+s.id)}"><strong>${esc(s.title||'Untitled book')}</strong><span>${esc(s.status.replaceAll('_',' '))} · ${esc(new Date(s.updated_at).toLocaleString())}</span></a>`).join(''):'<p class="helper">Your books will appear here.</p>';}catch(error){notice(error.message);}}}
 init();

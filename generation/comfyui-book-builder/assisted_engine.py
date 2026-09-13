@@ -84,6 +84,9 @@ def text_step(state, intent):
     if stage_id == 'story':
         prompt, schema = writing_prompt(state['config']), assisted_story.schema(state['config'])
         prompt += '\nIn private production metadata include numeric height_cm for every character. Keep the public story contract unchanged.'
+        if state['config'].get('moment'):
+            from .assisted_moment import writer_brief
+            prompt += '\n' + writer_brief(state['config']['moment'])
     else:
         prompt, schema = assisted_plan.request(package(state), state['config'])
     if intent['feedback']:
@@ -103,7 +106,8 @@ def text_step(state, intent):
         if stage_id == 'story':
             assisted_story.validate(value, state['config'])
         else:
-            assisted_plan.validate(package(state), value)
+            moment_ids=[p['id'] for p in state['config']['moment']['photos']] if state['config'].get('moment') else None
+            assisted_plan.validate(package(state), value, moment_ids)
     except (ValueError,KeyError,jsonschema.ValidationError) as exc:
         # A readable failed draft can be revised by its human editor. Approval
         # still repeats strict validation and cannot accept a broken contract.
@@ -208,6 +212,13 @@ def image_inputs(state, current, intent):
         if cast_refs:
             image=cast_board(state,current,path)
             references.append({'path':str(image),'label':'Cast: '+', '.join(store.stage(state,n)['title'] for n in cast_refs)})
+        if current['kind']=='moment':
+            # The uploaded photograph is Image 1; the style reference follows it.
+            # It is an immutable user upload pinned in the config, not an approved
+            # stage output, so it stays out of the approval-hash check.
+            photo=current['source_photo']
+            references.append({'path':str(store.root(state['id'])/photo['path']),
+                               'label':'The photograph to restyle — '+photo['caption']})
         for name in current['references']:
             if name not in cast_refs:
                 references.append({'path':str(approved(state,name)), 'label':store.stage(state,name)['title']})
@@ -332,7 +343,7 @@ def advance(state,candidate,record):
         state['title']=value['story']['metadata']['title']
         state['approved_page_count']=len(value['story']['pages'])
     elif current['id']=='plan':
-        value=json.loads(path.read_text());new=assisted_plan.stages(package(state),value)
+        value=json.loads(path.read_text());new=assisted_plan.stages(package(state),value,state['config'].get('moment'))
         state['stages']=state['stages'][:2]+new
     else:
         if current.get('reference_revision') and set(candidate['metadata']['approved_reference_sha256'])!=set(current['references']):

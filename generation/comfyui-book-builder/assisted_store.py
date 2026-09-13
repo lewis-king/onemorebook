@@ -61,9 +61,10 @@ def stage_dir(session_id, stage_id):
 def config(values):
     from .planning import DEFAULT_WRITER_MODEL
     from .story_craft import preferences, ART, DEFAULT_AGE
-    craft = preferences(values)
     from .story_craft_auto import ART_DIRECTION
     from .assisted_story import AUTO_MIN, AUTO_MAX, AUTO_TARGET
+    from . import assisted_moment
+    craft = preferences(values)
     automatic = craft['story_craft_version'] == 'picturebook-2'
     result = {'story_idea': str(values.get('story_idea', '')).strip(),
               'art_style': str(values.get('art_style') or '').strip() or (ART_DIRECTION if automatic else ART[craft['art_preset']][1]),
@@ -74,6 +75,14 @@ def config(values):
               'ollama_url': 'http://127.0.0.1:11434', 'ollama_model': DEFAULT_WRITER_MODEL,
               'review_model': 'gemma4:31b', 'prose_format': 'plain-v2', 'version': 'assisted-1',
               **craft}
+    mode = str(values.get('mode', 'scratch'))
+    if mode not in ('scratch', 'moment'):
+        raise ValueError("Choose 'scratch' or 'moment'.")
+    if mode == 'moment':
+        result['mode'] = 'moment'
+        result['moment'] = assisted_moment.validate_submission(values)
+    elif values.get('moment'):
+        raise ValueError('Photographs only belong in a from-a-moment book.')
     if result['page_count'] == 0 and automatic:
         result.update(page_count_min=AUTO_MIN, page_count_max=AUTO_MAX, page_count_target=AUTO_TARGET)
     elif not 2 <= result['page_count'] <= 24:
@@ -95,11 +104,17 @@ def new_stage(stage_id, kind, title):
 def create(values):
     with LOCK:
         sid = 'book-' + datetime.datetime.now(datetime.timezone.utc).strftime('%Y%m%d%H%M%S') + '-' + uuid.uuid4().hex[:10]
+        conf = config(values)
         state = {'version': 1, 'id': sid, 'created_at': now(), 'revision': 0,
-                 'config': config(values), 'status': 'ready', 'current_stage': 'story',
+                 'config': conf, 'status': 'ready', 'current_stage': 'story',
                  'stages': [new_stage('story', 'story', 'Story'), new_stage('plan', 'plan', 'Characters, props and places')],
                  'job': None, 'error': None}
         root(sid).mkdir(parents=True, exist_ok=False)
+        if conf.get('mode') == 'moment':
+            # Photographs are single-use: each staged upload lands inside this
+            # book with its hash pinned, then the staged file is consumed.
+            from . import assisted_moment
+            state['config']['moment'] = assisted_moment.intake_photos(sid, conf['moment'])
         save(state)
         return state
 

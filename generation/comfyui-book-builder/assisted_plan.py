@@ -10,18 +10,25 @@ ID = {'type': 'string', 'pattern': '^[a-z][a-z0-9_]{0,31}$'}
 IDS = {'type': 'array', 'items': ID, 'uniqueItems': True}
 
 
-def schema(book):
-    asset=obj({'id':ID,'kind':{'enum':['prop','location','character_state','prop_state']},
+def schema(book, moment_ids=None):
+    asset=obj({'id':ID,'kind':{'enum':['prop','location','character_state','prop_state']
+                               +(['moment'] if moment_ids else [])},
                'name':TEXT,'appearance':TEXT,'source_character':{'type':'string'}})
     asset['required'].remove('source_character')
     # Optional for old saved plans; mandatory only for the new derived-prop kind.
     asset['properties'].update(source_assets={**IDS,'minItems':1,'maxItems':MAX_REFERENCE_IMAGES},
                                visible_pages={'type':'array','items':{'type':'integer','minimum':0},
                                               'minItems':1,'uniqueItems':True})
-    asset['allOf']=[{'if':{'properties':{'kind':{'const':'prop_state'}}},
-                     'then':{'required':['source_assets','visible_pages']}},
-                    {'if':{'properties':{'kind':{'const':'character_state'}}},
-                     'then':{'required':['source_character']}}]
+    constraints=[{'if':{'properties':{'kind':{'const':'prop_state'}}},
+                  'then':{'required':['source_assets','visible_pages']}},
+                 {'if':{'properties':{'kind':{'const':'character_state'}}},
+                  'then':{'required':['source_character']}}]
+    if moment_ids:
+        # Moment references are the reader's own photographs, restyled by the
+        # creator; the planner may only cite the ones that were uploaded.
+        constraints.append({'if':{'properties':{'kind':{'const':'moment'}}},
+                            'then':{'properties':{'id':{'enum':list(moment_ids)}}}})
+    asset['allOf']=constraints
     return obj({
         'assets': {'type': 'array', 'maxItems': 24, 'items':asset},
         'scenes': {'type': 'array', 'minItems': len(book['pages'])+1, 'maxItems': len(book['pages'])+1,
@@ -70,15 +77,19 @@ by code; do not write Image N yourself. continuity_notes briefly explains object
     if config and config.get('story_craft_version'):
         from .story_craft import ILLUSTRATION_GUIDANCE
         prompt += ILLUSTRATION_GUIDANCE
+    if config and config.get('moment'):
+        from .assisted_moment import plan_guidance
+        prompt += plan_guidance(config['moment'])
     prompt += '\nBook package:\n'+json.dumps(package, ensure_ascii=False)
-    return prompt, schema(book)
+    moment_ids=[p['id'] for p in config['moment']['photos']] if config and config.get('moment') else None
+    return prompt, schema(book, moment_ids)
 
 
-def validate(package, plan):
+def validate(package, plan, moment_ids=None):
     import jsonschema
     from .story import make_render_plan
     book = make_render_plan(package['story'], package['production'])
-    jsonschema.validate(plan, schema(book))
+    jsonschema.validate(plan, schema(book, moment_ids))
     chars = {c['id']: c for c in book['characters']}
     assets = {a['id']: a for a in plan['assets']}
     if len(assets) != len(plan['assets']) or set(chars) & set(assets):
@@ -121,10 +132,11 @@ def validate(package, plan):
     return book
 
 
-def stages(package, plan):
+def stages(package, plan, moment=None):
     from .assisted_store import new_stage
     from .story import cover_title_instruction
-    book = validate(package, plan)
+    from .assisted_moment import restyle_brief
+    book = validate(package, plan, [p['id'] for p in moment['photos']] if moment else None)
     result = []
     def add(sid, kind, title, brief, refs, **extra):
         value = new_stage(sid, kind, title)
@@ -134,6 +146,14 @@ def stages(package, plan):
     add('style.png', 'style', 'Art style',
         'An inviting unoccupied landscape with simple vegetation and an open path. '+style+
         ' Clean unmarked artwork surfaces.', [])
+    if moment:
+        # Every uploaded photograph gets its own restyle stage, right after the
+        # art style exists: photo as Image 1, style as Image 2. The scenes cite
+        # the approved restyled versions through ordinary asset references.
+        for photo in moment['photos']:
+            short = photo['caption'] if len(photo['caption']) <= 42 else photo['caption'][:42].rstrip() + '…'
+            add(f"moments/{photo['id']}.png", 'moment', short,
+                restyle_brief(photo), ['style.png'], source_photo=photo)
     for char in book['characters']:
         add('characters/'+char['id']+'.png', 'character', char['name'],
             f"A single full-body portrait of {char['name']}, {char['appearance']}. "
@@ -141,6 +161,7 @@ def stages(package, plan):
             ['style.png'], character_id=char['id'])
     paths = {a['id']: ('states' if a['kind']=='character_state' else 'props' if a['kind'] in ('prop','prop_state') else 'locations')+'/'+a['id']+'.png'
              for a in plan['assets']}
+    paths.update({a['id']: 'moments/'+a['id']+'.png' for a in plan['assets'] if a['kind']=='moment'})
     paths.update({c['id']: 'characters/'+c['id']+'.png' for c in book['characters']})
     for asset in prop_states.ordered_assets(plan['assets'],len(book['pages'])):
         refs = ([paths[r] for r in asset['source_assets']] if asset['kind']=='prop_state' else

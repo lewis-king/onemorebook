@@ -1,3 +1,17 @@
+# From-a-moment books implemented — 2026-09-13 (latest)
+
+Feature request: generate a book from a real day, not only from an idea. Implemented in the assisted creator and awaiting Lewis's first real try.
+
+- Start screen mode toggle: **From an idea** (existing) / **From a moment**. Moment flow: upload 1–6 reference photographs, caption each, describe the day (a few cues suffice), then Generate. Uploads go to the new `POST /book-builder/creator/upload` (origin + creator-header checked, image validated, PNG-normalised, ≤25 MB, ≤4096 px, staged under `books/moment-uploads/`); `store.create` moves them into the session (`moment-src/moment_NN.png`) with SHA-256 pinned in `config.moment`. Uploads are single-use.
+- Story stage: the local writer receives the description and every caption via a moment brief (real names/people/events stay recognisable inside a normal arc; souvenir tone, rereadable ending). Words only — the writer never sees pixels.
+- After `style.png` is approved, each photograph gets a restyle stage (kind `moment`): photograph as Image 1, style as Image 2, existing Flux2 reference-latent graph — photo-real input restyled into the book look. UI shows the original photograph next to each candidate. Human approval required, Regenerate/Edit work as for any reference.
+- Plan: `moment` asset kind restricted by schema to the uploaded ids; planner guidance lists available moments with captions; scenes cite them in `asset_refs` under the existing six-image budget; validation call sites pass moment ids.
+- Backwards compatible: `mode` defaults to `scratch`; all saved sessions, exports, the public story contract and candidate provenance unchanged. Export includes `moments/*.png` as extra approved assets (publisher still uploads cover/pages only).
+- Verification: full pinned suite **385 tests pass**, including 10 new `test_moment_books.py` tests (submission validation, single-use intake, writer/plan/restyle text, photo-first reference wiring with approval hashes pinned only to approved stages, upload endpoint accept/reject). No inference run, no approvals made. ComfyUI was not running at handover — start with `python run.py start`, then open http://127.0.0.1:8188/book-builder/create.
+- Watch for on first real run: whether one restyle attempt sufficiently matches each photo (feedback/Edit loops are the escape hatch), and whether the planner cites moments on the right pages.
+
+---
+
 # Milo accepted; Cloudflare Pages preview deployed — 2026-09-11 (latest)
 
 Lewis completed and explicitly accepted **Milo and the Sun-Seeds**: "a successful finish of a book I'm happy with". Saved creator status complete, revision121, final page12; approved page11 is attempt4. Export: output/books/book-assisted-20260910213535-1b28c7aec5/export/. Preserve this accepted finish; the visual failures in earlier handovers describe older attempts. No generation, revisions or approvals are pending for this book.

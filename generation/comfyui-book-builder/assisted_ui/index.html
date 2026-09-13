@@ -12,9 +12,24 @@
   <main id="home" hidden>
     <div class="intro"><p class="eyebrow">YOUR STORY, ONE GOOD DECISION AT A TIME</p><h1>Let’s make a book.</h1><p>Start with an idea, or leave it to us.<br>Read the story and shape the pictures together.</p></div>
     <div class="home-grid"><form id="new-book" class="setup">
-      <label for="idea">What shall our story be about? <span class="optional">optional</span></label>
-      <textarea id="idea" name="story_idea" rows="4" maxlength="5000" aria-describedby="idea-help" placeholder="A tiny dragon who loves rainy days… or anything you can imagine."></textarea>
-      <p id="idea-help" class="helper">Leave this blank for a surprise. If you have an idea, you can tell us about the characters, the pictures, or how the story should feel.</p>
+      <div class="mode-toggle" role="radiogroup" aria-label="How should we begin?">
+        <label class="mode-choice"><input type="radio" name="mode" value="scratch" checked><span><strong>From an idea</strong><small>Start with anything you can imagine, or leave it blank for a surprise.</small></span></label>
+        <label class="mode-choice"><input type="radio" name="mode" value="moment"><span><strong>From a moment</strong><small>Turn a real day — a birthday, a holiday, a small adventure — into a storybook souvenir.</small></span></label>
+      </div>
+      <div id="idea-fields">
+        <label for="idea">What shall our story be about? <span class="optional">optional</span></label>
+        <textarea id="idea" name="story_idea" rows="4" maxlength="5000" aria-describedby="idea-help" placeholder="A tiny dragon who loves rainy days… or anything you can imagine."></textarea>
+        <p id="idea-help" class="helper">Leave this blank for a surprise. If you have an idea, you can tell us about the characters, the pictures, or how the story should feel.</p>
+      </div>
+      <div id="moment-fields" hidden>
+        <label for="moment-description">Tell us about the day</label>
+        <textarea id="moment-description" rows="4" maxlength="2000" placeholder="Esme's fifth birthday at Willow Farm — the cake, the donkeys, and the rain that did not stop the picnic…"></textarea>
+        <p class="helper">A few cues are plenty: who was there, where you were, and what made the day special. The story is written from your words and your photo captions.</p>
+        <p class="eyebrow moment-photos-label">REFERENCE PHOTOGRAPHS</p>
+        <div id="photo-rows"></div>
+        <button type="button" id="add-photo" class="secondary">Add another photograph</button>
+        <p class="helper">Up to six photographs — the people, the cake, the view. Give each a short caption, the words you would say while pointing at it. Sharp, realistic photos are best; each one is restyled into the book's illustration style, and you approve every restyle before it is used.</p>
+      </div>
       <button type="submit" class="primary">Generate <span aria-hidden="true">→</span></button>
       <p class="helper setup-note">Made for ages 4–7. First, a story for you to read together. Then, the pictures.</p>
     </form><aside class="recent"><p class="eyebrow">YOUR BOOKS</p><div id="sessions">Loading saved books…</div><p class="helper">Progress, prompts, attempts and feedback are saved as you go. Reopen this page after a shutdown to continue.</p></aside></div>

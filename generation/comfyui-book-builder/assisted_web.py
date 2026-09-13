@@ -1,16 +1,19 @@
 """Local UI routes and crash-aware MCP coordination, one job per review stage."""
 import asyncio
 import hashlib
+import io
 import json
 from pathlib import Path
 import re
 import sys
 import traceback
+import uuid
 import jsonschema
 from aiohttp import web, ClientSession
 
 from . import assisted_store as store
 from . import assisted_engine as engine
+from . import assisted_moment
 from .storage import write_exclusive, write_json
 from .runtime import generation_root, settings
 
@@ -217,6 +220,8 @@ def public_state(state):
     state['creator_url']=store.creator_url(state['id'])
     state['can_revise_pages']=True
     for stage in state['stages']:
+        if stage['kind']=='moment' and stage.get('source_photo'):
+            stage['source_photo_url']=f"/book-builder/books/{state['id']}/{stage['source_photo']['path']}"
         for candidate in stage['candidates']:
             if stage['id']==state['current_stage'] and stage['kind'] in ('story','plan'):
                 # Validation is a derived view, not a human decision. Recheck the
@@ -233,7 +238,8 @@ def public_state(state):
                             info['story_guide']=review_guide(content,state['config'])
                     else:
                         from .assisted_plan import validate
-                        validate(engine.package(state),content)
+                        moment_ids=[p['id'] for p in state['config']['moment']['photos']] if state['config'].get('moment') else None
+                        validate(engine.package(state),content,moment_ids)
                     info['validation_error']=None
                 except (ValueError,KeyError,OSError,jsonschema.ValidationError) as exc:
                     info['validation_error']=str(exc)
@@ -254,6 +260,49 @@ async def payload(request):
     data=await request.json()
     if not isinstance(data,dict):raise ValueError('Expected a JSON object.')
     return data
+
+
+async def upload(request):
+    """Receive one reference photograph for a from-a-moment book.
+
+    Files are validated as images, normalised to PNG and staged under the books
+    root; store.create moves them into the new session and pins their hashes.
+    """
+    origin=request.headers.get('Origin')
+    if origin and origin!=f'{request.scheme}://{request.host}':
+        raise web.HTTPForbidden(text='Cross-origin changes are not allowed.')
+    if request.headers.get('X-Book-Creator')!='1':
+        raise web.HTTPForbidden(text='Use the book creator to make changes.')
+    if request.content_length and request.content_length>assisted_moment.MAX_UPLOAD_BYTES*2:
+        raise web.HTTPRequestEntityTooLarge(max_size=assisted_moment.MAX_UPLOAD_BYTES*2,
+                                            actual_size=request.content_length)
+    post=await request.post()
+    field=post.get('file')
+    if not isinstance(field,web.FileField):
+        return web.json_response({'error':'Send the photograph as multipart field "file".'},status=400)
+    data=field.file.read(assisted_moment.MAX_UPLOAD_BYTES+1)
+    if len(data)>assisted_moment.MAX_UPLOAD_BYTES:
+        raise web.HTTPRequestEntityTooLarge(max_size=assisted_moment.MAX_UPLOAD_BYTES,actual_size=len(data))
+    try:
+        from PIL import Image
+        with Image.open(io.BytesIO(data)) as image:
+            image.verify()
+        with Image.open(io.BytesIO(data)) as image:
+            converted=image.convert('RGB')
+        if max(converted.size)>4096:
+            return web.json_response({'error':'Keep each photograph under 4096 pixels on its longest side.'},status=400)
+        buffer=io.BytesIO();converted.save(buffer,format='PNG')
+    except web.HTTPException:
+        raise
+    except Exception:
+        return web.json_response({'error':'That file is not a readable image.'},status=400)
+    png=buffer.getvalue()
+    upload_id=uuid.uuid4().hex
+    target=assisted_moment.staged_path(upload_id)
+    target.parent.mkdir(parents=True,exist_ok=True)
+    write_exclusive(target,png)
+    return web.json_response({'upload_id':upload_id,'sha256':hashlib.sha256(png).hexdigest(),
+                              'bytes':len(png)},headers={'Cache-Control':'no-store'})
 
 
 async def api(request):
@@ -366,3 +415,4 @@ def register():
     routes.post('/book-builder/creator/api')(api)
     routes.get('/book-builder/creator/api/{sid}')(api)
     routes.post('/book-builder/creator/api/{sid}')(api)
+    routes.post('/book-builder/creator/upload')(upload)

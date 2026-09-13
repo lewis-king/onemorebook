@@ -3,3 +3,25 @@
 .work-body{min-width:0;width:100%}.work-body pre{margin-bottom:0}
 .setup-note{margin:18px 0 0;font-size:12px}.review-questions{padding-left:18px;font-size:13px;line-height:1.7;color:var(--muted)}.review-questions li{margin-bottom:10px}#story-guide{border-top:1px solid var(--line);border-bottom:1px solid var(--line);padding:14px 0}#story-guide>p{margin-bottom:0}#story-guide details{margin-top:0}
 #publish-book,#published-link{width:100%;margin-top:10px}#published-link{background:#52815b}
+.mode-toggle{display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:26px}
+.mode-choice{display:block;margin:0;position:relative}
+.mode-choice input{position:absolute;opacity:0;pointer-events:none}
+.mode-choice span{display:block;border:1px solid #cfd8cc;border-radius:9px;padding:14px 16px;background:var(--paper);cursor:pointer;transition:border-color .15s,background .15s}
+.mode-choice strong{display:block;font-size:14px;margin-bottom:4px}
+.mode-choice small{font-size:11px;color:var(--muted);line-height:1.5;display:block}
+.mode-choice input:checked+span{border-color:var(--green);background:#e9efe2;box-shadow:0 0 0 1px var(--green)}
+.mode-choice input:focus-visible+span{outline:2px solid #b9ccbb;outline-offset:2px}
+#moment-fields textarea{margin-bottom:12px}
+.moment-photos-label{margin:24px 0 12px}
+.photo-row{display:grid;grid-template-columns:96px minmax(0,1fr) auto;gap:14px;align-items:start;margin-bottom:14px;padding:14px;border:1px solid var(--line);border-radius:9px;background:#f4f6ef}
+.photo-picker{position:relative;width:96px;height:96px}
+.photo-file{position:absolute;inset:0;opacity:0;cursor:pointer;height:100%}
+.photo-thumb{width:96px;height:96px;object-fit:cover;border-radius:6px;border:1px solid var(--line);display:block}
+.photo-caption{margin:0}
+.photo-remove{padding:0;min-height:0;font-size:11px;align-self:center}
+#add-photo{width:100%;margin-top:2px}
+.moment-compare{display:grid;grid-template-columns:1fr 1fr}
+.moment-compare figure{margin:0;min-width:0}
+.moment-compare img{width:100%;height:auto;display:block}
+.moment-compare figcaption{font-size:11px;color:var(--muted);padding:10px 14px;border-top:1px solid var(--line)}
+@media(max-width:600px){.mode-toggle{grid-template-columns:1fr}.moment-compare{grid-template-columns:1fr}.photo-row{grid-template-columns:80px minmax(0,1fr)}.photo-picker,.photo-thumb{width:80px;height:80px}}
