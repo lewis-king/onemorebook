@@ -100,11 +100,11 @@ def writer_brief(moment):
              'Photographs from the day, with captions:']
     for index, photo in enumerate(moment['photos'], start=1):
         lines.append(f"{index}. {photo['caption']} (restyled illustration reference '{photo['id']}')")
-    lines += ['', 'Let these real moments anchor the book: several pages should recreate moments from '
-              'the photographs, in the order the day unfolded where that helps. Use the real people and '
-              'their names as the cast, and describe each character\'s appearance so it matches what the '
-              'captions say about them. The exact illustrations are prepared separately; your job is the '
-              'words, faithful to the day.']
+    lines += ['', 'Let these real moments anchor the book: every photograph should illustrate the cover '
+              'or one page, recreating that moment in the order the day unfolded where that helps. Use the '
+              'real people and their names as the cast, and describe each character\'s appearance so it '
+              'matches what the captions say about them. The exact illustrations are prepared separately; '
+              'your job is the words, faithful to the day.']
     return '\n'.join(lines)
 
 
@@ -119,12 +119,14 @@ def restyle_brief(photo):
 
 def plan_guidance(moment):
     """Planner guidance listing the restyled moment references the scenes may cite."""
-    lines = ['', 'MOMENT REFERENCES', 'This book commemorates a real day. Styled moment references are '
-             'prepared automatically from the reader\'s own photographs; cite them by id in a scene\'s '
-             'asset_refs when that page recreates the memory. Each moment reference counts toward the '
-             'six-image budget like any prop or place reference.',
+    lines = ['', 'MOMENT REFERENCES', 'This book commemorates a real day, and each photograph the reader '
+             'uploaded MUST end up illustrating the cover or one page — that is the point of the book. '
+             'Styled moment references are prepared automatically from the photographs; cite them by id '
+             'in a scene\'s asset_refs when that page recreates the memory. Each moment reference counts '
+             'toward the six-image budget like any prop or place reference. Give one moment to each scene '
+             'whose prose recreates it; follow the order of the day where the story allows. A plan that '
+             'leaves a photograph unused cannot be approved.',
              'Available moments:']
     for photo in moment['photos']:
         lines.append(f"- {photo['id']}: {photo['caption']}")
-    lines.append('Cite a moment only when its page actually recreates that memory.')
     return '\n'.join(lines)

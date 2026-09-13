@@ -129,6 +129,17 @@ def validate(package, plan, moment_ids=None):
         if sum(assets[r]['kind'] == 'location' for r in refs) > 1:
             raise ValueError('A scene must choose one location reference.')
         prop_states.validate_scene(scene,assets)
+    if moment_ids:
+        # The book exists to keep the real day: every uploaded photograph must
+        # illustrate the cover or a page. Citation is read from the scenes, so a
+        # moment listed as an asset but never cited still counts as unused.
+        used = {r for s in plan['scenes'] for r in s['asset_refs']
+                if r in assets and assets[r]['kind'] == 'moment'}
+        unused = sorted(set(moment_ids) - used)
+        if unused:
+            raise ValueError('Photographs without a page: ' + ', '.join(unused) + '. '
+                             'Every uploaded moment should illustrate the cover or a page so the book '
+                             'keeps the real day; cite each in a scene, or remove it from the book.')
     return book
 
 
@@ -163,6 +174,7 @@ def stages(package, plan, moment=None):
              for a in plan['assets']}
     paths.update({a['id']: 'moments/'+a['id']+'.png' for a in plan['assets'] if a['kind']=='moment'})
     paths.update({c['id']: 'characters/'+c['id']+'.png' for c in book['characters']})
+    kinds = {a['id']: a['kind'] for a in plan['assets']}
     for asset in prop_states.ordered_assets(plan['assets'],len(book['pages'])):
         refs = ([paths[r] for r in asset['source_assets']] if asset['kind']=='prop_state' else
                 [paths[asset['source_character']]] if asset['kind']=='character_state' else ['style.png'])
@@ -176,11 +188,20 @@ def stages(package, plan, moment=None):
                if asset['kind']=='prop_state' else {}))
     for scene in plan['scenes']:
         n = scene['page']
-        moment = scene['moment']
+        scene_moment = scene['moment']
         if n == 0:
-            moment = moment.rstrip() + ' ' + cover_title_instruction(book['title'])
+            scene_moment = scene_moment.rstrip() + ' ' + cover_title_instruction(book['title'])
+        cast_count = len(scene['character_refs'])
+        moment_images = [f"Image {cast_count + i + 1}" for i, r in enumerate(scene['asset_refs'])
+                         if kinds.get(r) == 'moment']
+        if moment_images:
+            # This page illustrates a real memory: the moment reference must drive
+            # the scene, not sit in the background as loose inspiration.
+            scene_moment += (' This page illustrates a real moment from the reader\'s day: recreate '
+                             + ' and '.join(moment_images) + ' faithfully in this storybook style — same '
+                             'people, poses, key objects and setting — so the memory stays recognisable.')
         add('cover.png' if n==0 else f'pages/page-{n:03d}.png', 'scene', 'Cover' if n==0 else f'Page {n}',
-            moment, [paths[r] for r in scene['character_refs']+scene['asset_refs']],
+            scene_moment, [paths[r] for r in scene['character_refs']+scene['asset_refs']],
             cast_refs=[paths[r] for r in scene['character_refs']],
             cast_ids=[next((a['source_character'] for a in plan['assets'] if a['id']==r),r)
                       for r in scene['character_refs']],

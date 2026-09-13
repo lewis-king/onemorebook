@@ -132,8 +132,32 @@ class MomentBookTests(unittest.TestCase):
         book_plan['assets'].append({'id': 'moment_01', 'kind': 'moment', 'name': 'The cake moment',
                                     'appearance': 'Esme blowing out the candles, restyled from the family photograph.',
                                     'source_character': ''})
+        book_plan['assets'].append({'id': 'moment_02', 'kind': 'moment', 'name': 'The donkey ride',
+                                    'appearance': 'Grandpa leading the donkey while Esme laughs, restyled from the family photograph.',
+                                    'source_character': ''})
         book_plan['scenes'][1]['asset_refs'].append('moment_01')
+        book_plan['scenes'][2]['asset_refs'].append('moment_02')
         return book_plan
+
+    def test_every_moment_must_illustrate_a_page(self):
+        state = self.approve(self.add(self.moment_state(), manuscript()))
+        package = engine.package(state)
+        moment_ids = [p['id'] for p in state['config']['moment']['photos']]
+        full = self.moment_plan(state)
+        planning.validate(package, full, moment_ids)
+        # Leaving a photograph uncited blocks approval with the exact ids.
+        uncited = copy.deepcopy(full)
+        uncited['scenes'][2]['asset_refs'] = ['garden']
+        with self.assertRaisesRegex(ValueError, 'moment_02'):
+            planning.validate(package, uncited, moment_ids)
+        # Declaring the asset without citing it in any scene is still unused.
+        declared_only = copy.deepcopy(full)
+        declared_only['scenes'][2]['asset_refs'] = ['garden']
+        with self.assertRaisesRegex(ValueError, 'Photographs without a page'):
+            planning.validate(package, declared_only, moment_ids)
+        # Scratch books are unaffected.
+        scratch = self.approve(self.add(store.create({'page_count': 3}), manuscript()))
+        planning.validate(engine.package(scratch), self.plan(scratch))
 
     def test_plan_schema_accepts_only_configured_moments(self):
         state = self.approve(self.add(self.moment_state(), manuscript()))
@@ -177,6 +201,9 @@ class MomentBookTests(unittest.TestCase):
         self.assertIn('moment-src/moment_01.png', shown_stage['source_photo_url'])
         cake_scene = next(s for s in state['stages'] if s.get('page') == 1)
         self.assertIn('moments/moment_01.png', cake_scene['references'])
+        # The page brief binds the illustration to the real memory by image number.
+        self.assertIn('real moment from the reader', cake_scene['brief'])
+        self.assertIn('Image 3', cake_scene['brief'])
 
     def test_image_inputs_put_photograph_first_and_pin_only_approved_refs(self):
         state = self.approve(self.add(self.moment_state(), manuscript()))
