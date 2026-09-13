@@ -165,14 +165,18 @@ $('return-current').onclick=()=>{viewStage=state.current_stage;choice=null;rende
 $('stages').onclick=e=>{const b=e.target.closest('[data-stage]');if(b&&!b.disabled){viewStage=b.dataset.stage;choice=null;renderKey='';render();}};
 $('attempts').onclick=e=>{const b=e.target.closest('[data-attempt]');if(b){choice=b.dataset.attempt;renderKey='';render();}};
 const MAX_PHOTOS=14;
+let dragRow=null;
 function momentRows(){return [...document.querySelectorAll('.photo-row')];}
 function updateOrder(){momentRows().forEach((row,i)=>{row.querySelector('.photo-order').textContent=i+1;
-  const [up,down]=row.querySelectorAll('.photo-move');up.disabled=i===0;down.disabled=i===momentRows().length-1;});}
+  const [up,down]=row.querySelectorAll('.photo-move');up.disabled=i===0;down.disabled=i===momentRows().length-1;});
+  const note=$('photo-count-note');const count=momentRows().length;
+  note.hidden=!count;note.textContent=count?`${count} photograph${count===1?'':'s'} → ${count} page${count===1?'':'s'}, in this order. The story follows the day, one page per photograph.`:'';
+}
 function refreshPhotoAdd(){const rows=momentRows();$('add-photo').disabled=rows.length>=MAX_PHOTOS;
   $('add-photo').textContent=rows.length?'Add more photographs':'Add photographs';updateOrder();}
 function photoRow(file){
   const row=document.createElement('div');row.className='photo-row';
-  row.innerHTML='<span class="photo-order" aria-hidden="true"></span><div class="photo-picker"><img class="photo-thumb" alt="Photograph preview" hidden><button type="button" class="photo-zoom" hidden>View larger</button></div>'
+  row.innerHTML='<span class="photo-grip" draggable="true" title="Drag to reorder">⠿</span><span class="photo-order" aria-hidden="true"></span><div class="photo-picker"><img class="photo-thumb" alt="Photograph preview" hidden><button type="button" class="photo-zoom" hidden>View larger</button></div>'
     +'<input type="text" class="photo-caption" maxlength="500" placeholder="Caption — who or what is in this photo? For example: Esme blowing out the candles on the tractor cake.">'
     +'<div class="photo-row-actions"><button type="button" class="photo-move text-button">Move up</button><button type="button" class="photo-move text-button">Move down</button><button type="button" class="photo-remove text-button">Remove</button></div>';
   const thumb=row.querySelector('.photo-thumb'),zoom=row.querySelector('.photo-zoom');
@@ -183,9 +187,21 @@ function photoRow(file){
   const open=()=>{if(row._photo)openLightbox(row._photo.url);};
   thumb.onclick=open;zoom.onclick=open;
   const [up,down]=row.querySelectorAll('.photo-move');
-  up.onclick=()=>{const previous=row.previousElementSibling;if(previous){row.parentNode.insertBefore(row,previous);updateOrder();}};
-  down.onclick=()=>{const next=row.nextElementSibling;if(next){row.parentNode.insertBefore(next,row);updateOrder();}};
+  up.onclick=()=>{const previous=row.previousElementSibling;if(previous){row.parentNode.insertBefore(row,previous);refreshPhotoAdd();}};
+  down.onclick=()=>{const next=row.nextElementSibling;if(next){row.parentNode.insertBefore(next,row);refreshPhotoAdd();}};
   row.querySelector('.photo-remove').onclick=()=>{if(row._photo)URL.revokeObjectURL(row._photo.url);row.remove();refreshPhotoAdd();};
+  const grip=row.querySelector('.photo-grip');
+  grip.ondragstart=event=>{dragRow=row;event.dataTransfer.effectAllowed='move';event.dataTransfer.setData('text/plain','');row.classList.add('dragging');};
+  grip.ondragend=()=>{dragRow=null;row.classList.remove('dragging');
+    momentRows().forEach(r=>r.classList.remove('drop-above','drop-below'));};
+  row.ondragover=event=>{if(!dragRow||dragRow===row)return;event.preventDefault();event.dataTransfer.dropEffect='move';
+    const rect=row.getBoundingClientRect();const above=event.clientY-rect.top<rect.height/2;
+    row.classList.toggle('drop-above',above);row.classList.toggle('drop-below',!above);};
+  row.ondragleave=()=>row.classList.remove('drop-above','drop-below');
+  row.ondrop=event=>{if(!dragRow)return;event.preventDefault();
+    const rect=row.getBoundingClientRect();const above=event.clientY-rect.top<rect.height/2;
+    row.parentNode.insertBefore(dragRow,above?row:row.nextSibling);
+    row.classList.remove('drop-above','drop-below');refreshPhotoAdd();};
   return row;
 }
 const lightbox=document.createElement('div');lightbox.className='photo-lightbox';lightbox.hidden=true;

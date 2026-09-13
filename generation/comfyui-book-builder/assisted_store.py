@@ -81,11 +81,14 @@ def config(values):
     if mode == 'moment':
         result['mode'] = 'moment'
         result['moment'] = assisted_moment.validate_submission(values)
+        # A moment book follows the day exactly: one page per photograph, no
+        # invented pages and none left out.
+        result['page_count'] = len(result['moment']['photos'])
     elif values.get('moment'):
         raise ValueError('Photographs only belong in a from-a-moment book.')
     if result['page_count'] == 0 and automatic:
         result.update(page_count_min=AUTO_MIN, page_count_max=AUTO_MAX, page_count_target=AUTO_TARGET)
-    elif not 2 <= result['page_count'] <= 24:
+    elif result.get('mode') != 'moment' and not 2 <= result['page_count'] <= 24:
         raise ValueError('Choose 2–24 pages, or leave length automatic.')
     if not 1 <= result['max_characters'] <= 6:
         raise ValueError('Choose 1–6 characters.')

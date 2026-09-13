@@ -100,12 +100,14 @@ def writer_brief(moment):
              'Photographs from the day, listed in the order they happened, with captions:']
     for index, photo in enumerate(moment['photos'], start=1):
         lines.append(f"{index}. {photo['caption']} (restyled illustration reference '{photo['id']}')")
-    lines += ['', 'Let these real moments anchor the book: every photograph should illustrate the cover '
-              'or one page, and the pages should follow the order above — the page for photograph 1 '
-              'comes before the page for photograph 2, and so on — so the book reads like the day '
-              'itself. Use the real people and their names as the cast, and describe each character\'s '
-              'appearance so it matches what the captions say about them. The exact illustrations are '
-              'prepared separately; your job is the words, faithful to the day.']
+    lines += ['', f'This book has exactly {len(moment["photos"])} pages — one per photograph, no more and no '
+              'fewer, because it follows what actually happened. Page one recreates photograph 1, page two '
+              'recreates photograph 2, and so on, in the order listed above. Do not invent extra beats or '
+              'merge two photographs onto one page; if the day needs a little connective tissue, weave it '
+              'into the page that belongs to. The cover is illustrated from the story as usual — keep the '
+              'photographs on the numbered pages. Use the real people and their names as the cast, and '
+              'describe each character\'s appearance so it matches what the captions say about them. The '
+              'exact illustrations are prepared separately; your job is the words, faithful to the day.']
     return '\n'.join(lines)
 
 
@@ -120,15 +122,15 @@ def restyle_brief(photo):
 
 def plan_guidance(moment):
     """Planner guidance listing the restyled moment references the scenes may cite."""
-    lines = ['', 'MOMENT REFERENCES', 'This book commemorates a real day, and each photograph the reader '
-             'uploaded MUST end up illustrating the cover or one page — that is the point of the book. '
-             'The photographs were uploaded in the order the day happened. Styled moment references are '
-             'prepared automatically from them; cite them by id in a scene\'s asset_refs when that page '
-             'recreates the memory. Each moment reference counts toward the six-image budget like any '
-             'prop or place reference. Give one moment to each scene whose prose recreates it, and keep '
-             'the pages in photograph order: the page for moment_01 comes before the page for moment_02. '
-             'The cover (page 0) may use any one moment. A plan that leaves a photograph unused, reuses '
-             'one, puts two on a page, or orders pages against the photograph order cannot be approved.',
+    lines = ['', 'MOMENT REFERENCES', 'This book commemorates a real day, and it has exactly one story page '
+             'per photograph the reader uploaded — no invented pages, none left out. The photographs were '
+             'uploaded in the order the day happened. Styled moment references are prepared automatically '
+             'from them; cite them by id in a scene\'s asset_refs. Each moment reference counts toward the '
+             'six-image budget like any prop or place reference. Every numbered page must recreate exactly '
+             'one moment: page 1 uses moment_01, page 2 uses moment_02, and so on. The cover (page 0) is '
+             'illustrated from the story as usual and must not use a moment. A plan with an uncited '
+             'photograph, an empty page, two moments on a page, a moment on the cover, or pages out of '
+             'photograph order cannot be approved.',
              'Available moments, in day order:']
     for photo in moment['photos']:
         lines.append(f"- {photo['id']}: {photo['caption']}")

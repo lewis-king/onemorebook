@@ -36,3 +36,9 @@ body.photo-lightbox-open{overflow:hidden}
 .photo-order{align-self:center;width:22px;text-align:center;font:600 14px Georgia,serif;color:var(--muted)}
 .photo-row-actions{display:flex;flex-direction:column;gap:4px;align-self:center}
 .photo-row-actions .text-button{font-size:11px;min-height:0;padding:2px 0;white-space:nowrap}
+.photo-grip{cursor:grab;align-self:center;color:#9aa79b;user-select:none;-webkit-user-select:none;font-size:15px;line-height:1;padding:6px 2px;touch-action:none}
+.photo-grip:active{cursor:grabbing}
+.photo-row.dragging{opacity:.45}
+.photo-row.drop-above{box-shadow:0 -3px 0 0 var(--green)}
+.photo-row.drop-below{box-shadow:0 3px 0 0 var(--green)}
+#photo-count-note{margin:2px 0 10px;font-weight:600;color:#526e57}

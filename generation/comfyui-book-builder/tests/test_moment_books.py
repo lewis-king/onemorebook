@@ -35,6 +35,13 @@ def manuscript():
     return value
 
 
+def moment_manuscript():
+    """Two pages: the default moment fixtures upload two photographs."""
+    value = manuscript()
+    value['story']['pages'] = value['story']['pages'][:2]
+    return value
+
+
 class MomentBookTests(unittest.TestCase):
     setUp = fixtures.BookTests.setUp
     restore_module = fixtures.BookTests.restore_module
@@ -87,6 +94,8 @@ class MomentBookTests(unittest.TestCase):
         first, second = self.stage_upload(), self.stage_upload()
         state = store.create(self.submission([first, second]))
         root = store.root(state['id'])
+        # One page per photograph: the story length follows the upload.
+        self.assertEqual(state['config']['page_count'], 2)
         photos = state['config']['moment']['photos']
         self.assertEqual([p['id'] for p in photos], ['moment_01', 'moment_02'])
         for photo, caption, original in zip(photos, (CAPTION_1, CAPTION_2), (first, second)):
@@ -118,13 +127,14 @@ class MomentBookTests(unittest.TestCase):
     def test_story_prompt_includes_moment_brief(self):
         state = self.moment_state()
         intent = store.next_attempt(state)
-        with patch.object(engine, 'draft_json', return_value=manuscript()) as writer:
+        with patch.object(engine, 'draft_json', return_value=moment_manuscript()) as writer:
             engine.text_step(state, intent)
         saved = store.read(state['id'])
         prompt = engine.selected(saved, 'story')['metadata']['prompt']
         self.assertIn(DESCRIPTION, prompt)
         self.assertIn(CAPTION_1, prompt)
         self.assertIn(CAPTION_2, prompt)
+        self.assertIn('exactly 2 pages', prompt)
         self.assertEqual(writer.call_args.args[1], 'story')
 
     def moment_plan(self, state):
@@ -140,27 +150,22 @@ class MomentBookTests(unittest.TestCase):
         return book_plan
 
     def test_every_moment_must_illustrate_a_page(self):
-        state = self.approve(self.add(self.moment_state(), manuscript()))
+        state = self.approve(self.add(self.moment_state(), moment_manuscript()))
         package = engine.package(state)
         moment_ids = [p['id'] for p in state['config']['moment']['photos']]
         full = self.moment_plan(state)
         planning.validate(package, full, moment_ids)
-        # Leaving a photograph uncited blocks approval with the exact ids.
+        # Leaving a photograph out now leaves its page empty — one page per photo.
         uncited = copy.deepcopy(full)
         uncited['scenes'][2]['asset_refs'] = ['garden']
-        with self.assertRaisesRegex(ValueError, 'moment_02'):
+        with self.assertRaisesRegex(ValueError, 'no photograph'):
             planning.validate(package, uncited, moment_ids)
-        # Declaring the asset without citing it in any scene is still unused.
-        declared_only = copy.deepcopy(full)
-        declared_only['scenes'][2]['asset_refs'] = ['garden']
-        with self.assertRaisesRegex(ValueError, 'Photographs without a page'):
-            planning.validate(package, declared_only, moment_ids)
         # Scratch books are unaffected.
         scratch = self.approve(self.add(store.create({'page_count': 3}), manuscript()))
         planning.validate(engine.package(scratch), self.plan(scratch))
 
     def test_pages_follow_photograph_order(self):
-        state = self.approve(self.add(self.moment_state(), manuscript()))
+        state = self.approve(self.add(self.moment_state(), moment_manuscript()))
         package = engine.package(state)
         moment_ids = [p['id'] for p in state['config']['moment']['photos']]
         # Swapped: the donkey ride (uploaded second) cannot come before the cake.
@@ -176,14 +181,25 @@ class MomentBookTests(unittest.TestCase):
             planning.validate(package, crowded, moment_ids)
         # The same moment on two pages is not allowed.
         repeated = copy.deepcopy(self.moment_plan(state))
-        repeated['scenes'][3]['asset_refs'] = ['moment_01']
+        repeated['scenes'][2]['asset_refs'] = ['moment_01']
         with self.assertRaisesRegex(ValueError, 'two pages'):
             planning.validate(package, repeated, moment_ids)
+        # Every numbered page needs its photograph: one page per photo.
+        empty = copy.deepcopy(self.moment_plan(state))
+        empty['scenes'][2]['asset_refs'] = ['garden']
+        with self.assertRaisesRegex(ValueError, 'no photograph'):
+            planning.validate(package, empty, moment_ids)
+        # The cover is illustrated from the story, not from a photograph.
+        cover = copy.deepcopy(self.moment_plan(state))
+        cover['scenes'][0]['asset_refs'] = ['moment_01']
+        cover['scenes'][1]['asset_refs'] = ['garden', 'moment_02']
+        with self.assertRaisesRegex(ValueError, 'cover'):
+            planning.validate(package, cover, moment_ids)
         # A later photograph on a later page is fine.
         planning.validate(package, self.moment_plan(state), moment_ids)
 
     def test_plan_schema_accepts_only_configured_moments(self):
-        state = self.approve(self.add(self.moment_state(), manuscript()))
+        state = self.approve(self.add(self.moment_state(), moment_manuscript()))
         book_plan = self.moment_plan(state)
         package = engine.package(state)
         moment_ids = [p['id'] for p in state['config']['moment']['photos']]
@@ -199,7 +215,7 @@ class MomentBookTests(unittest.TestCase):
 
     def test_plan_request_describes_available_moments(self):
         state = self.moment_state()
-        prompt, schema = planning.request(engine.package(self.approve(self.add(state, manuscript()))),
+        prompt, schema = planning.request(engine.package(self.approve(self.add(state, moment_manuscript()))),
                                           state['config'])
         self.assertIn('MOMENT REFERENCES', prompt)
         self.assertIn(CAPTION_1, prompt)
@@ -210,7 +226,7 @@ class MomentBookTests(unittest.TestCase):
         self.assertNotIn('moment', plain_schema['properties']['assets']['items']['properties']['kind']['enum'])
 
     def test_moment_stages_follow_style_and_feed_scenes(self):
-        state = self.approve(self.add(self.moment_state(), manuscript()))
+        state = self.approve(self.add(self.moment_state(), moment_manuscript()))
         state = self.approve(self.add(state, self.moment_plan(state)))
         ids = [s['id'] for s in state['stages']]
         self.assertEqual(ids[:4], ['story', 'plan', 'style.png', 'moments/moment_01.png'])
@@ -229,7 +245,7 @@ class MomentBookTests(unittest.TestCase):
         self.assertIn('Image 3', cake_scene['brief'])
 
     def test_image_inputs_put_photograph_first_and_pin_only_approved_refs(self):
-        state = self.approve(self.add(self.moment_state(), manuscript()))
+        state = self.approve(self.add(self.moment_state(), moment_manuscript()))
         state = self.approve(self.add(state, self.moment_plan(state)))
         state = self.approve(self.png(state))  # style.png
         self.assertEqual(state['current_stage'], 'moments/moment_01.png')

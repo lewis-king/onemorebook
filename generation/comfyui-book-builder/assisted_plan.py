@@ -130,19 +130,23 @@ def validate(package, plan, moment_ids=None):
             raise ValueError('A scene must choose one location reference.')
         prop_states.validate_scene(scene,assets)
     if moment_ids:
-        # The book exists to keep the real day: every uploaded photograph must
-        # illustrate the cover or a page, one photograph per page, in the order
-        # the photographs were uploaded (the order of the day). Citation is read
-        # from the scenes, so a moment listed as an asset but never cited still
-        # counts as unused.
+        # The book exists to keep the real day, one page per photograph in the
+        # order the day happened: every numbered page recreates exactly one
+        # moment, each moment exactly one page, moments never on the cover.
         order = {mid: i for i, mid in enumerate(moment_ids)}
         cited = {}
         for scene in plan['scenes']:
             moments_here = [r for r in scene['asset_refs']
                             if r in assets and assets[r]['kind'] == 'moment']
+            if scene['page'] == 0 and moments_here:
+                raise ValueError('The cover is illustrated from the story. Keep the reader\'s '
+                                 'photographs on the numbered pages: ' + ', '.join(moments_here) + '.')
             if len(moments_here) > 1:
                 raise ValueError(f'Page {scene["page"]}: give this page one moment only '
                                  f'({", ".join(moments_here)}). Each memory deserves its own page.')
+            if scene['page'] > 0 and not moments_here:
+                raise ValueError(f'Page {scene["page"]} has no photograph. This book has one page per '
+                                 'photograph; give every page its moment from the day.')
             if moments_here:
                 mid = moments_here[0]
                 if mid in cited:
@@ -152,9 +156,9 @@ def validate(package, plan, moment_ids=None):
         unused = sorted(set(moment_ids) - set(cited), key=order.get)
         if unused:
             raise ValueError('Photographs without a page: ' + ', '.join(unused) + '. '
-                             'Every uploaded moment should illustrate the cover or a page so the book '
-                             'keeps the real day; cite each in a scene, or remove it from the book.')
-        numbered = [(cited[mid], mid) for mid in moment_ids if mid in cited and cited[mid] > 0]
+                             'This book has one page per photograph so it keeps the real day; '
+                             'give every photograph its page, or remove it from the book.')
+        numbered = [(cited[mid], mid) for mid in moment_ids if mid in cited]
         for (previous_page, previous), (page, mid) in zip(numbered, numbered[1:]):
             if page < previous_page:
                 raise ValueError(f'Pages should follow your photograph order: {mid} is on page {page} '
