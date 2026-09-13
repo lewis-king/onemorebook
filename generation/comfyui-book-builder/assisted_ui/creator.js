@@ -89,7 +89,7 @@ function render(){
   $('candidate-caption').hidden=!c||!job||c.attempt===job.attempt;
   $('candidate-caption').textContent=c&&job?`Showing saved attempt ${c.attempt}. Attempt ${job.attempt} is ${job.generation?'generating':'being prepared'}; its result will appear when ready.`:'';
   $('work-status').hidden=!working;
-  $('work-label').textContent=state.status==='exporting'?'Saving your finished book…':state.job?.generation?'Flux2 Turbo 8 is creating your candidate…':['story','plan'].includes(stage.kind)?'Gemma 4 is preparing your draft…':'Preparing this image…';
+  $('work-label').textContent=state.status==='exporting'?'Saving your finished book…':state.job?.stage_id==='style.png'?`Flux2 Turbo 8 is creating style option ${state.job.attempt} of 4…`:state.job?.generation?'Flux2 Turbo 8 is creating your candidate…':['story','plan'].includes(stage.kind)?'Gemma 4 is preparing your draft…':'Preparing this image…';
   $('work-detail').textContent=state.job?.prompt_id?`ComfyUI job ${state.job.prompt_id.slice(0,8)} · Attempt ${state.job.attempt}. You can leave this page; progress is saved.`:'This step will pause for your review when it is ready.';
   if(working&&state.job?.created_at){const elapsed=Math.max(0,Math.floor((Date.now()-Date.parse(state.job.created_at))/1000));$('work-detail').textContent+=` ${Math.floor(elapsed/60)}m ${elapsed%60}s elapsed.`;}
   $('stage-error').hidden=!isCurrent||!state.error;$('stage-error').textContent=state.error||'';
@@ -102,7 +102,7 @@ function render(){
     const info=c?.metadata||{};$('exact-prompt').textContent=info.prompt||'No model prompt: this candidate was edited directly.';
     $('story-guide').hidden=stage.kind!=='story'||!info.story_guide;
     $('story-guide').innerHTML=stage.kind==='story'?renderStoryGuide(info.story_guide):'';
-    $('review-hint').textContent=stage.kind==='story'?'Try a few pages aloud. Look for a story your child can follow, join in with and want to hear again. You decide when it is ready.':stage.kind==='plan'?'Check each scene against the page text, including the joke or feeling and what must stay consistent.':stage.kind==='moment'?'Check that the day is still recognisable — the people, the moment, the feeling — now drawn in the book\'s art style.':'Check the action, characters and recurring details. Your decision controls what happens next.';
+    $('review-hint').textContent=stage.kind==='story'?'Try a few pages aloud. Look for a story your child can follow, join in with and want to hear again. You decide when it is ready.':stage.kind==='plan'?'Check each scene against the page text, including the joke or feeling and what must stay consistent.':stage.kind==='moment'?'Check that the day is still recognisable — the people, the moment, the feeling — now drawn in the book\'s art style.':stage.kind==='style'?'Four takes on the book\'s art style arrive one by one. Compare them all, then approve the one you want — every later step follows it.':'Check the action, characters and recurring details. Your decision controls what happens next.';
     $('feedback').placeholder=stage.kind==='story'?'What would make this more engaging? Point to a page, an awkward line or a choice that does not make sense.':stage.kind==='plan'?'Which moment should we show? Mention any recurring object, action or visual joke that needs attention.':'What should change? For example: keep the heron on the left; remove the extra heron on the right.';
     $('model-info').textContent=modelDetails(info);
     renderReferences('references',info.reference_images);

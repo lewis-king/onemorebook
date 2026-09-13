@@ -12,6 +12,48 @@ from . import assisted_story
 from . import assisted_prompt_context
 from . import assisted_prompt_base
 
+# The art style anchors every later stage, so its stage presents four distinct
+# takes instead of one: attempt 1 is the story's planned direction, attempts
+# 2-4 add seeded medium/mood emphases. The human approves exactly one.
+STYLE_TAKES = (
+    'Give this picture a bold, flat cartoon look: crisp shapes, strong clean outlines and bright, saturated colours.',
+    'Give this picture a soft watercolour look: visible paper grain, loose brushwork and a gentle, warm palette.',
+    'Give this picture a playful crayon and coloured-pencil look with visible handmade strokes.',
+    'Give this picture a rich storybook look: detailed and softly lit, with warm cinematic depth.',
+    'Give this picture a minimalist picture-book look: simple rounded shapes and a calm, limited palette.',
+    'Give this picture a cosy gouache look: matte velvety colour, gentle texture and muted warmth.',
+)
+MAX_STYLE_TAKES = 4
+
+
+def style_take(state, intent):
+    """Deterministic distinct art-direction emphasis for style attempts 2+."""
+    if intent.get('stage_id') != 'style.png' or intent.get('mode', 'fresh') != 'fresh':
+        return None
+    attempt = intent['attempt']
+    if attempt < 2:
+        return None
+    order = sorted(range(len(STYLE_TAKES)),
+                   key=lambda i: digest([state['config']['seed'], 'style-take', i]))
+    return order[(attempt - 2) % len(order)]
+
+
+def continue_style_variations(state):
+    """Queue the next style take after a fresh attempt lands, until 4 exist.
+
+    Called while the style stage waits for review; a human decision (approve,
+    regenerate with feedback, revise) always takes precedence.
+    """
+    if state['status'] != 'awaiting_review' or state.get('page_revision'):
+        return False
+    stage = next((s for s in state['stages'] if s['id'] == 'style.png'), None)
+    if stage is None or stage['status'] != 'awaiting_review':
+        return False
+    if len(stage['candidates']) >= MAX_STYLE_TAKES:
+        return False
+    store.next_attempt(state)
+    return True
+
 
 def directory(sid, stage_id, attempt):
     return store.stage_dir(sid, stage_id) / f'attempt-{attempt:04d}'
@@ -233,6 +275,9 @@ def image_inputs(state, current, intent):
             prompt+=' Keep the identity of the character in Image 1 with the described current appearance.'
         if current['kind']=='prop_state' and not current.get('source_scene'):
             prompt+=' Use the referenced props as the parts of this single result, preserving their materials, colours and shapes in the described arrangement.'
+    take=style_take(state,intent)
+    if take is not None:
+        prompt+=' '+STYLE_TAKES[take]
     if len(references)>MAX_REFERENCE_IMAGES:
         raise ValueError(f'This scene has {len(references)} input images, exceeding the '
                          f'{MAX_REFERENCE_IMAGES}-image budget; revise the plan rather than dropping a reference.')

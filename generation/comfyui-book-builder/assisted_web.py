@@ -124,6 +124,18 @@ def same_job(state,intent):
     return state.get('job') and all(state['job'].get(k)==intent[k] for k in ('stage_id','attempt'))
 
 
+async def maybe_style_variations(sid,intent):
+    """After a fresh style attempt lands, queue the next take until 4 exist."""
+    if intent.get('stage_id')!='style.png' or intent.get('mode','fresh')!='fresh':
+        return False
+    try:
+        with store.LOCK:
+            state=store.read(sid)
+            return engine.continue_style_variations(state)
+    except Exception:
+        return False
+
+
 async def drive(sid,resume=False):
     intent=None
     try:
@@ -143,6 +155,7 @@ async def drive(sid,resume=False):
             write_json(path/'workflow.api.json',graph)
         # Existing outputs take precedence over a lost CLI receipt or restart.
         if engine.recover_candidate(store.read(sid),intent):
+            if await maybe_style_variations(sid,intent):return await drive(sid)
             return
         await mcp('server_info',{})
         pid,status=await locate(intent)
@@ -173,6 +186,7 @@ async def drive(sid,resume=False):
             await asyncio.sleep(2)
             state=store.read(sid)
             if not same_job(state,intent) or state['status']=='awaiting_review':
+                if await maybe_style_variations(sid,intent):return await drive(sid)
                 return
             history=await live('/history/'+pid)
             if pid in history:

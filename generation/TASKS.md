@@ -1,3 +1,11 @@
+# Four art-style takes per book — 2026-09-13 (latest)
+
+The art style anchors every later stage, so its stage now presents four distinct takes instead of one: attempt 1 is the story's planned direction; attempts 2–4 append seeded medium/mood emphases (bold flat cartoon, watercolour, crayon, storybook realism, minimalist, gouache — distinct per book via `config.seed`). After each fresh style attempt lands, `continue_style_variations` queues the next take until four candidates exist, so the filmstrip fills itself while the reader watches; any human decision (approve, regenerate with feedback, revise) stops the chain, and revision of an already-approved style also walks through four takes. The reader approves exactly one candidate as before.
+
+Source: `assisted_engine.py` (`STYLE_TAKES`, `style_take`, `continue_style_variations`), `assisted_web.drive` auto-chain, `assisted_ui` style-step hint and "style option N of 4" progress. Verification: full pinned suite **394 tests pass**, including new `test_style_takes.py` (first attempt unmodified, takes 2–4 distinct and deterministic, prompt injection, chain stops at four and yields to human decisions). ComfyUI restarted idle; saved books unchanged — the current birthday book can use it via Revise this reference on its style.
+
+---
+
 # References revisable; cast before moments — 2026-09-13 (latest)
 
 Lewis asked to change the art style a few generations in and found only pages could be reopened. Any approved reference (style, character, moment, prop, place, state) can now be reopened with **Revise this reference**; approving the replacement recomputes dependents from the stage reference graph and resets every approved downstream stage (moments, portraits, pages…) to pending, resuming generation from the next stage — old attempts stay visible for comparison, and Keep the original restores everything. Pages that supply an extracted reference stay protected; story and plan stay fixed. In moment books the canonical cast is now generated immediately after the art style, before the photograph restyles, so the characters exist before any scene that needs them.
