@@ -203,6 +203,11 @@ def stages(package, plan, moment=None):
     paths.update({c['id']: 'characters/'+c['id']+'.png' for c in book['characters']})
     kinds = {a['id']: a['kind'] for a in plan['assets']}
     for asset in prop_states.ordered_assets(plan['assets'],len(book['pages'])):
+        if asset['kind']=='moment':
+            # Moment references ARE the photograph restyle stages emitted above;
+            # the planner's moment assets only point scenes at them. Emitting
+            # them again here would duplicate every moment stage.
+            continue
         refs = ([paths[r] for r in asset['source_assets']] if asset['kind']=='prop_state' else
                 [paths[asset['source_character']]] if asset['kind']=='character_state' else ['style.png'])
         framing = ('A single full-body character portrait, relaxed upright pose, feet visible, flat warm ivory background. '

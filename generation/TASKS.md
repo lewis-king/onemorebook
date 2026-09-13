@@ -1,3 +1,11 @@
+# Duplicate moment stage fix — 2026-09-13 (latest)
+
+Lewis spotted two "bouncy castles" entries in the stage nav. Real bug: `assisted_plan.stages` emitted the config-driven photograph-restyle stages AND re-emitted the planner's moment assets as reference stages (same ids, planner names like "Two Castles"), so every moment existed twice — which would also have blocked export. The asset loop now skips `moment` kinds (scenes still resolve their ids to the restyle stages). Regression test asserts each moment appears exactly once. The live birthday book's saved state was repaired on disk (14 duplicate pending stages removed; approvals, candidates and current step unchanged; verified 46 unique stages).
+
+Source: `assisted_plan.stages`, `test_moment_books`. Full pinned suite **400 tests pass**; ComfyUI restarted idle.
+
+---
+
 # Style-step inspiration box; chaining fixes — 2026-09-13 (latest)
 
 The art-style step now has its own **Inspire the art** input (not just the creation forms): it saves `config.art_inspiration` with the next Regenerate/Edit on that stage, and the inspiration flavours every style take and every moment restyle. Style candidates record `style_inspiration` in their generation metadata; the auto-chain counts only candidates matching the currently configured inspiration, so changing it produces a fresh set of four takes (old attempts stay for comparison). Two chaining fixes from the first real session: the chain now also runs while the style stage itself is being revised (that IS the revise flow — previously the open revision blocked it), and the progress label counts options per inspiration rather than raw attempt numbers.

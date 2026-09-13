@@ -272,6 +272,10 @@ class MomentBookTests(unittest.TestCase):
         self.assertEqual(characters, ['characters/mira.png', 'characters/pip.png', 'characters/fern.png'])
         self.assertEqual(ids[3 + len(characters)], 'moments/moment_01.png')
         self.assertEqual(ids.index('moments/moment_01.png'), ids.index('moments/moment_02.png') - 1)
+        # Each moment exists exactly once: the restyle stages above, never
+        # duplicated by the planner's moment assets.
+        moment_stages = [i for i in ids if i.startswith('moments/')]
+        self.assertEqual(moment_stages, [f'moments/moment_{i:02d}.png' for i in range(1, 3)])
         stage = store.stage(state, 'moments/moment_01.png')
         self.assertEqual(stage['kind'], 'moment')
         self.assertEqual(stage['references'], ['style.png'])
