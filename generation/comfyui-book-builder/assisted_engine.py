@@ -261,6 +261,17 @@ def image_inputs(state, current, intent):
         source=next(c for c in current['candidates'] if c['id']==intent['source_candidate'])
         references=[{'path':str(store.candidate_path(state,source)),'label':'Selected illustration to edit','sha256':source['sha256']}]
         prompt='Edit Image 1. '+intent['feedback']+' Preserve the unaffected composition, character identities, gaze relationships, object designs and illustration style.'
+        if current['kind']=='moment' and current.get('source_photo'):
+            # The photograph is the ground truth for a restyle edit: without it
+            # the model can only reshuffle wrong pixels and merged details stay lost.
+            photo=current['source_photo']
+            references.append({'path':str(store.root(state['id'])/photo['path']),
+                               'label':'The original photograph — restore its distinct details'})
+            prompt=('Edit Image 1. '+intent['feedback']+
+                    ' Use Image 2, the original photograph: where the illustration missed, merged or '
+                    'duplicated something, restore exactly what the photograph shows — every distinct '
+                    'object, person and pose stays distinct. '
+                    'Preserve the unaffected composition, character identities, gaze relationships, object designs and illustration style.')
     else:
         cast_refs=current.get('cast_refs',[])
         if cast_refs:

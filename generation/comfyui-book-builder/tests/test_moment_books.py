@@ -128,6 +128,8 @@ class MomentBookTests(unittest.TestCase):
         restyle = moment.restyle_brief({'caption': CAPTION_1})
         self.assertIn(CAPTION_1, restyle)
         self.assertIn('storybook style', restyle)
+        self.assertIn('ONLY for the art style', restyle)
+        self.assertIn('do not merge or duplicate', restyle)
         guidance = moment.plan_guidance({'photos': [{'id': 'moment_01', 'caption': CAPTION_1}]})
         self.assertIn('moment_01', guidance)
         self.assertIn('asset_refs', guidance)
@@ -316,11 +318,36 @@ class MomentBookTests(unittest.TestCase):
         self.assertEqual(set(hashes), {'style.png'})
         self.assertIn('Image 1', prompt)
         self.assertIn('Image 2', prompt)
-        self.assertIn('style of Image 2', prompt)
+        self.assertIn('Use Image 2 ONLY for the art style', prompt)
         self.assertIn('demon hunters', prompt)
         self.assertIn('never scary or dark', prompt)
         state = self.approve(self.png(store.read(state['id'])))  # approve the restyle; approval checks only approved references
         self.assertEqual(state['current_stage'], 'moments/moment_02.png')
+
+    def test_moment_edit_carries_the_original_photograph(self):
+        state = self.approve(self.add(self.moment_state(), moment_manuscript()))
+        state = self.approve(self.add(state, self.moment_plan(state)))
+        state = self.approve(self.png(state))  # style.png
+        while state['current_stage'].startswith('characters/'):
+            state = self.approve(self.png(state))
+        state = self.png(store.read(state['id']))  # moment_01 candidate awaiting review
+        state = store.read(state['id'])
+        selected = engine.selected(state, 'moments/moment_01.png')
+        intent = store.next_attempt(state, 'Restore the second, different bouncy castle.',
+                                    mode='edit', source_candidate=selected['id'])
+        current = store.stage(store.read(state['id']))
+        with patch.object(engine, 'draft_json', return_value={'prompt': 'Edit Image 1. Restore the second castle.'}) as rewrite:
+            prompt, references, hashes = engine.image_inputs(store.read(state['id']), current, intent)
+        self.assertEqual(rewrite.call_count, 1)
+        # The rewrite request must explain the photograph reference; the final
+        # prompt is the rewriter's one-prompt output.
+        self.assertIn('original photograph', rewrite.call_args.args[3])
+        self.assertTrue(references[0]['path'].startswith('creator/stages/moments__moment_01.png/'))
+        self.assertIn('Selected illustration to edit', references[0]['label'])
+        self.assertEqual(references[1]['path'], 'moment-src/moment_01.png')
+        self.assertIn('original photograph', references[1]['label'])
+        self.assertIn('distinct object', rewrite.call_args.args[3])
+        self.assertEqual(set(hashes), {'style.png'})
 
 
 class MomentUploadAPITests(unittest.IsolatedAsyncioTestCase):

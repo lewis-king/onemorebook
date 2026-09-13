@@ -113,10 +113,12 @@ def writer_brief(moment):
 
 def restyle_brief(photo):
     """Stage brief: turn one photograph into the book illustration style."""
-    return ('Recreate this photograph as a children\'s book illustration in the exact style of Image 2: '
-            'the same medium, palette, softness and linework, with no photorealism. Keep the people, '
-            'poses, key objects and setting from Image 1 clearly recognisable, but render everything in '
-            'the storybook style. No text, lettering or watermark. '
+    return ('Recreate this photograph as a children\'s book illustration. Use Image 2 ONLY for the art '
+            'style — its medium, palette, linework and softness — and never copy anything it shows: no '
+            'landscape, trees, path, sky or scenery from Image 2 belongs in this picture. Keep the people, '
+            'poses, expressions, objects and setting from Image 1 clearly recognisable, rendered in that '
+            'storybook style rather than photorealism. Every distinct object in the photograph must stay '
+            'distinct — do not merge or duplicate repeated shapes. No text, lettering or watermark. '
             f"The grown-up's caption for this photograph: {photo['caption']}")
 
 
