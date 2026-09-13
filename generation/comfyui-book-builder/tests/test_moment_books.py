@@ -294,6 +294,11 @@ class MomentBookTests(unittest.TestCase):
         while state['current_stage'].startswith('characters/'):
             state = self.approve(self.png(state))
         self.assertEqual(state['current_stage'], 'moments/moment_01.png')
+        # The configured inspiration flavours the restyle prompts too.
+        latest = store.read(state['id'])
+        latest['config']['art_inspiration'] = 'demon hunters'
+        store.save(latest)
+        state = store.read(state['id'])
         intent = store.next_attempt(state)
         current = store.stage(state)
         prompt, references, hashes = engine.image_inputs(state, current, intent)
@@ -305,6 +310,8 @@ class MomentBookTests(unittest.TestCase):
         self.assertIn('Image 1', prompt)
         self.assertIn('Image 2', prompt)
         self.assertIn('style of Image 2', prompt)
+        self.assertIn('demon hunters', prompt)
+        self.assertIn('never scary or dark', prompt)
         state = self.approve(self.png(store.read(state['id'])))  # approve the restyle; approval checks only approved references
         self.assertEqual(state['current_stage'], 'moments/moment_02.png')
 

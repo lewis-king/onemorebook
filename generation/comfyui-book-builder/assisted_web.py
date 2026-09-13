@@ -345,6 +345,12 @@ async def api(request):
                 feedback=str(data.get('feedback','')).strip()
                 override=str(data.get('prompt_override','')).strip()
                 if len(feedback)>5000 or len(override)>6000:raise ValueError('Please keep feedback and prompts under 5,000 / 6,000 characters.')
+                if current['kind']=='style' and 'art_inspiration' in data:
+                    inspiration=str(data.get('art_inspiration') or '').strip()
+                    if len(inspiration)>300:raise ValueError('Keep the art inspiration under 300 characters.')
+                    if inspiration:state['config']['art_inspiration']=inspiration
+                    else:state['config'].pop('art_inspiration',None)
+                    state['revision']+=1;store.save(state)
                 if state.get('publication',{}).get('status')=='publishing' and action!='publish':
                     raise store.Conflict('Finish publishing this book before changing its approved export.')
                 if action=='publish':

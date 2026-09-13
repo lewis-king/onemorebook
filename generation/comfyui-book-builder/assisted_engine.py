@@ -42,14 +42,21 @@ def continue_style_variations(state):
     """Queue the next style take after a fresh attempt lands, until 4 exist.
 
     Called while the style stage waits for review; a human decision (approve,
-    regenerate with feedback, revise) always takes precedence.
+    regenerate with feedback, revise) always takes precedence. Counts only
+    candidates generated with the inspiration currently configured, so changing
+    the inspiration produces a fresh set of four takes. Chaining also runs
+    while the style stage itself is being revised — that is the revise flow.
     """
-    if state['status'] != 'awaiting_review' or state.get('page_revision'):
+    revision = state.get('page_revision') or {}
+    if state['status'] != 'awaiting_review' or (revision and revision.get('stage_id') != 'style.png'):
         return False
     stage = next((s for s in state['stages'] if s['id'] == 'style.png'), None)
     if stage is None or stage['status'] != 'awaiting_review':
         return False
-    if len(stage['candidates']) >= MAX_STYLE_TAKES:
+    current = state['config'].get('art_inspiration', '') or ''
+    matching = sum(1 for c in stage['candidates']
+                   if (c['metadata'].get('style_inspiration') or '') == current)
+    if matching >= MAX_STYLE_TAKES:
         return False
     store.next_attempt(state)
     return True
@@ -280,7 +287,7 @@ def image_inputs(state, current, intent):
             prompt+=' Keep the identity of the character in Image 1 with the described current appearance.'
         if current['kind']=='prop_state' and not current.get('source_scene'):
             prompt+=' Use the referenced props as the parts of this single result, preserving their materials, colours and shapes in the described arrangement.'
-    if current['id']=='style.png':
+    if current['id']=='style.png' or current['kind']=='moment':
         inspiration=state['config'].get('art_inspiration','').strip()
         if inspiration:
             prompt+=(' Art inspiration from the reader\'s world: '+inspiration+
@@ -359,6 +366,8 @@ def image_graph(state,intent):
     method='image_edit' if intent.get('mode')=='edit' or current.get('source_scene') else 'reference_generation' if refs else 'text_to_image'
     info={**from_graph(graph.finalize(),method),'prompt':prompt,'seed':str(seed),
           'reference_images':refs,'approved_reference_sha256':hashes}
+    if current['id']=='style.png':
+        info['style_inspiration']=state['config'].get('art_inspiration','') or ''
     base_file=directory(sid,current['id'],attempt)/'prompt-base.json'
     if base_file.exists():
         info['prompt_base']=json.loads(base_file.read_text())

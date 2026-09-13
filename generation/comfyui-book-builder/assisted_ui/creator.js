@@ -89,7 +89,8 @@ function render(){
   $('candidate-caption').hidden=!c||!job||c.attempt===job.attempt;
   $('candidate-caption').textContent=c&&job?`Showing saved attempt ${c.attempt}. Attempt ${job.attempt} is ${job.generation?'generating':'being prepared'}; its result will appear when ready.`:'';
   $('work-status').hidden=!working;
-  $('work-label').textContent=state.status==='exporting'?'Saving your finished book…':state.job?.stage_id==='style.png'?`Flux2 Turbo 8 is creating style option ${state.job.attempt} of 4…`:state.job?.generation?'Flux2 Turbo 8 is creating your candidate…':['story','plan'].includes(stage.kind)?'Gemma 4 is preparing your draft…':'Preparing this image…';
+  const styleTakes=stage.kind==='style'&&state.job?stage.candidates.filter(c=>(c.metadata.style_inspiration||'')===(state.config?.art_inspiration||'')).length:0;
+  $('work-label').textContent=state.status==='exporting'?'Saving your finished book…':state.job?.stage_id==='style.png'?`Flux2 Turbo 8 is creating style option ${styleTakes+1} of 4…`:state.job?.generation?'Flux2 Turbo 8 is creating your candidate…':['story','plan'].includes(stage.kind)?'Gemma 4 is preparing your draft…':'Preparing this image…';
   $('work-detail').textContent=state.job?.prompt_id?`ComfyUI job ${state.job.prompt_id.slice(0,8)} · Attempt ${state.job.attempt}. You can leave this page; progress is saved.`:'This step will pause for your review when it is ready.';
   if(working&&state.job?.created_at){const elapsed=Math.max(0,Math.floor((Date.now()-Date.parse(state.job.created_at))/1000));$('work-detail').textContent+=` ${Math.floor(elapsed/60)}m ${elapsed%60}s elapsed.`;}
   $('stage-error').hidden=!isCurrent||!state.error;$('stage-error').textContent=state.error||'';
@@ -98,6 +99,7 @@ function render(){
     renderKey=key;$('candidate-view').innerHTML=renderContent(stage,c);
     $('feedback').value='';$('prompt-override').value='';
     $('attempt-details').open=false;$('override-details').open=false;
+    $('style-inspiration').value=state.config?.art_inspiration||'';
     $('draft-json').value=c?.metadata.content?JSON.stringify(c.metadata.content,null,2):'';
     const info=c?.metadata||{};$('exact-prompt').textContent=info.prompt||'No model prompt: this candidate was edited directly.';
     $('story-guide').hidden=stage.kind!=='story'||!info.story_guide;
@@ -115,6 +117,7 @@ function render(){
   $('attempts').innerHTML=stage.candidates.map(a=>`<button class="attempt ${a.id===c?.id?'selected':''}" data-attempt="${esc(a.id)}">${['story','plan'].includes(stage.kind)?'<span class="text-thumb">Aa</span>':`<img src="${esc(a.url)}" alt="Attempt ${a.attempt}" loading="lazy">`}Attempt ${a.attempt}${a.id===original?' · Original':stage.status==='approved'&&a.id===stage.selected?' ✓':''}</button>`).join('');
   $('page-copy').innerHTML=stage.text?'<p class="eyebrow">ON THIS PAGE</p><p>'+esc(stage.text)+'</p>':'';
   const locked=stage.status==='approved';$('locked').hidden=!locked&&isCurrent;$('decision-content').hidden=locked||!isCurrent;
+  $('style-inspiration-block').hidden=$('decision-content').hidden||stage.kind!=='style';
   $('locked').querySelector('h2').textContent=c?.id===stage.selected?'Approved and saved.':'Earlier attempt';
   $('locked').querySelector('p').textContent=c?.id===stage.selected?(stage.kind==='scene'?'This is the approved image. You can revise it and approve a replacement.':'This is the approved version. You can revise it any time; steps that use it will be regenerated with the replacement.'):'This attempt was kept for comparison. The candidate marked ✓ is the approved version.';
   if(!locked&&!isCurrent){
@@ -152,7 +155,7 @@ async function act(action){
   if(action==='save_draft'){try{content=JSON.parse($('draft-json').value)}catch{notice('The draft must be valid JSON. Check the edited text.');return;}}
   if(action==='edit'&&!$('feedback').value.trim()&&!$('prompt-override').value.trim()){notice('Describe the change you want in the feedback box.');$('feedback').focus();return;}
   busy=true;render();notice('');
-  try{state=await request(api+'/'+sid,{action,revision:state.revision,stage_id:currentView().id,candidate_id:c?.id,feedback:$('feedback').value,prompt_override:$('prompt-override').value,content});choice=null;renderKey='';}
+  try{state=await request(api+'/'+sid,{action,revision:state.revision,stage_id:currentView().id,candidate_id:c?.id,feedback:$('feedback').value,prompt_override:$('prompt-override').value,content,...(currentView().kind==='style'?{art_inspiration:$('style-inspiration').value.trim()}:{})});choice=null;renderKey='';}
   catch(error){notice(error.message);try{state=await request(api+'/'+sid)}catch{}}
   finally{busy=false;render();}
 }

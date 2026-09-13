@@ -1,3 +1,11 @@
+# Style-step inspiration box; chaining fixes — 2026-09-13 (latest)
+
+The art-style step now has its own **Inspire the art** input (not just the creation forms): it saves `config.art_inspiration` with the next Regenerate/Edit on that stage, and the inspiration flavours every style take and every moment restyle. Style candidates record `style_inspiration` in their generation metadata; the auto-chain counts only candidates matching the currently configured inspiration, so changing it produces a fresh set of four takes (old attempts stay for comparison). Two chaining fixes from the first real session: the chain now also runs while the style stage itself is being revised (that IS the revise flow — previously the open revision blocked it), and the progress label counts options per inspiration rather than raw attempt numbers.
+
+Source: `assisted_engine` (moment-prompt injection, per-inspiration `continue_style_variations`, revision gate), `assisted_web` (art_inspiration on style-stage actions), `assisted_ui` (style-step input, option counter). Verification: full pinned suite **400 tests pass**, including API save test, chaining-restarts-on-inspiration-change, style-revision chaining, and moment-restyle injection. ComfyUI restarted idle.
+
+---
+
 # Art inspiration field — 2026-09-13 (latest)
 
 Both creation forms gain an optional **Inspire the art** box (≤300 characters): anything the child loves right now — a show, a game, a toy ("she's loving demon hunters at the moment"). It is stored as `config.art_inspiration`, reaches the story writer (which may let it colour the visual bible and world details) and is injected into every art-style take with a fixed guardrail: *cute, colourful, age-appropriate storybook interpretation — gentle and friendly, never scary or dark*. Books already underway can add inspiration through the style step's Regenerate feedback instead.
