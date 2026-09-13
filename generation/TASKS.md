@@ -1,4 +1,23 @@
-# Adversarial review of moments-into-pages — 2026-09-13 (latest)
+# Independent design review + empirical proof — 2026-09-13 (latest)
+
+Second adversarial pass at Lewis's request, done as an independent-design check: reconstruct the ideal
+workflow from the goal (photos true to the day, storybook style, simple, from-an-idea untouched) and
+compare against what was built. Verdict: the built approach matches the independent design — photographs
+never pre-translated (direct reference latents into the page render beats upfront restyle, img2img and
+control graphs for this goal), style delivered as words plus in-style references (never the scenic style
+sample for memories), deterministic memory binding, strict plan validation, human review per page with the
+photo alongside. Then PROVED the one open question empirically: two controlled Turbo-8 renders of the real
+Two Castles photo (the case that failed hardest before), same seed, identical engine-mirrored graphs, with
+and without the memory clause. Both are faithful (two distinct castles, correct layout and garden) and
+fully storybook-styled, with zero style-image bleed — see `.local/moment-approach-check/REVIEW.md`. New
+note: wide photos can leave a faint double-page spread seam in some seeds (seed-dependent, reviewable per
+page; regenerate if it shows). Props/locations still take the style image as a reference — existing
+behaviour for all books; watch for scenery bleed there and apply the same text-only fix if it appears.
+No code changed this pass. 404 tests still pass; server idle after the two renders.
+
+---
+
+# Adversarial review of moments-into-pages — 2026-09-13
 
 Full adversarial pass over the moments-into-pages change, before Lewis continues the birthday book. Found and fixed one real bug: the deterministic memory clause ("recreate Image N faithfully… never as a photograph") was appended **after** the pinned scene prompt base is reused, so a blank Regenerate would append it a second time — and because the doubled prompt then differs from the base, it reinstalled and **grew on every retry** (2 clauses, 3, 4…). The append is now idempotent (exact-clause check), with a regression test that a blank regenerate returns the pinned base verbatim with exactly one clause. Same pass: the local prompt-preparer's task now names the photograph image explicitly ("Image N is the reader's real photograph… recreate it faithfully"), so even a rewritten prompt keeps the memory central rather than relying on the appended clause alone. The writer brief no longer tells Gemma about "restyled illustration references" (there are no restyles anymore) — captions now cite the photograph id directly. New tests also lock the character-free page shape (photograph at Image 1, then props — the Smarties close-up case) and scratch-book parity (no `source_photo`/`photo_index` anywhere, no moment stages).
 
