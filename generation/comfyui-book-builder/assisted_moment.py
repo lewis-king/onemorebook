@@ -111,14 +111,24 @@ def writer_brief(moment):
     return '\n'.join(lines)
 
 
-def restyle_brief(photo):
-    """Stage brief: turn one photograph into the book illustration style."""
-    return ('Recreate this photograph as a children\'s book illustration. Use Image 2 ONLY for the art '
-            'style — its medium, palette, linework and softness — and never copy anything it shows: no '
-            'landscape, trees, path, sky or scenery from Image 2 belongs in this picture. Keep the people, '
-            'poses, expressions, objects and setting from Image 1 clearly recognisable, rendered in that '
-            'storybook style rather than photorealism. Every distinct object in the photograph must stay '
-            'distinct — do not merge or duplicate repeated shapes. No text, lettering or watermark. '
+def restyle_brief(photo, style=''):
+    """Stage brief: turn one photograph's subjects into an isolated storybook reference.
+
+    The photograph is the only image input — a scenic approved style sample passed
+    alongside it kept donating its own content (rainbows, trees, its characters)
+    into the memory, so the art style arrives as words instead. Like the character
+    and prop references, the result shows just the subjects on a plain backdrop;
+    the full scene is composed later at page time.
+    """
+    return ('Paint the main subjects of this photograph — the people, what they are doing, and the '
+            "photograph's key objects — as a children's book illustration reference. The photograph "
+            '(Image 1) is the only content guide: keep every face, pose, expression, outfit and object '
+            'faithful and clearly recognisable, and keep every distinct object distinct — do not merge '
+            'or duplicate repeated shapes. Present the subjects as the clear central focus on a plain, '
+            'uncluttered warm-ivory storybook backdrop: do not recreate the photograph\'s background, '
+            'setting or scenery here, because the full scene is composed later at page time. Render in '
+            'this book\'s illustration style: ' + style + ' No photorealism, no text, lettering or '
+            'watermark. '
             f"The grown-up's caption for this photograph: {photo['caption']}")
 
 

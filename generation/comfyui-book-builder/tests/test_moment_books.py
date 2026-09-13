@@ -125,11 +125,11 @@ class MomentBookTests(unittest.TestCase):
         self.assertIn(CAPTION_1, brief)
         self.assertIn('moment_01', brief)
         self.assertIn('souvenir', brief)
-        restyle = moment.restyle_brief({'caption': CAPTION_1})
+        restyle = moment.restyle_brief({'caption': CAPTION_1}, 'soft gouache')
         self.assertIn(CAPTION_1, restyle)
-        self.assertIn('storybook style', restyle)
-        self.assertIn('ONLY for the art style', restyle)
+        self.assertIn('soft gouache', restyle)
         self.assertIn('do not merge or duplicate', restyle)
+        self.assertIn('warm-ivory', restyle)
         guidance = moment.plan_guidance({'photos': [{'id': 'moment_01', 'caption': CAPTION_1}]})
         self.assertIn('moment_01', guidance)
         self.assertIn('asset_refs', guidance)
@@ -283,9 +283,9 @@ class MomentBookTests(unittest.TestCase):
         # Planner names title the stages; captions stay in the brief/source.
         self.assertEqual(stage['title'], 'The cake moment')
         self.assertEqual(store.stage(state, 'moments/moment_02.png')['title'], 'The donkey ride')
-        self.assertEqual(stage['references'], ['style.png'])
+        self.assertEqual(stage['references'], [])
         self.assertEqual(stage['source_photo']['caption'], CAPTION_1)
-        self.assertEqual(stage['brief'], moment.restyle_brief(stage['source_photo']))
+        self.assertEqual(stage['brief'], moment.restyle_brief(stage['source_photo'], 'soft gouache'))
         shown = api.public_state(state)
         shown_stage = next(s for s in shown['stages'] if s['id'] == 'moments/moment_01.png')
         self.assertIn('moment-src/moment_01.png', shown_stage['source_photo_url'])
@@ -314,11 +314,14 @@ class MomentBookTests(unittest.TestCase):
         self.assertEqual(references[0]['path'], 'moment-src/moment_01.png')
         self.assertIn('photograph to restyle', references[0]['label'])
         self.assertIn(CAPTION_1, references[0]['label'])
-        self.assertTrue(references[1]['path'].startswith('creator/stages/style.png/'))
-        self.assertEqual(set(hashes), {'style.png'})
+        # The photograph is the only image input — the scenic style sample is
+        # never offered as a reference, so it cannot donate its scenery and
+        # characters into the memory.
+        self.assertEqual(len(references), 1)
+        self.assertEqual(hashes, {})
         self.assertIn('Image 1', prompt)
-        self.assertIn('Image 2', prompt)
-        self.assertIn('Use Image 2 ONLY for the art style', prompt)
+        self.assertNotIn('Image 2', prompt)
+        self.assertIn('soft gouache', prompt)
         self.assertIn('demon hunters', prompt)
         self.assertIn('never scary or dark', prompt)
         state = self.approve(self.png(store.read(state['id'])))  # approve the restyle; approval checks only approved references
@@ -347,7 +350,7 @@ class MomentBookTests(unittest.TestCase):
         self.assertEqual(references[1]['path'], 'moment-src/moment_01.png')
         self.assertIn('original photograph', references[1]['label'])
         self.assertIn('distinct object', rewrite.call_args.args[3])
-        self.assertEqual(set(hashes), {'style.png'})
+        self.assertEqual(hashes, {})
 
 
 class MomentUploadAPITests(unittest.IsolatedAsyncioTestCase):

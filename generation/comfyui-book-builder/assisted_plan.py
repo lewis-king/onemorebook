@@ -191,9 +191,12 @@ def stages(package, plan, moment=None):
             ['style.png'], character_id=char['id'])
     if moment:
         # Every uploaded photograph gets its own restyle stage once the art
-        # style exists: photo as Image 1, style as Image 2. The canonical cast
-        # comes first — they anchor every scene the moments feed. Titles use
-        # the planner's short moment names where it supplied them.
+        # style exists. The photograph is the only image input — the art style
+        # arrives as words in the brief, because a scenic style sample offered
+        # as a reference kept donating its scenery and characters into the
+        # memory. The canonical cast comes first — they anchor every scene the
+        # moments feed. Titles use the planner's short moment names where it
+        # supplied them.
         moment_names = {a['id']: a['name'] for a in plan['assets']
                         if a.get('kind') == 'moment' and isinstance(a.get('name'), str)}
         for photo in moment['photos']:
@@ -201,7 +204,7 @@ def stages(package, plan, moment=None):
             if len(title) > 42:
                 title = title[:42].rstrip() + '…'
             add(f"moments/{photo['id']}.png", 'moment', title,
-                restyle_brief(photo), ['style.png'], source_photo=photo)
+                restyle_brief(photo, style), [], source_photo=photo)
     paths = {a['id']: ('states' if a['kind']=='character_state' else 'props' if a['kind'] in ('prop','prop_state') else 'locations')+'/'+a['id']+'.png'
              for a in plan['assets']}
     paths.update({a['id']: 'moments/'+a['id']+'.png' for a in plan['assets'] if a['kind']=='moment'})

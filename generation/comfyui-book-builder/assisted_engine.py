@@ -278,9 +278,10 @@ def image_inputs(state, current, intent):
             image=cast_board(state,current,path)
             references.append({'path':str(image),'label':'Cast: '+', '.join(store.stage(state,n)['title'] for n in cast_refs)})
         if current['kind']=='moment':
-            # The uploaded photograph is Image 1; the style reference follows it.
-            # It is an immutable user upload pinned in the config, not an approved
-            # stage output, so it stays out of the approval-hash check.
+            # The uploaded photograph is the only image input; the art style
+            # arrives as words in the brief. It is an immutable user upload
+            # pinned in the config, not an approved stage output, so it stays
+            # out of the approval-hash check.
             photo=current['source_photo']
             references.append({'path':str(store.root(state['id'])/photo['path']),
                                'label':'The photograph to restyle — '+photo['caption']})
