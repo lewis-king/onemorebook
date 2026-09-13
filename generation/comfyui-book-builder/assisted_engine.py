@@ -261,9 +261,9 @@ def image_inputs(state, current, intent):
         source=next(c for c in current['candidates'] if c['id']==intent['source_candidate'])
         references=[{'path':str(store.candidate_path(state,source)),'label':'Selected illustration to edit','sha256':source['sha256']}]
         prompt='Edit Image 1. '+intent['feedback']+' Preserve the unaffected composition, character identities, gaze relationships, object designs and illustration style.'
-        if current['kind']=='moment' and current.get('source_photo'):
-            # The photograph is the ground truth for a restyle edit: without it
-            # the model can only reshuffle wrong pixels and merged details stay lost.
+        if current.get('source_photo'):
+            # The photograph is the ground truth for an edit: without it the
+            # model can only reshuffle wrong pixels and merged details stay lost.
             photo=current['source_photo']
             references.append({'path':str(store.root(state['id'])/photo['path']),
                                'label':'The original photograph — restore its distinct details'})
@@ -278,16 +278,31 @@ def image_inputs(state, current, intent):
             image=cast_board(state,current,path)
             references.append({'path':str(image),'label':'Cast: '+', '.join(store.stage(state,n)['title'] for n in cast_refs)})
         if current['kind']=='moment':
-            # The uploaded photograph is the only image input; the art style
-            # arrives as words in the brief. It is an immutable user upload
-            # pinned in the config, not an approved stage output, so it stays
-            # out of the approval-hash check.
+            # Legacy moment restyle stages (superseded by direct photo-to-page
+            # rendering): the uploaded photograph is the only image input; the
+            # art style arrives as words in the brief. It is an immutable user
+            # upload pinned in the config, not an approved stage output, so it
+            # stays out of the approval-hash check.
             photo=current['source_photo']
             references.append({'path':str(store.root(state['id'])/photo['path']),
                                'label':'The photograph to restyle — '+photo['caption']})
+        photo_ref=None
+        if current['kind']=='scene' and current.get('source_photo'):
+            # A page that recreates a real photograph takes it as a direct image
+            # input, inserted at the moment's plan slot so the assembled Image
+            # numbers match the scene brief. Immutable upload, like the legacy
+            # moment stages: pinned in config, outside the approval-hash check.
+            photo=current['source_photo']
+            photo_ref={'path':str(store.root(state['id'])/photo['path']),
+                       'label':'The real photograph this page recreates — '+photo['caption']}
+        photo_slot=(len(references)+int(current.get('photo_index',0))) if photo_ref is not None else None
         for name in current['references']:
             if name not in cast_refs:
+                if photo_ref is not None and len(references)==photo_slot:
+                    references.append(photo_ref);photo_ref=None
                 references.append({'path':str(approved(state,name)), 'label':store.stage(state,name)['title']})
+        if photo_ref is not None:
+            references.append(photo_ref)
         if current['kind']=='scene' and not references:
             references.append({'path':str(approved(state,'style.png')),'label':'Art style'})
             hashes['style.png']=hashlib.sha256(approved(state,'style.png').read_bytes()).hexdigest()
@@ -334,6 +349,14 @@ def image_inputs(state, current, intent):
         if set(result)!= {'prompt'} or not isinstance(result['prompt'],str) or not 1<=len(result['prompt'])<=5000:
             raise ValueError('The prompt rewrite must return one nonempty prompt, at most 5,000 characters.')
         prompt=result['prompt']
+    if current['kind']=='scene' and current.get('source_photo') and intent.get('mode')!='edit':
+        # The photograph reference only matters if the final prompt binds it: a
+        # rewritten or overridden prompt may drop the brief's own wording. Append
+        # the memory clause deterministically, with the assembled image number.
+        photo_image=next(i+1 for i,ref in enumerate(references) if ref['label'].startswith('The real photograph'))
+        prompt+=(f' This page recreates a real moment from the reader\'s day: recreate Image {photo_image} '
+                 'faithfully — same people, poses, key objects and setting — drawn in this storybook '
+                 'style, never as a photograph.')
     if managed:
         if base is None or prompt!=base['prompt']:
             base=assisted_prompt_base.install(state,current['id'],prompt,context_hash,

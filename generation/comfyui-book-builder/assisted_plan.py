@@ -173,7 +173,6 @@ def validate(package, plan, moment_ids=None):
 def stages(package, plan, moment=None):
     from .assisted_store import new_stage
     from .story import cover_title_instruction
-    from .assisted_moment import restyle_brief
     book = validate(package, plan, [p['id'] for p in moment['photos']] if moment else None)
     result = []
     def add(sid, kind, title, brief, refs, **extra):
@@ -189,32 +188,19 @@ def stages(package, plan, moment=None):
             f"A single full-body portrait of {char['name']}, {char['appearance']}. "
             'Relaxed upright pose, feet visible, flat warm ivory background. '+style,
             ['style.png'], character_id=char['id'])
-    if moment:
-        # Every uploaded photograph gets its own restyle stage once the art
-        # style exists. The photograph is the only image input — the art style
-        # arrives as words in the brief, because a scenic style sample offered
-        # as a reference kept donating its scenery and characters into the
-        # memory. The canonical cast comes first — they anchor every scene the
-        # moments feed. Titles use the planner's short moment names where it
-        # supplied them.
-        moment_names = {a['id']: a['name'] for a in plan['assets']
-                        if a.get('kind') == 'moment' and isinstance(a.get('name'), str)}
-        for photo in moment['photos']:
-            title = moment_names.get(photo['id']) or photo['caption']
-            if len(title) > 42:
-                title = title[:42].rstrip() + '…'
-            add(f"moments/{photo['id']}.png", 'moment', title,
-                restyle_brief(photo, style), [], source_photo=photo)
+    # Photographs are never generated upfront. Each scene that cites a moment
+    # receives the original photograph as a direct image input at render time,
+    # alongside the cast board and any prop/place references; one-off moments
+    # need no review of their own. Only reusable things — characters, props,
+    # places and their states — become reference stages.
+    photos = {p['id']: p for p in moment['photos']} if moment else {}
     paths = {a['id']: ('states' if a['kind']=='character_state' else 'props' if a['kind'] in ('prop','prop_state') else 'locations')+'/'+a['id']+'.png'
              for a in plan['assets']}
-    paths.update({a['id']: 'moments/'+a['id']+'.png' for a in plan['assets'] if a['kind']=='moment'})
     paths.update({c['id']: 'characters/'+c['id']+'.png' for c in book['characters']})
-    kinds = {a['id']: a['kind'] for a in plan['assets']}
     for asset in prop_states.ordered_assets(plan['assets'],len(book['pages'])):
         if asset['kind']=='moment':
-            # Moment references ARE the photograph restyle stages emitted above;
-            # the planner's moment assets only point scenes at them. Emitting
-            # them again here would duplicate every moment stage.
+            # Moment assets are the reader's own photographs; scenes receive
+            # them directly (source_photo below), so they never become stages.
             continue
         refs = ([paths[r] for r in asset['source_assets']] if asset['kind']=='prop_state' else
                 [paths[asset['source_character']]] if asset['kind']=='character_state' else ['style.png'])
@@ -231,19 +217,23 @@ def stages(package, plan, moment=None):
         scene_moment = scene['moment']
         if n == 0:
             scene_moment = scene_moment.rstrip() + ' ' + cover_title_instruction(book['title'])
-        cast_count = len(scene['character_refs'])
-        moment_images = [f"Image {cast_count + i + 1}" for i, r in enumerate(scene['asset_refs'])
-                         if kinds.get(r) == 'moment']
+        cast_slots = 1 if scene['character_refs'] else 0
+        moment_refs = [(i, photos[r]) for i, r in enumerate(scene['asset_refs']) if r in photos]
+        moment_images = [f"Image {cast_slots + i + 1}" for i, _ in moment_refs]
         if moment_images:
-            # This page illustrates a real memory: the moment reference must drive
+            # This page illustrates a real memory: the photograph must drive
             # the scene, not sit in the background as loose inspiration.
             scene_moment += (' This page illustrates a real moment from the reader\'s day: recreate '
                              + ' and '.join(moment_images) + ' faithfully in this storybook style — same '
                              'people, poses, key objects and setting — so the memory stays recognisable.')
+        stage_extra = {}
+        if moment_refs:
+            i, photo = moment_refs[0]
+            stage_extra.update(source_photo=photo, photo_index=i)
         add('cover.png' if n==0 else f'pages/page-{n:03d}.png', 'scene', 'Cover' if n==0 else f'Page {n}',
-            scene_moment, [paths[r] for r in scene['character_refs']+scene['asset_refs']],
+            scene_moment, [paths[r] for r in scene['character_refs']+scene['asset_refs'] if r not in photos],
             cast_refs=[paths[r] for r in scene['character_refs']],
             cast_ids=[next((a['source_character'] for a in plan['assets'] if a['id']==r),r)
                       for r in scene['character_refs']],
-            page=n, text='' if n==0 else book['pages'][n-1]['text'])
+            page=n, text='' if n==0 else book['pages'][n-1]['text'], **stage_extra)
     return result

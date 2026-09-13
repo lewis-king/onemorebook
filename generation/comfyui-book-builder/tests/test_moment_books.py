@@ -118,21 +118,17 @@ class MomentBookTests(unittest.TestCase):
         listed = store.listing()
         self.assertTrue(any(item['id'] == state['id'] for item in listed))
 
-    def test_writer_plan_and_restlye_texts(self):
+    def test_writer_plan_and_guidance_texts(self):
         brief = moment.writer_brief({'description': DESCRIPTION,
                                      'photos': [{'id': 'moment_01', 'caption': CAPTION_1}]})
         self.assertIn(DESCRIPTION, brief)
         self.assertIn(CAPTION_1, brief)
         self.assertIn('moment_01', brief)
         self.assertIn('souvenir', brief)
-        restyle = moment.restyle_brief({'caption': CAPTION_1}, 'soft gouache')
-        self.assertIn(CAPTION_1, restyle)
-        self.assertIn('soft gouache', restyle)
-        self.assertIn('do not merge or duplicate', restyle)
-        self.assertIn('warm-ivory', restyle)
         guidance = moment.plan_guidance({'photos': [{'id': 'moment_01', 'caption': CAPTION_1}]})
         self.assertIn('moment_01', guidance)
         self.assertIn('asset_refs', guidance)
+        self.assertIn('image input', guidance)
 
     def test_story_prompt_includes_moment_brief(self):
         uploads = [self.stage_upload(), self.stage_upload()]
@@ -264,78 +260,76 @@ class MomentBookTests(unittest.TestCase):
         self.assertNotIn('MOMENT REFERENCES', plain)
         self.assertNotIn('moment', plain_schema['properties']['assets']['items']['properties']['kind']['enum'])
 
-    def test_moment_stages_follow_style_and_feed_scenes(self):
+    def test_photographs_feed_pages_directly_without_moment_stages(self):
         state = self.approve(self.add(self.moment_state(), moment_manuscript()))
         state = self.approve(self.add(state, self.moment_plan(state)))
         ids = [s['id'] for s in state['stages']]
-        # Cast first: the canonical portraits anchor every scene the moments feed.
         self.assertEqual(ids[:3], ['story', 'plan', 'style.png'])
         characters = [s['id'] for s in state['stages'] if s['id'].startswith('characters/')]
         self.assertEqual(characters, ['characters/mira.png', 'characters/pip.png', 'characters/fern.png'])
-        self.assertEqual(ids[3 + len(characters)], 'moments/moment_01.png')
-        self.assertEqual(ids.index('moments/moment_01.png'), ids.index('moments/moment_02.png') - 1)
-        # Each moment exists exactly once: the restyle stages above, never
-        # duplicated by the planner's moment assets.
-        moment_stages = [i for i in ids if i.startswith('moments/')]
-        self.assertEqual(moment_stages, [f'moments/moment_{i:02d}.png' for i in range(1, 3)])
-        stage = store.stage(state, 'moments/moment_01.png')
-        self.assertEqual(stage['kind'], 'moment')
-        # Planner names title the stages; captions stay in the brief/source.
-        self.assertEqual(stage['title'], 'The cake moment')
-        self.assertEqual(store.stage(state, 'moments/moment_02.png')['title'], 'The donkey ride')
-        self.assertEqual(stage['references'], [])
-        self.assertEqual(stage['source_photo']['caption'], CAPTION_1)
-        self.assertEqual(stage['brief'], moment.restyle_brief(stage['source_photo'], 'soft gouache'))
+        # Photographs never become stages: each page that cites a moment
+        # receives the original upload directly.
+        self.assertFalse(any(i.startswith('moments/') for i in ids))
+        page = store.stage(state, 'pages/page-001.png')
+        self.assertEqual(page['kind'], 'scene')
+        self.assertEqual(page['source_photo']['caption'], CAPTION_1)
+        self.assertEqual(page['photo_index'], 1)
+        self.assertNotIn('moments/moment_01.png', page['references'])
+        self.assertIn('locations/garden.png', page['references'])
+        # The cast board is ONE image no matter how many characters are in it,
+        # so the photograph lands on Image 3 on both pages (Image 1 cast,
+        # Image 2 garden) — the old per-character count pointed pages with two
+        # or more characters at the wrong input.
+        self.assertIn('Image 3', page['brief'])
+        second = store.stage(state, 'pages/page-002.png')
+        self.assertEqual(second['photo_index'], 1)
+        self.assertIn('Image 3', second['brief'])
         shown = api.public_state(state)
-        shown_stage = next(s for s in shown['stages'] if s['id'] == 'moments/moment_01.png')
+        shown_stage = next(s for s in shown['stages'] if s['id'] == 'pages/page-001.png')
         self.assertIn('moment-src/moment_01.png', shown_stage['source_photo_url'])
         cake_scene = next(s for s in state['stages'] if s.get('page') == 1)
-        self.assertIn('moments/moment_01.png', cake_scene['references'])
-        # The page brief binds the illustration to the real memory by image number.
         self.assertIn('real moment from the reader', cake_scene['brief'])
-        self.assertIn('Image 3', cake_scene['brief'])
 
-    def test_image_inputs_put_photograph_first_and_pin_only_approved_refs(self):
+    def test_page_image_inputs_place_photograph_at_its_plan_slot(self):
         state = self.approve(self.add(self.moment_state(), moment_manuscript()))
         state = self.approve(self.add(state, self.moment_plan(state)))
         state = self.approve(self.png(state))  # style.png
-        # The cast comes first; walk through the portraits to the moments.
-        while state['current_stage'].startswith('characters/'):
+        # Approve every reference up to the cover, then the cover itself.
+        while state['current_stage'] != 'cover.png':
             state = self.approve(self.png(state))
-        self.assertEqual(state['current_stage'], 'moments/moment_01.png')
-        # The configured inspiration flavours the restyle prompts too.
-        latest = store.read(state['id'])
-        latest['config']['art_inspiration'] = 'demon hunters'
-        store.save(latest)
-        state = store.read(state['id'])
+        state = self.approve(self.png(state))
+        self.assertEqual(state['current_stage'], 'pages/page-001.png')
         intent = store.next_attempt(state)
         current = store.stage(state)
         prompt, references, hashes = engine.image_inputs(state, current, intent)
-        self.assertEqual(references[0]['path'], 'moment-src/moment_01.png')
-        self.assertIn('photograph to restyle', references[0]['label'])
-        self.assertIn(CAPTION_1, references[0]['label'])
-        # The photograph is the only image input — the scenic style sample is
-        # never offered as a reference, so it cannot donate its scenery and
-        # characters into the memory.
-        self.assertEqual(len(references), 1)
-        self.assertEqual(hashes, {})
-        self.assertIn('Image 1', prompt)
-        self.assertNotIn('Image 2', prompt)
-        self.assertIn('soft gouache', prompt)
-        self.assertIn('demon hunters', prompt)
-        self.assertIn('never scary or dark', prompt)
-        state = self.approve(self.png(store.read(state['id'])))  # approve the restyle; approval checks only approved references
-        self.assertEqual(state['current_stage'], 'moments/moment_02.png')
+        # Cast board first, then the plan's asset slots in order: garden, then
+        # the photograph at the moment's slot.
+        self.assertEqual(references[0]['label'][:5], 'Cast:')
+        self.assertTrue(references[1]['path'].startswith('creator/stages/locations__garden.png/'))
+        self.assertEqual(references[2]['path'], 'moment-src/moment_01.png')
+        self.assertIn('photograph this page recreates', references[2]['label'])
+        self.assertIn(CAPTION_1, references[2]['label'])
+        # Only approved stage outputs are approval-pinned; the immutable upload is not.
+        self.assertEqual(set(hashes), {'characters/mira.png', 'locations/garden.png'})
+        # The brief binds the photograph by image number (cast board is Image 1)…
+        self.assertIn('Image 3', current['brief'])
+        # …and the final prompt binds it again after the local preparer's rewrite.
+        self.assertIn('Image 3', prompt)
+        self.assertIn('never as a photograph', prompt)
+        self.assertIn('gouache', prompt.lower())
+        state = self.approve(self.png(store.read(state['id'])))
+        self.assertEqual(state['current_stage'], 'pages/page-002.png')
 
-    def test_moment_edit_carries_the_original_photograph(self):
+    def test_page_edit_carries_the_original_photograph(self):
         state = self.approve(self.add(self.moment_state(), moment_manuscript()))
         state = self.approve(self.add(state, self.moment_plan(state)))
         state = self.approve(self.png(state))  # style.png
-        while state['current_stage'].startswith('characters/'):
+        while state['current_stage'] != 'cover.png':
             state = self.approve(self.png(state))
-        state = self.png(store.read(state['id']))  # moment_01 candidate awaiting review
+        state = self.approve(self.png(state))  # cover
+        state = self.png(store.read(state['id']))  # page candidate awaiting review
         state = store.read(state['id'])
-        selected = engine.selected(state, 'moments/moment_01.png')
+        selected = engine.selected(state, 'pages/page-001.png')
         intent = store.next_attempt(state, 'Restore the second, different bouncy castle.',
                                     mode='edit', source_candidate=selected['id'])
         current = store.stage(store.read(state['id']))
@@ -345,12 +339,12 @@ class MomentBookTests(unittest.TestCase):
         # The rewrite request must explain the photograph reference; the final
         # prompt is the rewriter's one-prompt output.
         self.assertIn('original photograph', rewrite.call_args.args[3])
-        self.assertTrue(references[0]['path'].startswith('creator/stages/moments__moment_01.png/'))
+        self.assertTrue(references[0]['path'].startswith('creator/stages/pages__page-001.png/'))
         self.assertIn('Selected illustration to edit', references[0]['label'])
         self.assertEqual(references[1]['path'], 'moment-src/moment_01.png')
         self.assertIn('original photograph', references[1]['label'])
         self.assertIn('distinct object', rewrite.call_args.args[3])
-        self.assertEqual(hashes, {})
+        self.assertEqual(set(hashes), {'characters/mira.png', 'locations/garden.png'})
 
 
 class MomentUploadAPITests(unittest.IsolatedAsyncioTestCase):

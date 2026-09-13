@@ -234,7 +234,7 @@ def public_state(state):
     state['creator_url']=store.creator_url(state['id'])
     state['can_revise_pages']=True
     for stage in state['stages']:
-        if stage['kind']=='moment' and stage.get('source_photo'):
+        if stage.get('source_photo'):
             stage['source_photo_url']=f"/book-builder/books/{state['id']}/{stage['source_photo']['path']}"
         for candidate in stage['candidates']:
             if stage['kind'] in ('story','plan'):

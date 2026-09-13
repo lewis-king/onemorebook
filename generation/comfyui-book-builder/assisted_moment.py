@@ -1,10 +1,10 @@
-"""Generate a book from a real day: staged photo intake, writer brief and restyle guidance.
+"""Generate a book from a real day: staged photo intake, writer brief and plan guidance.
 
 Moment books commemorate an actual day (a birthday, a holiday, a small adventure).
 The reader uploads reference photographs with a caption each, plus a free description
-of the day. The photographs are restyled into the book's illustration style and act
-as scene references, while the captions and description carry their content into the
-story text — the local writer works from words, never from pixels.
+of the day. The photographs feed page renders directly as image inputs — each numbered
+page recreates one photograph — while the captions and description carry their content
+into the story text: the local writer works from words, never from pixels.
 """
 import hashlib
 from pathlib import Path
@@ -111,33 +111,13 @@ def writer_brief(moment):
     return '\n'.join(lines)
 
 
-def restyle_brief(photo, style=''):
-    """Stage brief: turn one photograph's subjects into an isolated storybook reference.
-
-    The photograph is the only image input — a scenic approved style sample passed
-    alongside it kept donating its own content (rainbows, trees, its characters)
-    into the memory, so the art style arrives as words instead. Like the character
-    and prop references, the result shows just the subjects on a plain backdrop;
-    the full scene is composed later at page time.
-    """
-    return ('Paint the main subjects of this photograph — the people, what they are doing, and the '
-            "photograph's key objects — as a children's book illustration reference. The photograph "
-            '(Image 1) is the only content guide: keep every face, pose, expression, outfit and object '
-            'faithful and clearly recognisable, and keep every distinct object distinct — do not merge '
-            'or duplicate repeated shapes. Present the subjects as the clear central focus on a plain, '
-            'uncluttered warm-ivory storybook backdrop: do not recreate the photograph\'s background, '
-            'setting or scenery here, because the full scene is composed later at page time. Render in '
-            'this book\'s illustration style: ' + style + ' No photorealism, no text, lettering or '
-            'watermark. '
-            f"The grown-up's caption for this photograph: {photo['caption']}")
-
-
 def plan_guidance(moment):
-    """Planner guidance listing the restyled moment references the scenes may cite."""
+    """Planner guidance listing the photograph references the scenes may cite."""
     lines = ['', 'MOMENT REFERENCES', 'This book commemorates a real day, and it has exactly one story page '
              'per photograph the reader uploaded — no invented pages, none left out. The photographs were '
-             'uploaded in the order the day happened. Styled moment references are prepared automatically '
-             'from them; cite them by id in a scene\'s asset_refs. Each moment reference counts toward the '
+             'uploaded in the order the day happened, and each scene that cites one receives the original '
+             'photograph as an image input at render time; cite them by id in a scene\'s asset_refs. Each '
+             'moment reference counts toward the '
              'six-image budget like any prop or place reference. Every numbered page must recreate exactly '
              'one moment: page 1 uses moment_01, page 2 uses moment_02, and so on. The cover (page 0) is '
              'illustrated from the story as usual and must not use a moment. A plan with an uncited '

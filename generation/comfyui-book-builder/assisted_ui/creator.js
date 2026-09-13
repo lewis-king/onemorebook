@@ -60,9 +60,9 @@ function renderStoryGuide(guide){
 function renderContent(stage,c){
   if(!c)return '<div class="placeholder"><div><h2>Your next chapter starts here.</h2><p>The next candidate will appear here as soon as it is saved.</p></div></div>';
   if(!['story','plan'].includes(stage.kind)){
-    if(stage.kind==='moment'&&stage.source_photo_url){
+    if(stage.source_photo_url){
       return '<div class="moment-compare"><figure><img src="'+esc(stage.source_photo_url)+'" alt="The original photograph"><figcaption>The photograph</figcaption></figure>'
-        +'<figure><a href="'+esc(c.url)+'" target="_blank" rel="noopener" aria-label="Open full-size restyled image"><img class="art" src="'+esc(c.url)+'" alt="Storybook restyle — attempt '+c.attempt+'"></a><figcaption>Storybook restyle · attempt '+c.attempt+'</figcaption></figure></div>';
+        +'<figure><a href="'+esc(c.url)+'" target="_blank" rel="noopener" aria-label="Open full-size storybook illustration"><img class="art" src="'+esc(c.url)+'" alt="Storybook illustration — attempt '+c.attempt+'"></a><figcaption>'+(stage.kind==='moment'?'Storybook restyle':'Storybook page')+' · attempt '+c.attempt+'</figcaption></figure></div>';
     }
     return `<a href="${esc(c.url)}" target="_blank" rel="noopener" aria-label="Open full-size image"><img class="art" src="${esc(c.url)}" alt="${esc(stage.title)} — attempt ${c.attempt}"></a>`;
   }
@@ -104,7 +104,7 @@ function render(){
     const info=c?.metadata||{};$('exact-prompt').textContent=info.prompt||'No model prompt: this candidate was edited directly.';
     $('story-guide').hidden=stage.kind!=='story'||!info.story_guide;
     $('story-guide').innerHTML=stage.kind==='story'?renderStoryGuide(info.story_guide):'';
-    $('review-hint').textContent=stage.kind==='story'?'Try a few pages aloud. Look for a story your child can follow, join in with and want to hear again. You decide when it is ready.':stage.kind==='plan'?'Check each scene against the page text, including the joke or feeling and what must stay consistent.':stage.kind==='moment'?'Check that the day is still recognisable — the people, the moment, the feeling — now drawn in the book\'s art style.':stage.kind==='style'?'Four takes on the book\'s art style arrive one by one. Compare them all, then approve the one you want — every later step follows it.':'Check the action, characters and recurring details. Your decision controls what happens next.';
+    $('review-hint').textContent=stage.kind==='story'?'Try a few pages aloud. Look for a story your child can follow, join in with and want to hear again. You decide when it is ready.':stage.kind==='plan'?'Check each scene against the page text, including the joke or feeling and what must stay consistent.':stage.kind==='moment'?'Check that the day is still recognisable — the people, the moment, the feeling — now drawn in the book\'s art style.':stage.kind==='style'?'Four takes on the book\'s art style arrive one by one. Compare them all, then approve the one you want — every later step follows it.':stage.kind==='scene'&&stage.source_photo_url?'This page recreates a real photograph. Check the people, poses and key details against the original — the storybook scene should stay true to the day.':'Check the action, characters and recurring details. Your decision controls what happens next.';
     $('feedback').placeholder=stage.kind==='story'?'What would make this more engaging? Point to a page, an awkward line or a choice that does not make sense.':stage.kind==='plan'?'Which moment should we show? Mention any recurring object, action or visual joke that needs attention.':'What should change? For example: keep the heron on the left; remove the extra heron on the right.';
     $('model-info').textContent=modelDetails(info);
     renderReferences('references',info.reference_images);
@@ -129,7 +129,7 @@ function render(){
   $('reopen-page').textContent=stage.kind==='scene'?(stage.id==='cover.png'?'Revise this cover':'Revise this page'):'Revise this reference';
   $('reopen-page').disabled=busy||Boolean(state.page_revision)||!['awaiting_review','error','ready','complete'].includes(state.status);
   $('reopen-help').hidden=$('reopen-page').hidden||($('reopen-page').disabled?false:stage.kind==='scene');
-  $('reopen-help').textContent=state.page_revision?'Finish the step you are revising, or keep its original, before reopening another.':stage.kind!=='scene'?'Revise with feedback as usual. Approving the replacement marks every approved step that uses this reference — moments, portraits, pages — for regeneration with the new version.':'Wait for the current generation to finish, then reopen this page.';
+  $('reopen-help').textContent=state.page_revision?'Finish the step you are revising, or keep its original, before reopening another.':stage.kind!=='scene'?'Revise with feedback as usual. Approving the replacement marks every approved step that uses this reference — portraits, pages — for regeneration with the new version.':'Wait for the current generation to finish, then reopen this page.';
   const canDecide=isCurrent&&['awaiting_review','error','ready'].includes(state.status)&&!busy;
   $('approve').disabled=!canDecide||!c;$('regenerate').disabled=!canDecide;
   $('approve').textContent=original?'Approve replacement & return →':'Approve & continue →';

@@ -1,4 +1,12 @@
-# Duplicate moment stage fix — 2026-09-13 (latest)
+# Moments render directly into pages — 2026-09-13 (latest)
+
+Workflow review with Lewis: one-off moments ("Face Paint Queue", "Family Photo") should not be generated upfront — they are pages, and the photograph belongs in the page render. Only reusable things (the cake, the bouncy castles, character states) need upfront reference stages for cross-page consistency. Simplification now live: the 14 `moments/moment_NN.png` restyle stages are gone from `assisted_plan.stages`; a scene citing a `moment_*` asset carries `source_photo` + `photo_index`, and `image_inputs` inserts the original photograph at the moment's plan slot (cast board first, however many characters — fixing the old Image-number miscount for multi-character scenes: it used the character count instead of the single cast-board image). Scene briefs bind the memory by image number, and the engine re-appends that binding after any Gemma rewrite or human prompt override so the photograph can never drop out of the instruction. Page edits carry the photograph as ground truth (as moment edits did). The UI compare view and review hint moved to photo-backed pages; `source_photo_url` is no longer moment-kind-specific. Legacy saved states with kind `moment` stages still render. `restyle_brief` removed.
+
+Source: `assisted_plan.stages`, `assisted_engine.image_inputs`, `assisted_web.public_state`, `assisted_ui/creator.js`, `assisted_moment.py`, `tests/test_moment_books.py`. Full pinned suite **401 tests pass**. The live birthday book was migrated on disk: 14 restyle stages removed (attempts stay on disk), page stages carry `source_photo`/`photo_index`, `current_stage` set to the first pending reference (`characters/emilia.png`).
+
+---
+
+# Duplicate moment stage fix — 2026-09-13
 
 Lewis spotted two "bouncy castles" entries in the stage nav. Real bug: `assisted_plan.stages` emitted the config-driven photograph-restyle stages AND re-emitted the planner's moment assets as reference stages (same ids, planner names like "Two Castles"), so every moment existed twice — which would also have blocked export. The asset loop now skips `moment` kinds (scenes still resolve their ids to the restyle stages). Regression test asserts each moment appears exactly once. The live birthday book's saved state was repaired on disk (14 duplicate pending stages removed; approvals, candidates and current step unchanged; verified 46 unique stages).
 
