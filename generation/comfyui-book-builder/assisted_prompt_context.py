@@ -32,6 +32,12 @@ def revision_request(current, intent, prompt, references, stages, *, preparing=F
                 'illustration brief and reference designs. Reconcile contradictions using the page prose. '
                 'Preserve compatible creative choices. Bind each actor to its species and distinguishing '
                 'clothing once, beside its action, and preserve the intended cast count. ')
+    photo_inputs = [f'Image {i+1}' for i, ref in enumerate(references)
+                    if ref['label'].startswith('The real photograph')]
+    if photo_inputs:
+        task += (', '.join(photo_inputs) + (' is' if len(photo_inputs) == 1 else ' are') +
+                 ' the reader\'s real photograph for this page: recreate it faithfully — same people, '
+                 'poses, key objects and setting — in this storybook style, never as a photograph. ')
     # These are design notes, not additional images. In an edit, only the selected
     # illustration is supplied. Never claim that approved portraits are Image 2+.
     notes = [{'stage': sid, 'kind': stages[sid]['kind'], 'name': stages[sid]['title'],

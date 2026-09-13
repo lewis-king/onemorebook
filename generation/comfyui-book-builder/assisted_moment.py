@@ -99,7 +99,7 @@ def writer_brief(moment):
              '', 'The day, in the grown-up\'s words:', moment['description'], '',
              'Photographs from the day, listed in the order they happened, with captions:']
     for index, photo in enumerate(moment['photos'], start=1):
-        lines.append(f"{index}. {photo['caption']} (restyled illustration reference '{photo['id']}')")
+        lines.append(f"{index}. {photo['caption']} (photograph '{photo['id']}')")
     lines += ['', f'This book has exactly {len(moment["photos"])} pages — one per photograph, no more and no '
               'fewer, because it follows what actually happened. Page one recreates photograph 1, page two '
               'recreates photograph 2, and so on, in the order listed above. Do not invent extra beats or '

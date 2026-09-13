@@ -50,6 +50,16 @@ def moment_manuscript_n(count):
     return value
 
 
+def detail_manuscript():
+    """Page 1 is a character-free close-up, like the Smarties surprise photo."""
+    value = moment_manuscript()
+    page = value['story']['pages'][0]
+    page['charactersPresent'] = []
+    page['isMainCharacterPresent'] = False
+    page['imagePrompt'] = 'A close-up of the glowing ribbon of moonlight resting on the garden path.'
+    return value
+
+
 class MomentBookTests(unittest.TestCase):
     setUp = fixtures.BookTests.setUp
     restore_module = fixtures.BookTests.restore_module
@@ -345,6 +355,56 @@ class MomentBookTests(unittest.TestCase):
         self.assertIn('original photograph', references[1]['label'])
         self.assertIn('distinct object', rewrite.call_args.args[3])
         self.assertEqual(set(hashes), {'characters/mira.png', 'locations/garden.png'})
+
+    def test_blank_regenerate_reuses_base_without_duplicating_memory_clause(self):
+        state = self.approve(self.add(self.moment_state(), moment_manuscript()))
+        state = self.approve(self.add(state, self.moment_plan(state)))
+        state = self.approve(self.png(state))  # style.png
+        while state['current_stage'] != 'cover.png':
+            state = self.approve(self.png(state))
+        state = self.approve(self.png(state))
+        state = store.read(state['id'])
+        intent = store.next_attempt(state)
+        first, _, _ = engine.image_inputs(state, store.stage(state), intent)
+        self.assertEqual(first.count('never as a photograph'), 1)
+        # A blank regenerate reuses the pinned base prompt verbatim; the memory
+        # clause must not be appended a second time (it would bake into a new
+        # base and grow on every retry).
+        state = store.read(state['id'])
+        intent = store.next_attempt(state)
+        second, _, _ = engine.image_inputs(state, store.stage(state), intent)
+        self.assertEqual(second, first)
+        self.assertEqual(second.count('never as a photograph'), 1)
+
+    def test_moment_page_without_characters_puts_photograph_first(self):
+        state = self.approve(self.add(self.moment_state(), detail_manuscript()))
+        plan = self.moment_plan(state)
+        # A detail shot may have nobody in it (the Smarties surprise close-up):
+        # no cast board, photograph first, then the props.
+        plan['scenes'][1]['asset_refs'] = ['moment_01', 'garden']
+        state = self.approve(self.add(state, plan))
+        state = self.approve(self.png(state))  # style.png
+        while state['current_stage'] != 'cover.png':
+            state = self.approve(self.png(state))
+        state = self.approve(self.png(state))
+        stage = store.stage(state, 'pages/page-001.png')
+        self.assertEqual(stage['photo_index'], 0)
+        self.assertIn('Image 1', stage['brief'])
+        intent = store.next_attempt(state)
+        prompt, references, _ = engine.image_inputs(state, store.stage(state), intent)
+        self.assertEqual(references[0]['path'], 'moment-src/moment_01.png')
+        self.assertTrue(references[1]['path'].startswith('creator/stages/locations__garden.png/'))
+        self.assertIn('never as a photograph', prompt)
+
+    def test_scratch_scene_stages_carry_no_photograph_machinery(self):
+        state = self.approve(self.add(store.create({'page_count': 3}), manuscript()))
+        state = self.approve(self.add(state, self.plan(state)))
+        scenes = [s for s in state['stages'] if s['kind'] == 'scene']
+        self.assertTrue(scenes)
+        for scene in scenes:
+            self.assertNotIn('source_photo', scene)
+            self.assertNotIn('photo_index', scene)
+        self.assertFalse(any(i.startswith('moments/') for i in [s['id'] for s in state['stages']]))
 
 
 class MomentUploadAPITests(unittest.IsolatedAsyncioTestCase):

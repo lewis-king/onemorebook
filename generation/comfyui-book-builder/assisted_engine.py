@@ -353,10 +353,15 @@ def image_inputs(state, current, intent):
         # The photograph reference only matters if the final prompt binds it: a
         # rewritten or overridden prompt may drop the brief's own wording. Append
         # the memory clause deterministically, with the assembled image number.
+        # Idempotent on purpose: a blank regenerate reuses the pinned base
+        # prompt, which already carries the clause — appending blindly would
+        # duplicate it and bake the growth into a new base on every retry.
         photo_image=next(i+1 for i,ref in enumerate(references) if ref['label'].startswith('The real photograph'))
-        prompt+=(f' This page recreates a real moment from the reader\'s day: recreate Image {photo_image} '
-                 'faithfully — same people, poses, key objects and setting — drawn in this storybook '
-                 'style, never as a photograph.')
+        memory_clause=(f' This page recreates a real moment from the reader\'s day: recreate Image {photo_image} '
+                       'faithfully — same people, poses, key objects and setting — drawn in this storybook '
+                       'style, never as a photograph.')
+        if memory_clause not in prompt:
+            prompt+=memory_clause
     if managed:
         if base is None or prompt!=base['prompt']:
             base=assisted_prompt_base.install(state,current['id'],prompt,context_hash,
