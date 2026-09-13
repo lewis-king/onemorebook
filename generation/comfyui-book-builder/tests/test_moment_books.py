@@ -278,6 +278,9 @@ class MomentBookTests(unittest.TestCase):
         self.assertEqual(moment_stages, [f'moments/moment_{i:02d}.png' for i in range(1, 3)])
         stage = store.stage(state, 'moments/moment_01.png')
         self.assertEqual(stage['kind'], 'moment')
+        # Planner names title the stages; captions stay in the brief/source.
+        self.assertEqual(stage['title'], 'The cake moment')
+        self.assertEqual(store.stage(state, 'moments/moment_02.png')['title'], 'The donkey ride')
         self.assertEqual(stage['references'], ['style.png'])
         self.assertEqual(stage['source_photo']['caption'], CAPTION_1)
         self.assertEqual(stage['brief'], moment.restyle_brief(stage['source_photo']))
