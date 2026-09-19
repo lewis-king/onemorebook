@@ -281,6 +281,25 @@ class YoloJudgeTests(unittest.TestCase):
         # The cover keeps its title rule instead.
         self.assertNotIn('hand-lettered display typography', prompt)
 
+    def test_character_free_page_forbids_figures_after_rewrite(self):
+        state = self.prepare()
+        while state['current_stage'] != 'pages/page-003.png':
+            state = self.approve(self.png(store.read(state['id'])))
+        intent = store.next_attempt(state)
+        intent.pop('prompt_base', None)
+        with patch.object(engine, 'draft_json', return_value={'prompt': 'The empty garden glows.'}):
+            prompt, _, _ = engine.image_inputs(state, store.stage(state), intent)
+        self.assertIn('completely unpopulated scene', prompt)
+        # A page with a cast does not get the unpopulated clause.
+        state2 = self.prepare()
+        while state2['current_stage'] != 'pages/page-001.png':
+            state2 = self.approve(self.png(store.read(state2['id'])))
+        intent2 = store.next_attempt(state2)
+        intent2.pop('prompt_base', None)
+        with patch.object(engine, 'draft_json', return_value={'prompt': 'Mira finds the light.'}):
+            prompt2, _, _ = engine.image_inputs(state2, store.stage(state2), intent2)
+        self.assertNotIn('completely unpopulated', prompt2)
+
     def test_moment_scene_judge_receives_the_photograph(self):
         case = moment_fixtures.MomentBookTests()
         uploads = [case.stage_upload(), case.stage_upload()]

@@ -387,6 +387,13 @@ def image_inputs(state, current, intent):
         no_text=' No readable text, letters, numbers or writing anywhere in the scene; any signs or labels stay blank or show only simple pictures.'
         if no_text.strip() not in prompt:
             prompt+=no_text
+        if not current.get('cast_refs'):
+            # A character-free page gives the model no cast images, and scene
+            # priors ("bustling market") make it invent foreground people.
+            # Forbid figures deterministically rather than trusting the brief.
+            empty=' This is a completely unpopulated scene: no people, no animals, no faces, no figures — pure setting and objects only.'
+            if empty.strip() not in prompt:
+                prompt+=empty
     if managed:
         if base is None or prompt!=base['prompt']:
             base=assisted_prompt_base.install(state,current['id'],prompt,context_hash,

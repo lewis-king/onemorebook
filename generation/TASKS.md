@@ -20,7 +20,11 @@ no_extra_characters after adjudication caught a stray off-model dog on page 8. P
 a full prompt_override (the preparer kept re-inserting the protagonists from the story idea) and the
 revised judge approved the clean establishing shot; export `exports/11e72650e4e7f1a0/`. Also learned:
 negative feedback ("no girl, no dog") anchors the model on the negated subjects — phrase emptiness
-positively. Suite: **424 tests** green.
+positively. Root-cause forensics: attempt 1's render prompt was already character-free and the
+location reference judge had already rejected a silhouette-populated market street, yet FLUX.2 still
+invented foreground people from scene priors — so character-free pages now get a deterministic
+"completely unpopulated scene: no people, no animals, no faces" sentence (same pattern as the
+no-text/cover/memory clauses). Suite: **426 tests** green.
 
 ---
 
