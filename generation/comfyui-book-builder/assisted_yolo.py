@@ -27,7 +27,7 @@ DEFAULT_STYLE_REVIEW_MODEL = 'hf.co/unsloth/Qwen3.5-27B-GGUF:Q6_K'
 
 TEXT = {'type': 'string', 'minLength': 1}
 
-SCENE_CHECKS = ('scene_matches', 'photo_fidelity', 'characters_on_model',
+SCENE_CHECKS = ('scene_matches', 'photo_fidelity', 'characters_on_model', 'no_extra_characters',
                 'style_matches', 'anatomy_sound', 'no_unwanted_text', 'age_safe')
 COVER_CHECKS = ('scene_matches', 'characters_on_model', 'style_matches', 'anatomy_sound',
                 'title_correct', 'title_integrated', 'age_safe')
@@ -243,6 +243,9 @@ def judge_scene(state, stage, candidate):
                 'still delivers the moment is acceptable — fail for missing or wrong action, not '
                 'for framing choice alone), '
               + fidelity + cast
+              + 'no_extra_characters (every person or animal in frame is one of the planned cast '
+                'or clearly part of the scenery crowd the brief calls for — an extra or duplicated '
+                'character, or the pet that has left the story at this point, fails), '
               + 'style_matches (storybook illustration, not a photograph), anatomy_sound (no extra '
                 'limbs, fused hands or distorted faces), no_unwanted_text (no rendered words or '
                 'letters), age_safe (nothing scary or inappropriate for young children).'

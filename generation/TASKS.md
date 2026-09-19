@@ -1,4 +1,23 @@
-# Cover typography system + library name avoidance — 2026-09-19 (latest)
+# Golden pass 2 at scale + judge hardening — 2026-09-19 (latest)
+
+Second golden pass on the full system: book-20260919180221-17a699f801 ("The Night Lantern Market",
+14 pages, 3-character cast + background extras, 29 stages) ran to `complete` with 60 decisions
+(57 yolo, 3 human). The new cover typography system worked first try in production: glowing
+lantern-light hand-lettering in the night sky, approved by the YOLO cover judge's new
+title_correct/title_integrated checks. The name avoid-list produced a fresh cast (Mei, Ada, Truffle).
+Three parks, each a real system finding: (1) prop briefs mixing a plain-backdrop framing rule with
+scenery words looped the judge both ways — judge now treats the first sentence as the binding
+framing rule and the planner must not put backdrops in prop appearances; (2) scene judge failed
+pages on camera framing alone — framing is now should-follow, only missing/wrong action fails;
+(3) interior pages had NO no-lettering rule anywhere in the assisted path, so market signage kept
+rendering — interior scene prompts now get a deterministic no-text sentence (same pattern as the
+cover/memory clauses), and page 8 then passed. Post-completion adjudication found one more judge
+gap: an extra off-model dog slipped into approved page 8 unremarked — SCENE_CHECKS gains
+no_extra_characters. Suite: **424 tests** green.
+
+---
+
+# Cover typography system + library name avoidance — 2026-09-19
 
 Lewis flagged that cover titles looked "plonked on" (a flat serif block across the middle). Root cause
 found in the pipeline, not just the instruction: the Gemma prompt-preparer compressed the title clause

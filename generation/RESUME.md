@@ -1,4 +1,15 @@
-# Cover typography + name variety — 2026-09-19 (latest)
+# Golden pass 2 complete; judge hardened — 2026-09-19 (latest)
+
+book-20260919180221-17a699f801 ("The Night Lantern Market", 14 pages, 29 stages) completed under
+YOLO: 60 decisions, 57 judge / 3 human. Cover typography works in production (glowing hand-lettered
+title); fresh names (Mei, Ada, Truffle). Three parks produced three shipped fixes: reference-judge
+framing precedence (+ planner no-backdrop rule), scene-judge framing latitude, and a deterministic
+no-lettering sentence for interior pages (they had none). One adjudication gap closed after:
+SCENE_CHECKS gains no_extra_characters. Suite 424. All work pushed to main.
+
+---
+
+# Cover typography + name variety — 2026-09-19
 
 Covers: the title clause was being compressed away by the prompt rewrite, rendering pasted-on serif
 blocks. Proven fix via `.local/cover-lab/` (same scene, same seed, instruction variants): hand-lettered,

@@ -380,6 +380,13 @@ def image_inputs(state, current, intent):
         title_clause=' '+cover_title_instruction(title)
         if title_clause.strip() not in prompt:
             prompt+=title_clause
+    if current['kind']=='scene' and current.get('page') and intent.get('mode')!='edit' and base is None:
+        # Interior pages are unlettered, but a scene prompt set in a market or
+        # shop invites signage; forbid it deterministically (same pattern as
+        # the cover title clause and the moment memory clause).
+        no_text=' No readable text, letters, numbers or writing anywhere in the scene; any signs or labels stay blank or show only simple pictures.'
+        if no_text.strip() not in prompt:
+            prompt+=no_text
     if managed:
         if base is None or prompt!=base['prompt']:
             base=assisted_prompt_base.install(state,current['id'],prompt,context_hash,

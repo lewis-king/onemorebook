@@ -251,6 +251,18 @@ class YoloJudgeTests(unittest.TestCase):
             prompt2, _, _ = engine.image_inputs(store.read(state['id']), store.stage(store.read(state['id'])), intent2)
         self.assertEqual(prompt2.count('hand-lettered display typography'), 1)
 
+    def test_page_prompts_forbid_lettering_after_rewrite(self):
+        state = self.prepare()
+        while state['current_stage'] != 'pages/page-001.png':
+            state = self.approve(self.png(store.read(state['id'])))
+        intent = store.next_attempt(state)
+        intent.pop('prompt_base', None)
+        with patch.object(engine, 'draft_json', return_value={'prompt': 'A busy market scene.'}):
+            prompt, _, _ = engine.image_inputs(state, store.stage(state), intent)
+        self.assertIn('No readable text', prompt)
+        # The cover keeps its title rule instead.
+        self.assertNotIn('hand-lettered display typography', prompt)
+
     def test_moment_scene_judge_receives_the_photograph(self):
         case = moment_fixtures.MomentBookTests()
         uploads = [case.stage_upload(), case.stage_upload()]
