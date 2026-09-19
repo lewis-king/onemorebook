@@ -25,6 +25,7 @@ class YoloConfigTests(unittest.TestCase):
     def test_approval_mode_defaults_to_assisted_and_validates(self):
         self.assertEqual(store.config({})['approval_mode'], 'assisted')
         self.assertEqual(store.config({'approval_mode': 'yolo'})['approval_mode'], 'yolo')
+        self.assertEqual(store.config({})['style_review_model'], yolo.DEFAULT_STYLE_REVIEW_MODEL)
         with self.assertRaisesRegex(ValueError, 'assisted.*yolo'):
             store.config({'approval_mode': 'autopilot'})
 
@@ -153,6 +154,25 @@ class YoloJudgeTests(unittest.TestCase):
         self.assertEqual(stage['status'], 'approved')
         self.assertEqual(stage['selected'], chosen['id'])
         self.assertNotEqual(state['current_stage'], 'style.png')
+
+    def test_rejudging_never_overwrites_a_saved_report(self):
+        state = self.state()
+        with patch.object(quality, 'json_model', return_value=report(yolo.STORY_CHECKS)):
+            yolo.judge_session(state['id'])
+            yolo.judge_session(state['id'])
+        reports = list(engine.directory(state['id'], 'story', 1).glob('judge-report*.json'))
+        self.assertEqual(len(reports), 2)
+
+    def test_style_judge_uses_the_ranking_model_and_guards_photos(self):
+        state = self.style_pool(4)
+        verdict_report = {'best_image': 4, 'acceptable': True, 'uncertain': False,
+                          'evidence': 'Take four is empty.', 'issues': []}
+        with patch.object(quality, 'json_model', return_value=verdict_report) as call:
+            yolo.judge_session(state['id'])
+        self.assertEqual(call.call_args.args[1], yolo.DEFAULT_STYLE_REVIEW_MODEL)
+        prompt = call.call_args.args[2]
+        self.assertIn('photograph of a physical', prompt)
+        self.assertIn('check every corner', prompt.lower())
 
     def test_style_judge_retries_then_parks_after_two_rounds(self):
         state = self.style_pool(4)

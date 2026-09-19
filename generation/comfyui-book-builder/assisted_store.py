@@ -60,6 +60,7 @@ def stage_dir(session_id, stage_id):
 
 def config(values):
     from .planning import DEFAULT_WRITER_MODEL
+    from .assisted_yolo import DEFAULT_STYLE_REVIEW_MODEL
     from .story_craft import preferences, ART, DEFAULT_AGE
     from .story_craft_auto import ART_DIRECTION
     from .assisted_story import AUTO_MIN, AUTO_MAX, AUTO_TARGET
@@ -73,7 +74,8 @@ def config(values):
               'max_characters': int(values.get('max_characters', 3)),
               'seed': int(values.get('seed', int(datetime.datetime.now().timestamp() * 1000))),
               'ollama_url': 'http://127.0.0.1:11434', 'ollama_model': DEFAULT_WRITER_MODEL,
-              'review_model': 'gemma4:31b', 'prose_format': 'plain-v2', 'version': 'assisted-1',
+              'review_model': 'gemma4:31b', 'style_review_model': DEFAULT_STYLE_REVIEW_MODEL,
+              'prose_format': 'plain-v2', 'version': 'assisted-1',
               **craft}
     mode = str(values.get('mode', 'scratch'))
     if mode not in ('scratch', 'moment'):

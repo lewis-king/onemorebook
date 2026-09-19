@@ -15,9 +15,15 @@ from . import assisted_store as store
 from . import quality
 from .story import asset_seed, object_schema
 
-JUDGE_VERSION = 'yolo-1'
+JUDGE_VERSION = 'yolo-2'
 MAX_AUTO_RETRIES = 3        # judge-requested regenerations per stage
 MAX_STYLE_TAKE_POOL = 8     # two rounds of the four-take style loop, then park
+
+# Benchmarked on the real adjudication cases (.local/judge-bench): gemma4:31b
+# judges single-image stages without false rejects but misranks the four-image
+# style comparison; qwen3.5-27b ranks the takes correctly. So the style stage
+# gets the ranker, everything else keeps the steadier single-image judge.
+DEFAULT_STYLE_REVIEW_MODEL = 'hf.co/unsloth/Qwen3.5-27B-GGUF:Q6_K'
 
 TEXT = {'type': 'string', 'minLength': 1}
 
@@ -126,15 +132,19 @@ def judge_style(state, stage):
               + _context(state)
               + '\nStyle direction: ' + stage['brief']
               + '\n' + '\n'.join(f'IMAGE{i+1} is style take {c["attempt"]}.' for i, c in enumerate(pool))
-              + '\nPick the single best take (best_image) for young children: appealing, warm, '
+              + '\nEvery take must itself be a digital artwork: a photograph of a physical print, '
+                'card, object, room or pet is a failed take, however pretty the picture inside it. '
+                'Pick the single best take (best_image) for young children: appealing, warm, '
                 'technically clean, true to the direction, with no text, collage or watermark. '
-                'The take MUST be completely unoccupied: any person, animal or creature in a take '
-                'makes that take unacceptable, no matter how lovely — this picture anchors '
-                'technique only, and stray characters would leak into every page. acceptable is '
-                'true only if best_image is unoccupied AND good enough to anchor the whole book. '
-                'When no take is acceptable, say exactly what is missing in issues.')
+                'The take MUST be completely unoccupied: check every corner and edge — any person, '
+                'animal or creature in a take makes that take unacceptable, no matter how lovely — '
+                'this picture anchors technique only, and stray characters would leak into every '
+                'page. acceptable is true only if best_image is unoccupied AND good enough to '
+                'anchor the whole book. When no take is acceptable, say exactly what is missing '
+                'in issues.')
     report = _call(state, stage, pool[0], prompt, schema,
-                   [_candidate_bytes(state, c) for c in pool], 32768)
+                   [_candidate_bytes(state, c) for c in pool], 32768,
+                   model=config_style_model(state))
     chosen = pool[report['best_image'] - 1]
     if report.get('uncertain'):
         return _uncertain_verdict('The AI judge was unsure about the style takes — please choose one.')
@@ -215,16 +225,28 @@ def judge_scene(state, stage, candidate):
     return _verdict_from_report(report, SCENE_CHECKS, candidate['id'])
 
 
-def _call(state, stage, candidate, prompt, schema, images, num_ctx):
+def config_style_model(state):
+    return state['config'].get('style_review_model') or DEFAULT_STYLE_REVIEW_MODEL
+
+
+def _call(state, stage, candidate, prompt, schema, images, num_ctx, model=None):
     from .storage import write_json
     from . import assisted_engine as engine
     config = state['config']
+    model = model or config.get('review_model', quality.DEFAULT_REVIEW_MODEL)
     seed = asset_seed(config['seed'], 'judge:' + stage['id'] + ':' + str(candidate['attempt']))
     started = time.monotonic()
-    report = quality.json_model(config['ollama_url'], config.get('review_model', quality.DEFAULT_REVIEW_MODEL),
+    report = quality.json_model(config['ollama_url'], model,
                                 prompt, schema, images=images, seed=seed, num_ctx=num_ctx)
-    write_json(engine.directory(state['id'], stage['id'], candidate['attempt']) / 'judge-report.json',
-               {'judge_version': JUDGE_VERSION, 'model': config.get('review_model'),
+    directory = engine.directory(state['id'], stage['id'], candidate['attempt'])
+    # Never overwrite a saved report: a re-judge after a restart gets the next name.
+    report_path = directory / 'judge-report.json'
+    n = 1
+    while report_path.exists():
+        n += 1
+        report_path = directory / f'judge-report-{n}.json'
+    write_json(report_path,
+               {'judge_version': JUDGE_VERSION, 'model': model,
                 'stage_id': stage['id'], 'attempt': candidate['attempt'], 'prompt': prompt,
                 'image_count': len(images), 'seconds': round(time.monotonic() - started, 2),
                 'report': report})
