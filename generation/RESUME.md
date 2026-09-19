@@ -2,10 +2,11 @@
 
 book-20260919180221-17a699f801 ("The Night Lantern Market", 14 pages, 29 stages) completed under
 YOLO: 60 decisions, 57 judge / 3 human. Cover typography works in production (glowing hand-lettered
-title); fresh names (Mei, Ada, Truffle). Three parks produced three shipped fixes: reference-judge
-framing precedence (+ planner no-backdrop rule), scene-judge framing latitude, and a deterministic
-no-lettering sentence for interior pages (they had none). One adjudication gap closed after:
-SCENE_CHECKS gains no_extra_characters. Suite 424. All work pushed to main.
+title); fresh names (Mei, Ada, Truffle). Fixes shipped from its parks and from Lewis's page-1 catch:
+reference-judge framing precedence (+ planner no-backdrop rule), scene-judge framing latitude,
+deterministic no-lettering for interior pages, no_extra_characters with the page's planned cast
+stated explicitly (character-free pages get "EMPTY — pure scenery"), and the fixed page 1 (invented
+family removed via prompt_override) in export `exports/11e72650e4e7f1a0/`. Suite 424. Pushed to main.
 
 ---
 

@@ -212,6 +212,24 @@ class YoloJudgeTests(unittest.TestCase):
         self.assertIn('Illustration brief', captured['prompt'])
         self.assertIn('judge the design, not the angle', captured['prompt'])
         self.assertIn('not for framing choice alone', captured['prompt'])
+        self.assertIn('The planned cast for this page is exactly', captured['prompt'])
+        self.assertEqual(verdict['action'], 'approve')
+
+    def test_scene_judge_states_an_empty_cast_for_character_free_pages(self):
+        state = self.prepare()
+        while state['current_stage'] != 'pages/page-003.png':
+            state = self.approve(self.png(store.read(state['id'])))
+        state = self.png(state)
+        stage = store.stage(state)
+        self.assertEqual(stage['cast_refs'], [])
+        captured = {}
+        def fake(url, model, prompt, schema, **kwargs):
+            captured['prompt'] = prompt
+            captured.update(kwargs)
+            return report(yolo.SCENE_CHECKS)
+        with patch.object(quality, 'json_model', side_effect=fake):
+            verdict = yolo.judge_session(state['id'])
+        self.assertIn('The planned cast for this page is EMPTY', captured['prompt'])
         self.assertEqual(verdict['action'], 'approve')
 
     def test_cover_judge_checks_title_typography(self):

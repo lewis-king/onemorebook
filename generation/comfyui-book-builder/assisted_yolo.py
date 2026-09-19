@@ -212,6 +212,15 @@ def judge_scene(state, stage, candidate):
             'expressions SHOULD differ from a reference portrait — a face in profile is not a '
             'mismatch; judge the design, not the angle), ' if stage.get('cast_refs') else
             'characters_on_model (no character references supplied — mark true), ')
+    if stage.get('cast_refs'):
+        planned = ('The planned cast for this page is exactly: '
+                   + ', '.join(store.stage(state, n)['title'] for n in stage['cast_refs'])
+                   + '. Any other detailed person or animal with a face fails no_extra_characters '
+                     'unless the brief explicitly calls for a crowd. ')
+    else:
+        planned = ('The planned cast for this page is EMPTY — pure scenery. Any detailed person, '
+                   'face or animal in frame fails no_extra_characters; only tiny distant anonymous '
+                   'silhouettes are acceptable, and only when the brief describes a busy place. ')
     if stage.get('page') == 0:
         from . import assisted_engine as engine
         title = engine.package(state)['story']['metadata']['title']
@@ -236,7 +245,7 @@ def judge_scene(state, stage, candidate):
     prompt = ('Review a children\'s picture-book illustration. ' + ' '.join(parts)
               + '\nIllustration brief: ' + stage['brief']
               + ('\nPage text: "' + stage['text'] + '"' if stage.get('text') else '')
-              + '\n' + _context(state)
+              + '\n' + _context(state) + ' ' + planned
               + '\nCheck: scene_matches (the page\'s moment is delivered: right characters, right '
                 'action, key objects and setting. Camera framing words in the brief (close-up, low '
                 'angle, wide shot) should be followed, but a clear, well-composed alternative that '

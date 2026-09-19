@@ -5,15 +5,22 @@ Second golden pass on the full system: book-20260919180221-17a699f801 ("The Nigh
 (57 yolo, 3 human). The new cover typography system worked first try in production: glowing
 lantern-light hand-lettering in the night sky, approved by the YOLO cover judge's new
 title_correct/title_integrated checks. The name avoid-list produced a fresh cast (Mei, Ada, Truffle).
-Three parks, each a real system finding: (1) prop briefs mixing a plain-backdrop framing rule with
-scenery words looped the judge both ways — judge now treats the first sentence as the binding
+Four parks/incidents, each a real system finding: (1) prop briefs mixing a plain-backdrop framing rule
+with scenery words looped the judge both ways — judge now treats the first sentence as the binding
 framing rule and the planner must not put backdrops in prop appearances; (2) scene judge failed
 pages on camera framing alone — framing is now should-follow, only missing/wrong action fails;
 (3) interior pages had NO no-lettering rule anywhere in the assisted path, so market signage kept
-rendering — interior scene prompts now get a deterministic no-text sentence (same pattern as the
-cover/memory clauses), and page 8 then passed. Post-completion adjudication found one more judge
-gap: an extra off-model dog slipped into approved page 8 unremarked — SCENE_CHECKS gains
-no_extra_characters. Suite: **424 tests** green.
+rendering — interior scene prompts now get a deterministic no-text sentence, and page 8 then passed;
+(4) Lewis caught page 1 full of invented foreground people: it is a character-free establishing scene
+(charactersPresent []), so the render got no cast images, FLUX invented the family (every attempt),
+and the judge passed them because it saw the story idea naming them but had no notion of the page's
+EMPTY planned cast. The scene judge now states the planned cast explicitly ("exactly: X, Y" or
+"EMPTY — pure scenery; any detailed face fails no_extra_characters"), and SCENE_CHECKS gained
+no_extra_characters after adjudication caught a stray off-model dog on page 8. Page 1 was fixed with
+a full prompt_override (the preparer kept re-inserting the protagonists from the story idea) and the
+revised judge approved the clean establishing shot; export `exports/11e72650e4e7f1a0/`. Also learned:
+negative feedback ("no girl, no dog") anchors the model on the negated subjects — phrase emptiness
+positively. Suite: **424 tests** green.
 
 ---
 
