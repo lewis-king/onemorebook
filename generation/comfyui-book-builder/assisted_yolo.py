@@ -175,6 +175,10 @@ def judge_reference(state, stage, candidate):
     prompt = ('Review IMAGE1 as a reusable reference image for a children\'s picture book. '
               + ' '.join(labels)
               + '\nIt should depict: ' + stage['brief']
+              + '\nThe brief\'s first sentence is the FRAMING rule (single subject, plain backdrop) '
+                'and always wins for the backdrop: scenery words inside the appearance description '
+                '(grass, floor, a table) are story context for the subject, never a backdrop to draw. '
+                'Judge the subject against the appearance and the backdrop against the framing.'
               + '\n' + _context(state)
               + '\nCheck: design_matches (the subject matches its described appearance), '
                 'style_matches (same paint/line technique, palette and lighting treatment as the '
@@ -233,8 +237,11 @@ def judge_scene(state, stage, candidate):
               + '\nIllustration brief: ' + stage['brief']
               + ('\nPage text: "' + stage['text'] + '"' if stage.get('text') else '')
               + '\n' + _context(state)
-              + '\nCheck: scene_matches (the action and composition deliver the brief'
-              + (' and page text' if stage.get('text') else '') + '), '
+              + '\nCheck: scene_matches (the page\'s moment is delivered: right characters, right '
+                'action, key objects and setting. Camera framing words in the brief (close-up, low '
+                'angle, wide shot) should be followed, but a clear, well-composed alternative that '
+                'still delivers the moment is acceptable — fail for missing or wrong action, not '
+                'for framing choice alone), '
               + fidelity + cast
               + 'style_matches (storybook illustration, not a photograph), anatomy_sound (no extra '
                 'limbs, fused hands or distorted faces), no_unwanted_text (no rendered words or '

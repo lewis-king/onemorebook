@@ -56,6 +56,8 @@ object; a prop_state depicts an assembly or changed object as one unit. If a cha
 physical state changes, add a character_state reference with source_character set to its canonical ID
 and appearance describing the complete current design. Other kinds may omit source_character.
 Use unique IDs distinct from canonical character IDs. Avoid decorative reference proliferation.
+A prop or location appearance describes the subject itself, never its backdrop: no grass, floor,
+table, sky or scenery in the description — the reference stage adds its own plain backdrop.
 scenes: page 0 is the cover, followed by every numbered page in order. Each moment is a concise
 positive visual description of ONE instant that directly illustrates the page's prose. Preserve
 the named actor, action, target and essential outcome. Use Name (species and distinguishing clothing)

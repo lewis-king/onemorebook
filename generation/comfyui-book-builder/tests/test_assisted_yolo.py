@@ -211,6 +211,7 @@ class YoloJudgeTests(unittest.TestCase):
         self.assertEqual(len(captured['images']), 1 + len(stage['cast_refs']))
         self.assertIn('Illustration brief', captured['prompt'])
         self.assertIn('judge the design, not the angle', captured['prompt'])
+        self.assertIn('not for framing choice alone', captured['prompt'])
         self.assertEqual(verdict['action'], 'approve')
 
     def test_cover_judge_checks_title_typography(self):
@@ -281,11 +282,13 @@ class YoloJudgeTests(unittest.TestCase):
         self.assertEqual(stage['kind'], 'character')
         captured = {}
         def fake(url, model, prompt, schema, **kwargs):
+            captured['prompt'] = prompt
             captured.update(kwargs)
             return report(yolo.REFERENCE_CHECKS)
         with patch.object(quality, 'json_model', side_effect=fake):
             verdict = yolo.judge_session(state['id'])
         self.assertEqual(len(captured['images']), 2)
+        self.assertIn('FRAMING rule', captured['prompt'])
         self.assertEqual(verdict['action'], 'approve')
 
 
