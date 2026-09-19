@@ -1,4 +1,18 @@
-# YOLO review mode live — 2026-09-19 (latest)
+# Cover typography + name variety — 2026-09-19 (latest)
+
+Covers: the title clause was being compressed away by the prompt rewrite, rendering pasted-on serif
+blocks. Proven fix via `.local/cover-lab/` (same scene, same seed, instruction variants): hand-lettered,
+hierarchical, sky-set lettering works every time. `cover_title_instruction` carries the proven wording;
+the planner names a per-book lettering style; the preparer keeps typography verbatim; the engine
+re-appends the clause after rewrites; the YOLO cover judge checks title correctness/integration;
+book.html no longer duplicates the title under the cover. Names: the writer now gets the library's
+used character names as a do-not-reuse list (Pip ×6, Barnaby ×5 measured). Suite 423. A 14-page,
+4-character YOLO golden pass (book-20260919180221-17a699f801, night lantern market) is running to
+prove scale.
+
+---
+
+# YOLO review mode live — 2026-09-19
 
 The creator start form offers **Assisted** (unchanged default: human approves every step) and **YOLO**: a local AI judge reviews each landed candidate — story/plan text, style-take ranking, reference cleanliness, and page checks against brief, cast references and moment photographs — then approves, regenerates with its corrections (max 3 per stage), or parks for a human when uncertain or exhausted. Two models share judging by benchmark result (`.local/judge-bench/`): gemma4:31b (`review_model`) for story/plan/reference/page stages, Qwen3.5-27B-GGUF (`style_review_model`) for the four-take style ranking — each was the strongest at its job; qwen3-vl:32b was tried and rejected (over-strict, 6/9). Automated decisions are recorded `source: 'yolo'`; numbered `judge-report` JSONs sit in each judged attempt; exports stamp `approval_mode`. Mid-book switch via the sidebar button / `set_approval_mode`; human surgery after completion re-judges and version-exports normally. Proven e2e unattended: book-20260919123550-4f152ddd03 completed 17 stages in ~35 min; Kimi adjudication of every stage found one prompt-level slip (style take occupancy), fixed and re-verified wired. Suite: 419 tests.
 

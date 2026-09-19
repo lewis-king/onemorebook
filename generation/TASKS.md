@@ -1,4 +1,24 @@
-# Golden-pass YOLO book + judge angle fix — 2026-09-19 (latest)
+# Cover typography system + library name avoidance — 2026-09-19 (latest)
+
+Lewis flagged that cover titles looked "plonked on" (a flat serif block across the middle). Root cause
+found in the pipeline, not just the instruction: the Gemma prompt-preparer compressed the title clause
+away when rewriting cover prompts. Fixed as a system, proven empirically in `.local/cover-lab/` (the
+real Hazel cover scene, same seed, three instruction variants): the old "display font in negative
+space" wording renders a pasted-on block; "hand-lettered display typography that belongs to the
+artwork… playful size hierarchy… set into the open sky… never a plain flat block" renders genuine
+picture-cover lettering on every seed (4/4). gemma4's typography rubric agrees: old clause fails
+`title_integrated`, new clause passes all. Wire-in: `story.cover_title_instruction` carries the proven
+wording; the planner now names a per-book lettering style (the 2026-09-10 workflow did this — "bubbly,
+sparkly gold letters"); the preparer must keep typography instructions verbatim on covers; the engine
+re-appends the canonical clause after any rewrite (pinned bases stay verbatim; new bases carry it);
+the YOLO cover judge checks `title_correct`/`title_integrated`; book.html drops the duplicate visible
+`<h1>` under the cover (alt text keeps the title). Name repetition measured across the library (Pip ×6,
+Barnaby ×5, Leo ×4): the story writer now receives the library's used character names as a
+do-not-reuse list (`assisted_store.library_character_names`) plus a stock-name guard. Suite: 423.
+
+---
+
+# Golden-pass YOLO book + judge angle fix — 2026-09-19
 
 First full book on the final judge combination: book-20260919141312-bfce86fed2 ("Hazel and the Red
 Balloon", 6 pages, 20 stages) ran to `complete` with 44 decisions (42 yolo, 2 human). Three events, all
