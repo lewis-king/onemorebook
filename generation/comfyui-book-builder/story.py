@@ -439,12 +439,20 @@ def scene_prompt(project, scene):
 
 
 def cover_title_instruction(title):
-    """Give the image model one exact, positive instruction for cover typography."""
+    """Give the image model one exact, positive instruction for cover typography.
+
+    Wording proven in the cover lab (.local/cover-lab): hand-lettered, hierarchical,
+    sky-set lettering reliably produces real book-cover typography; asking for a
+    'display font in negative space' produces a pasted-on serif block.
+    """
     quoted = json.dumps(title, ensure_ascii=False)
-    return (f'The cover includes the exact title {quoted} as readable lettering. Choose a display '
-            'font and placement that fit the story mood and artwork; keep it legible at thumbnail '
-            'size in clear negative space, away from faces and the focal action. Include only this '
-            'title as text.')
+    return (f'The cover must include the exact title {quoted} as hand-lettered display typography '
+            'that belongs to the artwork: lettered by hand in the illustration\'s own medium, with '
+            'a playful size hierarchy on the key word, set into the open sky with generous clear '
+            'space around every word, free to follow a soft curve or drift with the composition '
+            'rather than sitting dead-centre, never a plain flat block pasted across the middle, '
+            'never floating over the main character. Crisp, correctly spelled, legible at thumbnail '
+            'size, in colours that harmonise with the palette. Include only this title as text.')
 
 
 def uses_cast_guide(project, scene):

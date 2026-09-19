@@ -65,9 +65,9 @@ class AssistedCreatorTests(unittest.TestCase):
         state=self.prepare()
         cover=store.stage(state,'cover.png')
         self.assertIn('"The Borrowed Moonlight"',cover['brief'])
-        self.assertIn('readable lettering',cover['brief'])
-        self.assertIn('display font',cover['brief'])
-        self.assertIn('clear negative space',cover['brief'])
+        self.assertIn('hand-lettered display typography',cover['brief'])
+        self.assertIn('never a plain flat block',cover['brief'])
+        self.assertIn('legible at thumbnail',cover['brief'])
 
     def test_migrated_output_alias_preserves_references_and_comfy_preview(self):
         target=self.output/'generation/output/books';target.mkdir(parents=True)
@@ -285,7 +285,9 @@ class AssistedCreatorTests(unittest.TestCase):
         self.assertEqual([n['stage'] for n in notes],current['references'])
         self.assertEqual(notes[0]['design_brief'],'A blue coat with one badge on the left sleeve.')
         self.assertNotIn('characters/fern.png',[n['stage'] for n in notes])
-        self.assertEqual(prompt,'A corrected scene.')
+        # The cover's title clause is re-appended deterministically after any rewrite.
+        self.assertTrue(prompt.startswith('A corrected scene.'))
+        self.assertIn('hand-lettered display typography',prompt)
         self.assertEqual(state,before)
 
     def test_edit_rewrite_does_not_turn_design_notes_into_additional_image_inputs(self):
@@ -405,6 +407,29 @@ class AssistedAPITests(AssistedCreatorTests,unittest.IsolatedAsyncioTestCase):
         saved=store.read(sid)
         self.assertEqual(saved['status'],'complete')
         self.assertEqual(saved['publication']['status'],'complete')
+
+    def test_plan_request_asks_for_cover_lettering_style(self):
+        state=self.approve(self.state())
+        prompt,_=planning.request(engine.package(state),state['config'])
+        self.assertIn('lettering style',prompt)
+        self.assertIn('bubbly',prompt)
+
+    def test_story_prompt_avoids_names_already_in_the_library(self):
+        value=fixtures.package_fixture()
+        for c,h in zip(value['production']['characters'],[100,50,65]):c['height_cm']=h
+        first=self.approve(self.state())  # approved story with the fixture cast
+        second=store.create({'page_count':3,'max_characters':3,'seed':4242})
+        intent=store.next_attempt(second)
+        with patch.object(engine,'draft_json',return_value=value):
+            engine.text_step(store.read(second['id']),intent)
+        saved=store.read(second['id'])
+        prompt=engine.selected(saved,'story')['metadata']['prompt']
+        for taken in ('Mira','Pip','Fern'):
+            self.assertIn(taken,prompt)
+        self.assertIn('Never reuse those names',prompt)
+        self.assertIn('Barnaby',prompt)
+        self.assertIn('Mira',store.library_character_names('other-book'))
+        self.assertNotIn('Mira',store.library_character_names(first['id']))
 
 
 if __name__=='__main__':unittest.main()

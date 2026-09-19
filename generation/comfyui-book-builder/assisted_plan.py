@@ -63,8 +63,10 @@ when first naming each actor. One instance of each required character; identify 
 Preserve recurring object designs and where a trapped object remains until freed.
 Do not illustrate multiple sequential events at once or turn metaphors into extra objects.
 Use natural prose, approximately 50–100 words per scene, not JSON/image-model instructions,
-negative lists, measurements, labels or quoted story dialogue. The cover moment may describe the
-title's visual treatment, but the exact title instruction is added by the renderer.
+negative lists, measurements, labels or quoted story dialogue. The cover moment SHOULD name a
+lettering style for the title that suits the story's mood — "bubbly, sparkly gold letters" for a
+princess tale, "bold crayon letters" for a playful romp — placed where the artwork leaves clear
+space. The renderer adds the exact title text and the typography rules.
 character_refs lists only visible canonical character IDs, substituting a character_state ID when
 that change is active. It must match the approved page's charactersPresent exactly.
 asset_refs lists relevant prop/location IDs, with at most ONE location. FLUX.2.dev has a budget of

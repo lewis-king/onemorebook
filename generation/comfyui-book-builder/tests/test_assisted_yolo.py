@@ -196,7 +196,7 @@ class YoloJudgeTests(unittest.TestCase):
 
     def test_scene_judge_receives_candidate_and_cast_references(self):
         state = self.prepare()
-        while state['current_stage'] != 'cover.png':
+        while state['current_stage'] != 'pages/page-001.png':
             state = self.approve(self.png(store.read(state['id'])))
         state = self.png(state)
         stage = store.stage(state)
@@ -212,6 +212,43 @@ class YoloJudgeTests(unittest.TestCase):
         self.assertIn('Illustration brief', captured['prompt'])
         self.assertIn('judge the design, not the angle', captured['prompt'])
         self.assertEqual(verdict['action'], 'approve')
+
+    def test_cover_judge_checks_title_typography(self):
+        state = self.prepare()
+        while state['current_stage'] != 'cover.png':
+            state = self.approve(self.png(store.read(state['id'])))
+        state = self.png(state)
+        stage = store.stage(state)
+        self.assertEqual(stage['kind'], 'scene')
+        captured = {}
+        def fake(url, model, prompt, schema, **kwargs):
+            captured['prompt'] = prompt
+            captured.update(kwargs)
+            return report(yolo.COVER_CHECKS)
+        with patch.object(quality, 'json_model', side_effect=fake):
+            verdict = yolo.judge_session(state['id'])
+        self.assertEqual(len(captured['images']), 1 + len(stage['cast_refs']))
+        self.assertIn('title_correct', captured['prompt'])
+        self.assertIn('pasted', captured['prompt'])
+        self.assertEqual(verdict['action'], 'approve')
+
+    def test_cover_prompt_reappends_title_clause_after_rewrite(self):
+        state = self.prepare()
+        while state['current_stage'] != 'cover.png':
+            state = self.approve(self.png(store.read(state['id'])))
+        intent = store.next_attempt(state)
+        intent.pop('prompt_base', None)  # force the rewrite path
+        with patch.object(engine, 'draft_json', return_value={'prompt': 'A hedgehog cover scene.'}):
+            prompt, _, _ = engine.image_inputs(state, store.stage(state), intent)
+        self.assertIn('hand-lettered display typography', prompt)
+        self.assertIn('"The Borrowed Moonlight"', prompt)
+        from book_test_pack.story import cover_title_instruction
+        clause = cover_title_instruction('The Borrowed Moonlight')
+        intent2 = store.next_attempt(store.read(state['id']))
+        intent2.pop('prompt_base', None)
+        with patch.object(engine, 'draft_json', return_value={'prompt': 'Lovely cover. ' + clause}):
+            prompt2, _, _ = engine.image_inputs(store.read(state['id']), store.stage(store.read(state['id'])), intent2)
+        self.assertEqual(prompt2.count('hand-lettered display typography'), 1)
 
     def test_moment_scene_judge_receives_the_photograph(self):
         case = moment_fixtures.MomentBookTests()

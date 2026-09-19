@@ -38,6 +38,10 @@ def revision_request(current, intent, prompt, references, stages, *, preparing=F
         task += (', '.join(photo_inputs) + (' is' if len(photo_inputs) == 1 else ' are') +
                  ' the reader\'s real photograph for this page: recreate it faithfully — same people, '
                  'poses, key objects and setting — in this storybook style, never as a photograph. ')
+    if current.get('page') == 0:
+        task += ('This is the cover. Keep the cover-typography instruction from the original prompt '
+                 'verbatim at the end of the rewritten prompt — never compress or paraphrase the '
+                 'title lettering requirements. ')
     # These are design notes, not additional images. In an edit, only the selected
     # illustration is supplied. Never claim that approved portraits are Image 2+.
     notes = [{'stage': sid, 'kind': stages[sid]['kind'], 'name': stages[sid]['title'],

@@ -154,6 +154,36 @@ def expect_revision(state, revision):
         raise Conflict('This book changed in another tab. Refresh before deciding.')
 
 
+def library_character_names(exclude_id, limit=40):
+    """Character names already used by this library's approved stories.
+
+    The writer gets these as a do-not-reuse list so new books stop recycling
+    the same stock names. Best-effort: unreadable books are skipped.
+    """
+    names = []
+    for path in sorted(books_root().glob('book-*/creator.json')):
+        if path.parent.name == exclude_id:
+            continue
+        try:
+            state = json.loads(path.read_text())
+            story_stage = next((s for s in state.get('stages', []) if s['id'] == 'story'), None)
+            if not story_stage or story_stage.get('status') != 'approved':
+                continue
+            candidate = next((c for c in story_stage['candidates'] if c['id'] == story_stage.get('selected')), None)
+            if not candidate:
+                continue
+            document = json.loads((path.parent / candidate['path']).read_text())
+            for character in document.get('production', {}).get('characters', []):
+                name = character.get('name') if isinstance(character, dict) else None
+                if isinstance(name, str) and name.strip() and name.strip() not in names:
+                    names.append(name.strip())
+        except (OSError, ValueError, AttributeError):
+            continue
+        if len(names) >= limit:
+            break
+    return names[:limit]
+
+
 def next_attempt(state, feedback='', *, mode='fresh', source_candidate=None, prompt_override=''):
     current = stage(state)
     if current['status'] == 'approved' or state['status'] == 'complete':

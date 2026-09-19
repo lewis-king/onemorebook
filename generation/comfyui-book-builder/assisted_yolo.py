@@ -29,6 +29,8 @@ TEXT = {'type': 'string', 'minLength': 1}
 
 SCENE_CHECKS = ('scene_matches', 'photo_fidelity', 'characters_on_model',
                 'style_matches', 'anatomy_sound', 'no_unwanted_text', 'age_safe')
+COVER_CHECKS = ('scene_matches', 'characters_on_model', 'style_matches', 'anatomy_sound',
+                'title_correct', 'title_integrated', 'age_safe')
 REFERENCE_CHECKS = ('design_matches', 'style_matches', 'clean_reference', 'no_unwanted_text')
 STORY_CHECKS = ('age_appropriate', 'coherent_arc', 'read_aloud', 'matches_request', 'engaging')
 PLAN_CHECKS = ('covers_story', 'reusable_references', 'continuity_sound', 'matches_request')
@@ -206,9 +208,26 @@ def judge_scene(state, stage, candidate):
             'expressions SHOULD differ from a reference portrait — a face in profile is not a '
             'mismatch; judge the design, not the angle), ' if stage.get('cast_refs') else
             'characters_on_model (no character references supplied — mark true), ')
-    title_note = (' The page text below is empty because this is the cover: the requested book title '
-                  'IS expected as lettering, and only other text fails no_unwanted_text.'
-                  if stage.get('page') == 0 else '')
+    if stage.get('page') == 0:
+        from . import assisted_engine as engine
+        title = engine.package(state)['story']['metadata']['title']
+        schema = quality.review_schema(COVER_CHECKS)
+        prompt = ('Review a children\'s picture-book COVER. ' + ' '.join(parts)
+                  + '\nCover brief: ' + stage['brief']
+                  + '\n' + _context(state)
+                  + '\nCheck: scene_matches (the composition delivers the cover brief), '
+                  + cast
+                  + 'style_matches (storybook illustration, not a photograph), anatomy_sound, '
+                    f'title_correct (the exact title "{title}" appears, every word present and '
+                    'correctly spelled, and no other letters or words anywhere), title_integrated '
+                    '(the lettering feels like part of the artwork — hand-lettered in the '
+                    'illustration\'s own medium with clear space around it — NOT a plain flat '
+                    'block pasted across the middle, never covering the main character\'s face, '
+                    'legible at thumbnail size), age_safe.'
+                  + '\nJudge what is actually visible. List concrete issues only when something '
+                    'should change, phrased as corrections for the artist.')
+        report = _call(state, stage, candidate, prompt, schema, images, 32768)
+        return _verdict_from_report(report, COVER_CHECKS, candidate['id'])
     schema = quality.review_schema(SCENE_CHECKS)
     prompt = ('Review a children\'s picture-book illustration. ' + ' '.join(parts)
               + '\nIllustration brief: ' + stage['brief']
@@ -220,7 +239,6 @@ def judge_scene(state, stage, candidate):
               + 'style_matches (storybook illustration, not a photograph), anatomy_sound (no extra '
                 'limbs, fused hands or distorted faces), no_unwanted_text (no rendered words or '
                 'letters), age_safe (nothing scary or inappropriate for young children).'
-              + title_note
               + '\nJudge what is actually visible; do not invent hidden details. List concrete '
                 'issues only when something should change, phrased as corrections for the artist.')
     report = _call(state, stage, candidate, prompt, schema, images, 32768)

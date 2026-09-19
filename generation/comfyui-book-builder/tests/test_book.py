@@ -112,9 +112,9 @@ class BookTests(unittest.TestCase):
         cover = next(s for s in specs if s['name'] == 'cover.png')
         page = next(s for s in specs if s['name'] == 'pages/page-001.png')
         self.assertIn('"The Borrowed Moonlight"', cover['prompt'])
-        self.assertIn('readable lettering', cover['prompt'])
-        self.assertIn('display font', cover['prompt'])
-        self.assertIn('clear negative space', cover['prompt'])
+        self.assertIn('hand-lettered display typography', cover['prompt'])
+        self.assertIn('never a plain flat block', cover['prompt'])
+        self.assertIn('legible at thumbnail', cover['prompt'])
         self.assertIn('No text, captions', page['prompt'])
         self.assertNotIn('The Borrowed Moonlight', page['prompt'])
 

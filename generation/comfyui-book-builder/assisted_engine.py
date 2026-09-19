@@ -141,6 +141,13 @@ def text_step(state, intent):
                        + state['config']['art_inspiration']
                        + '. Let it colour the visual style and world details, interpreted cutely and '
                          'age-appropriately for young children — colourful and gentle, never scary or dark.')
+        taken = store.library_character_names(sid)
+        if taken:
+            prompt += ('\nThis reader\'s library already has characters named: ' + ', '.join(taken)
+                       + '. Never reuse those names, and avoid the stock names story models reach for '
+                         '(Barnaby, Pip, Milo, Bramble, Leo, Arthur). Invent fresh, distinctive names '
+                         'that suit each character\'s species, personality and world — an unexpected '
+                         'real name, a playful word-name or an invented one are all welcome.')
     else:
         prompt, schema = assisted_plan.request(package(state), state['config'])
     if intent['feedback']:
@@ -362,6 +369,17 @@ def image_inputs(state, current, intent):
                        'style, never as a photograph.')
         if memory_clause not in prompt:
             prompt+=memory_clause
+    if current['id']=='cover.png' and intent.get('mode')!='edit' and base is None:
+        # The cover title clause is load-bearing art direction; a rewritten or
+        # overridden prompt may compress it into "legible display font", which
+        # renders as a pasted-on serif block. Re-append it deterministically so
+        # every newly installed base carries it. A pinned base is trusted
+        # verbatim: bases installed after this change already carry the clause.
+        from .story import cover_title_instruction
+        title=package(state)['story']['metadata']['title']
+        title_clause=' '+cover_title_instruction(title)
+        if title_clause.strip() not in prompt:
+            prompt+=title_clause
     if managed:
         if base is None or prompt!=base['prompt']:
             base=assisted_prompt_base.install(state,current['id'],prompt,context_hash,
@@ -486,7 +504,7 @@ def export_session(state):
     write_json(target/'illustration-plan.json',effective_plan(state))
     if state.get('reference_updates'):
         write_json(target/'reference-updates.json',state['reference_updates'])
-    sections=[f'<section><img src="cover.png" alt="Cover"><h1>{html.escape(title)}</h1></section>']
+    sections=[f'<section><img src="cover.png" alt="Cover — {html.escape(title)}"></section>']
     for page in story['pages']:
         n=page['pageNumber'];text=html.escape(page['text']).replace('\n','<br>')
         sections.append(f'<section><img src="pages/page-{n:03d}.png" alt="Page {n}"><p>{text}</p><footer>{n}</footer></section>')
