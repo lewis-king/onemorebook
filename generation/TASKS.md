@@ -1,4 +1,22 @@
-# YOLO mode: AI-judged end-to-end books — 2026-09-19 (latest)
+# Golden-pass YOLO book + judge angle fix — 2026-09-19 (latest)
+
+First full book on the final judge combination: book-20260919141312-bfce86fed2 ("Hazel and the Red
+Balloon", 6 pages, 20 stages) ran to `complete` with 44 decisions (42 yolo, 2 human). Three events, all
+handled by design: (1) page 2 parked after four identical `characters_on_model` rejects — adjudication
+found the judge was angle-blind (failing a profile-view hedgehog against the front-view portrait); the
+scene judge now judges identity by design with explicit pose/angle latitude, verified by re-judging the
+parked candidate to an approve, and page 2 then passed on its next render. (2) Page 4 parked after the
+judge correctly insisted on the brief's dramatic low angle and pointing branch which the renderer never
+delivered — the fail-closed park worked; the human (this session, playing the parked-for reviewer)
+approved attempt 4 with a recorded override note. (3) Page 6's prompt-writer timed out twice because the
+pinned test suite was run concurrently and starved the GPU — operational collision, not a product bug;
+resume → regenerate recovered. Style ranking ran on Qwen3.5-27B and picked a clean unoccupied take.
+Final art adjudicated page by page: on-model cast, consistent style, correct title lettering, and page
+6's three judge rounds visibly shaped the exact requested close-up. Suite: **419 tests** green.
+
+---
+
+# YOLO mode: AI-judged end-to-end books — 2026-09-19
 
 The start form now asks **Assisted or YOLO**. YOLO (`config.approval_mode == 'yolo'`, the explicit per-book acceptance for automated approval) hands every landed candidate to a local AI judge — `assisted_yolo.py` via the existing `quality.json_model` image+schema plumbing, run off the event loop from `assisted_web.maybe_yolo` at the same two points style-take chaining hooks in. The judge checks story/plan drafts (contract failures short-circuit back to the writer without a model call), ranks the four style takes, checks references for design/style/cleanliness, and checks pages against brief, page text, cast references and — for moment books — the original photograph. Approvals go through the unchanged `engine.advance`; rejections regenerate with the judge's issues as feedback; three failed retries, any `uncertain`, or any judge error parks the stage for a human (`auto_parked` until a human acts). `set_approval_mode` switches modes mid-book; human surgery after completion (reopen/regenerate) re-judges and re-exports a versioned export. Decisions record `source: 'yolo'`, each judged attempt saves a numbered `judge-report` JSON (re-judges never overwrite), and the export manifest stamps `approval_mode`.
 

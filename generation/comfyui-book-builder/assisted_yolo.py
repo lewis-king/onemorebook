@@ -201,8 +201,10 @@ def judge_scene(state, stage, candidate):
                 'added flourishes fail only when they contradict the photo), '
                 if photo else
                 'photo_fidelity (no photograph for this page — mark true), ')
-    cast = ('characters_on_model (the people match the approved character references in clothing, '
-            'colours and features), ' if stage.get('cast_refs') else
+    cast = ('characters_on_model (the characters match their approved references in identity: '
+            'clothing, colours, markings and distinctive features. Poses, camera angles and '
+            'expressions SHOULD differ from a reference portrait — a face in profile is not a '
+            'mismatch; judge the design, not the angle), ' if stage.get('cast_refs') else
             'characters_on_model (no character references supplied — mark true), ')
     title_note = (' The page text below is empty because this is the cover: the requested book title '
                   'IS expected as lettering, and only other text fails no_unwanted_text.'

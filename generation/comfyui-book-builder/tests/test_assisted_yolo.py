@@ -210,6 +210,7 @@ class YoloJudgeTests(unittest.TestCase):
             verdict = yolo.judge_session(state['id'])
         self.assertEqual(len(captured['images']), 1 + len(stage['cast_refs']))
         self.assertIn('Illustration brief', captured['prompt'])
+        self.assertIn('judge the design, not the angle', captured['prompt'])
         self.assertEqual(verdict['action'], 'approve')
 
     def test_moment_scene_judge_receives_the_photograph(self):
