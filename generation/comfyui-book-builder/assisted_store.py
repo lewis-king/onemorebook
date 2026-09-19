@@ -78,6 +78,12 @@ def config(values):
     mode = str(values.get('mode', 'scratch'))
     if mode not in ('scratch', 'moment'):
         raise ValueError("Choose 'scratch' or 'moment'.")
+    approval = str(values.get('approval_mode', 'assisted'))
+    if approval not in ('assisted', 'yolo'):
+        raise ValueError("Choose 'assisted' or 'yolo' review.")
+    # YOLO is the explicit, recorded acceptance that the AI judge may approve
+    # candidates for this book; every such decision is stamped source 'yolo'.
+    result['approval_mode'] = approval
     if mode == 'moment':
         result['mode'] = 'moment'
         result['moment'] = assisted_moment.validate_submission(values)
@@ -205,10 +211,12 @@ def record_candidate(session_id, stage_id, attempt, path, metadata=None):
         return state
 
 
-def decision(state, candidate, action, feedback):
+def decision(state, candidate, action, feedback, source='human'):
+    if source not in ('human', 'yolo'):
+        raise ValueError('Unknown decision source.')
     record = {'id': uuid.uuid4().hex, 'at': now(), 'session_id': state['id'],
               'stage_id': state['current_stage'], 'candidate_id': candidate['id'],
               'candidate_sha256': candidate['sha256'], 'action': action,
-              'feedback': feedback, 'source': 'human', 'revision': state['revision']}
+              'feedback': feedback, 'source': source, 'revision': state['revision']}
     write_json(root(state['id']) / 'creator' / 'decisions' / (record['id'] + '.json'), record)
     return record

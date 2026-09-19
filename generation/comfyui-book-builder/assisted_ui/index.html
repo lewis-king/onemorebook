@@ -16,6 +16,10 @@
         <label class="mode-choice"><input type="radio" name="mode" value="scratch" checked><span><strong>From an idea</strong><small>Start with anything you can imagine, or leave it blank for a surprise.</small></span></label>
         <label class="mode-choice"><input type="radio" name="mode" value="moment"><span><strong>From a moment</strong><small>Turn a real day — a birthday, a holiday, a small adventure — into a storybook souvenir.</small></span></label>
       </div>
+      <div class="mode-toggle" role="radiogroup" aria-label="Who reviews each step?">
+        <label class="mode-choice"><input type="radio" name="approval_mode" value="assisted" checked><span><strong>Assisted</strong><small>You approve every step before the next begins — the best results.</small></span></label>
+        <label class="mode-choice"><input type="radio" name="approval_mode" value="yolo"><span><strong>YOLO</strong><small>The AI judge reviews and approves each step, building the whole book itself. You can still fix or redo anything afterwards.</small></span></label>
+      </div>
       <div id="idea-fields">
         <label for="idea">What shall our story be about? <span class="optional">optional</span></label>
         <textarea id="idea" name="story_idea" rows="4" maxlength="5000" aria-describedby="idea-help" placeholder="A tiny dragon who loves rainy days… or anything you can imagine."></textarea>
@@ -42,7 +46,7 @@
     </form><aside class="recent"><p class="eyebrow">YOUR BOOKS</p><div id="sessions">Loading saved books…</div><p class="helper">Progress, prompts, attempts and feedback are saved as you go. Reopen this page after a shutdown to continue.</p></aside></div>
   </main>
   <main id="studio" hidden>
-    <aside class="rail"><a href="/book-builder/create" class="back">← All books</a><h2 id="book-title">Your new book</h2><p id="overall" class="helper"></p><nav id="stages" aria-label="Book stages"></nav><a id="finished-link" class="primary" hidden target="_blank" rel="noopener">Read your book ↗</a><button id="publish-book" class="primary" hidden>Publish to library ↗</button><a id="published-link" class="primary" hidden target="_blank" rel="noopener">Open published book ↗</a><p id="publish-status" class="helper small" hidden></p></aside>
+    <aside class="rail"><a href="/book-builder/create" class="back">← All books</a><h2 id="book-title">Your new book</h2><p id="overall" class="helper"></p><nav id="stages" aria-label="Book stages"></nav><a id="finished-link" class="primary" hidden target="_blank" rel="noopener">Read your book ↗</a><button id="publish-book" class="primary" hidden>Publish to library ↗</button><a id="published-link" class="primary" hidden target="_blank" rel="noopener">Open published book ↗</a><p id="publish-status" class="helper small" hidden></p><button id="toggle-auto" class="text-button" hidden></button></aside>
     <section class="workspace"><div class="stage-heading"><div><p id="kind" class="eyebrow"></p><h1 id="stage-title"></h1></div><div id="status" role="status" aria-live="polite"></div></div>
       <div id="work-status" class="work-status" hidden><span class="spinner" aria-hidden="true"></span><div class="work-body"><strong id="work-label"></strong><p id="work-detail"></p></div></div>
       <div id="stage-error" class="error" hidden></div>
@@ -54,6 +58,7 @@
         </details>
       </div><aside class="decision-panel"><div id="page-copy"></div><div id="decision-content">
           <p class="eyebrow">YOUR REVIEW</p><h2>Does this feel right?</h2><p id="review-hint" class="helper">Check the action, characters and recurring details. Your decision controls what happens next.</p>
+          <p id="auto-note" class="helper" hidden></p>
           <div id="story-guide" hidden></div>
           <div id="style-inspiration-block" hidden>
             <label for="style-inspiration">Inspire the art <span class="optional">optional</span></label>

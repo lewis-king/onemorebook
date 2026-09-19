@@ -80,19 +80,20 @@ function render(){
   const stage=currentView(),c=candidate(),isCurrent=stage.id===state.current_stage;
   $('book-title').textContent=state.title||'Your new book';
   const approved=state.stages.filter(s=>s.status==='approved').length;
-  $('overall').textContent=`${approved} of ${state.stages.length} steps approved · Saved locally`;
+  $('overall').textContent=`${approved} of ${state.stages.length} steps approved${state.config?.approval_mode==='yolo'?' · YOLO — AI judge is reviewing':''} · Saved locally`;
   $('stages').innerHTML=state.stages.map(s=>`<button class="stage-nav ${s.id===stage.id?'viewing':''} ${s.id===state.current_stage?'active':''}" data-stage="${esc(s.id)}" ${s.status==='pending'&&s.id!==state.current_stage?'disabled':''}><span class="mark">${s.status==='approved'?'✓':s.id===state.current_stage?'◉':'○'}</span>${esc(s.title)}</button>`).join('');
   $('stage-title').textContent=stage.title;$('kind').textContent=stage.kind==='scene'?'MAKE THE STORY VISIBLE':stage.kind==='story'?'BEGIN WITH A STORY':stage.kind==='plan'?'PLAN THE WORLD':stage.kind==='moment'?'YOUR MOMENTS, STORYBOOK STYLE':'BUILD YOUR REFERENCE LIBRARY';
   $('status').textContent=stage.status==='approved'?'Approved':state.status==='complete'?'Book complete':isCurrent?state.status.replaceAll('_',' '):stage.status.replaceAll('_',' ');
   const working=isCurrent&&['queued','generating','exporting','ready'].includes(state.status);
+  const judging=Boolean(state.auto_review);
   const job=runningJob();
   $('candidate-caption').hidden=!c||!job||c.attempt===job.attempt;
   $('candidate-caption').textContent=c&&job?`Showing saved attempt ${c.attempt}. Attempt ${job.attempt} is ${job.generation?'generating':'being prepared'}; its result will appear when ready.`:'';
-  $('work-status').hidden=!working;
+  $('work-status').hidden=!working&&!judging;
   const styleTakes=stage.kind==='style'&&state.job?stage.candidates.filter(c=>(c.metadata.style_inspiration||'')===(state.config?.art_inspiration||'')).length:0;
-  $('work-label').textContent=state.status==='exporting'?'Saving your finished book…':state.job?.stage_id==='style.png'?`Flux2 Turbo 8 is creating style option ${styleTakes+1} of 4…`:state.job?.generation?'Flux2 Turbo 8 is creating your candidate…':['story','plan'].includes(stage.kind)?'Gemma 4 is preparing your draft…':'Preparing this image…';
-  $('work-detail').textContent=state.job?.prompt_id?`ComfyUI job ${state.job.prompt_id.slice(0,8)} · Attempt ${state.job.attempt}. You can leave this page; progress is saved.`:'This step will pause for your review when it is ready.';
-  if(working&&state.job?.created_at){const elapsed=Math.max(0,Math.floor((Date.now()-Date.parse(state.job.created_at))/1000));$('work-detail').textContent+=` ${Math.floor(elapsed/60)}m ${elapsed%60}s elapsed.`;}
+  $('work-label').textContent=judging?'Gemma 4, the AI judge, is reviewing this candidate…':state.status==='exporting'?'Saving your finished book…':state.job?.stage_id==='style.png'?`Flux2 Turbo 8 is creating style option ${styleTakes+1} of 4…`:state.job?.generation?'Flux2 Turbo 8 is creating your candidate…':['story','plan'].includes(stage.kind)?'Gemma 4 is preparing your draft…':'Preparing this image…';
+  $('work-detail').textContent=judging?'It will approve the attempt, regenerate it with fixes, or hand the decision to you.':state.job?.prompt_id?`ComfyUI job ${state.job.prompt_id.slice(0,8)} · Attempt ${state.job.attempt}. You can leave this page; progress is saved.`:'This step will pause for your review when it is ready.';
+  if(!judging&&working&&state.job?.created_at){const elapsed=Math.max(0,Math.floor((Date.now()-Date.parse(state.job.created_at))/1000));$('work-detail').textContent+=` ${Math.floor(elapsed/60)}m ${elapsed%60}s elapsed.`;}
   $('stage-error').hidden=!isCurrent||!state.error;$('stage-error').textContent=state.error||'';
   const key=stage.id+':'+(c?.id||'none')+':'+(c?.sha256||'')+':'+(c?.metadata.validation_error||'');
   if(key!==renderKey){
@@ -148,6 +149,12 @@ function render(){
   $('published-link').hidden=!published;$('published-link').href=publication.url||'#';
   $('publish-status').hidden=!publication.status||publication.status==='complete';
   $('publish-status').textContent=publication.status==='publishing'?'Uploading the approved export to Supabase. You can leave this page open; the upload is resumable.':publication.error||'';
+  const yoloMode=state.config?.approval_mode==='yolo';
+  const judgeNote=yoloMode&&isCurrent&&stage.feedback&&['awaiting_review','error'].includes(state.status)?'AI judge: '+stage.feedback:'';
+  $('auto-note').hidden=!judgeNote;$('auto-note').textContent=judgeNote;
+  $('toggle-auto').hidden=state.status==='complete';
+  $('toggle-auto').textContent=yoloMode?'Pause the AI judge — I’ll review myself':'Let the AI judge finish this book (YOLO)';
+  $('toggle-auto').disabled=busy||['queued','generating','exporting'].includes(state.status);
 }
 async function act(action){
   if(busy)return;
@@ -162,6 +169,10 @@ async function act(action){
 $('approve').onclick=()=>act('approve');$('regenerate').onclick=()=>act('regenerate');$('edit-image').onclick=()=>act('edit');$('save-draft').onclick=()=>act('save_draft');$('resume').onclick=()=>act('resume');
 $('reopen-page').onclick=()=>act('reopen');$('keep-original').onclick=()=>act('keep_original');
 $('publish-book').onclick=()=>act('publish');
+$('toggle-auto').onclick=async()=>{if(busy)return;busy=true;render();notice('');
+  try{state=await request(api+'/'+sid,{action:'set_approval_mode',revision:state.revision,approval_mode:state.config?.approval_mode==='yolo'?'assisted':'yolo'});}
+  catch(error){notice(error.message);try{state=await request(api+'/'+sid)}catch{}}
+  finally{busy=false;render();}};
 $('use-prompt').onclick=()=>{$('prompt-override').value=promptView().text;renderPrompt();$('prompt-override').focus();};
 $('prompt-override').oninput=()=>renderPrompt();
 $('override-details').ontoggle=()=>{if(state)renderPrompt();};
@@ -250,7 +261,8 @@ $('new-book').onsubmit=async e=>{e.preventDefault();const b=e.submitter;b.disabl
         b.textContent=`Uploading photograph ${index+1} of ${rows.length}…`;
         photos.push({upload_id:await uploadPhoto(photo.file),caption});
       }
-      data={mode:'moment',story_idea:'',moment:{description,photos},art_inspiration:$('moment-art-inspiration').value.trim()};
+      data={mode:'moment',story_idea:'',moment:{description,photos},art_inspiration:$('moment-art-inspiration').value.trim(),
+            approval_mode:document.querySelector('input[name="approval_mode"]:checked')?.value||'assisted'};
     }else{
       data=Object.fromEntries(new FormData(e.target));data.mode='scratch';
     }

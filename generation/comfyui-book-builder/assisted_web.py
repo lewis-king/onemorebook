@@ -14,6 +14,7 @@ from aiohttp import web, ClientSession
 from . import assisted_store as store
 from . import assisted_engine as engine
 from . import assisted_moment
+from . import assisted_yolo as yolo
 from .storage import write_exclusive, write_json
 from .runtime import generation_root, settings
 
@@ -136,6 +137,81 @@ async def maybe_style_variations(sid,intent):
         return False
 
 
+async def maybe_yolo(sid,intent):
+    """Let the AI judge decide a landed candidate for YOLO-opted-in books.
+
+    Mirrors the human decision paths exactly: approve goes through
+    engine.advance, retry through store.next_attempt, and anything uncertain
+    parks the stage for a human. Returns True when it handled the candidate.
+    """
+    try:
+        chained=False
+        with store.LOCK:
+            state=store.read(sid)
+            if not yolo.enabled(state) or state['status']!='awaiting_review':
+                return False
+            stage=store.stage(state)
+            if stage['id']!=intent.get('stage_id') or not stage['candidates']:
+                return False
+            if stage.get('auto_parked'):
+                return False  # Parked for a human until they act on it.
+            if state.get('auto_review'):
+                return True  # A judge pass is already in flight for this stage.
+            if stage['id']=='style.png':
+                chained=engine.continue_style_variations(state)
+            if not chained:
+                state['auto_review']={'stage_id':stage['id'],'attempt':stage['candidates'][-1]['attempt'],
+                                      'started_at':store.now()}
+                state['revision']+=1;store.save(state)
+        if chained:
+            await drive(sid)
+            return True
+        verdict=await asyncio.to_thread(yolo.judge_session,sid)
+        with store.LOCK:
+            state=store.read(sid)
+            state.pop('auto_review',None)
+            if (state['status']!='awaiting_review' or store.stage(state)['id']!=intent.get('stage_id')
+                    or not yolo.enabled(state)):
+                # A human decided or paused automation while the judge was thinking; their call stands.
+                state['revision']+=1;store.save(state)
+                return True
+            proceed=yolo.apply_verdict(state,verdict)
+        if proceed:
+            await drive(sid)
+        return True
+    except Exception as exc:
+        traceback.print_exc()
+        with store.LOCK:
+            state=store.read(sid)
+            state.pop('auto_review',None)
+            if yolo.enabled(state) and state['status']=='awaiting_review':
+                current=store.stage(state)
+                current['feedback']=('The AI judge could not finish reviewing this attempt ('
+                                     +str(exc)[:300]+'). Please review it yourself.')
+                state['revision']+=1;store.save(state)
+        return True
+
+
+def launch_judge(sid):
+    """Start (or restart) judging for a YOLO book parked with a candidate."""
+    with store.LOCK:
+        state=store.read(sid)
+        if not yolo.enabled(state) or state['status']!='awaiting_review' or state.get('auto_review'):
+            return
+        stage=store.stage(state)
+        if not stage['candidates']:
+            return
+        intent={'stage_id':stage['id'],'attempt':stage['candidates'][-1]['attempt']}
+        key=(sid,stage['id'],'judge-'+str(intent['attempt']))
+        if key in ACTIVE and not ACTIVE[key].done():
+            return
+        task=asyncio.create_task(maybe_yolo(sid,intent));ACTIVE[key]=task
+        def release(finished):
+            if ACTIVE.get(key) is finished:
+                ACTIVE.pop(key,None)
+        task.add_done_callback(release)
+
+
 async def drive(sid,resume=False):
     intent=None
     try:
@@ -156,6 +232,7 @@ async def drive(sid,resume=False):
         # Existing outputs take precedence over a lost CLI receipt or restart.
         if engine.recover_candidate(store.read(sid),intent):
             if await maybe_style_variations(sid,intent):return await drive(sid)
+            if await maybe_yolo(sid,intent):return
             return
         await mcp('server_info',{})
         pid,status=await locate(intent)
@@ -187,6 +264,7 @@ async def drive(sid,resume=False):
             state=store.read(sid)
             if not same_job(state,intent) or state['status']=='awaiting_review':
                 if await maybe_style_variations(sid,intent):return await drive(sid)
+                if await maybe_yolo(sid,intent):return
                 return
             history=await live('/history/'+pid)
             if pid in history:
@@ -214,18 +292,25 @@ def launch(sid,resume=False):
     # differs from the next intent and it cannot mutate the next stage.
     with store.LOCK:
         state=store.read(sid)
-        if state['status'] in ('awaiting_review','complete'):
+        if state['status']=='complete':
             return
-        if not state.get('job') and state['status']=='ready':
-            # Allocate before yielding: Resume must see the same immutable intent.
-            store.next_attempt(state)
-        key=(sid,state['current_stage'],state['job']['attempt'] if state.get('job') else 'export')
-        if key not in ACTIVE or ACTIVE[key].done():
-            task=asyncio.create_task(drive(sid,resume));ACTIVE[key]=task
-            def release(finished):
-                if ACTIVE.get(key) is finished:
-                    ACTIVE.pop(key,None)
-            task.add_done_callback(release)
+        judge=False
+        if state['status']=='awaiting_review':
+            # A YOLO book parked here still has work: judge the saved candidate.
+            judge=yolo.enabled(state) and not state.get('auto_review')
+        else:
+            if not state.get('job') and state['status']=='ready':
+                # Allocate before yielding: Resume must see the same immutable intent.
+                store.next_attempt(state)
+            key=(sid,state['current_stage'],state['job']['attempt'] if state.get('job') else 'export')
+            if key not in ACTIVE or ACTIVE[key].done():
+                task=asyncio.create_task(drive(sid,resume));ACTIVE[key]=task
+                def release(finished):
+                    if ACTIVE.get(key) is finished:
+                        ACTIVE.pop(key,None)
+                task.add_done_callback(release)
+    if judge:
+        launch_judge(sid)
 
 
 def public_state(state):
@@ -377,6 +462,13 @@ async def api(request):
                         raise store.Conflict('There is nothing to resume at this step.')
                     # The explicit request allows repeating an interrupted step ONLY
                     # after drive() checks saved candidates, live queue and history.
+                elif action=='set_approval_mode':
+                    mode=str(data.get('approval_mode',''))
+                    if mode not in ('assisted','yolo'):raise ValueError("Choose 'assisted' or 'yolo' review.")
+                    if state['status'] in ('queued','generating','exporting'):
+                        raise store.Conflict('Wait for the current step to finish before changing review mode.')
+                    state['config']['approval_mode']=mode
+                    state['revision']+=1;store.save(state)
                 elif action in ('approve','regenerate','edit','save_draft'):
                     if state['status'] not in ('awaiting_review','error','ready'):
                         raise store.Conflict('Wait for this generation to finish before deciding.')
@@ -397,6 +489,8 @@ async def api(request):
                         if current['kind']=='story':validate_assisted_story(content,state['config'])
                         else:assisted_plan.validate(engine.package(state),content)
                         store.decision(state,candidate,'revise_text',feedback)
+                        current['auto_retries']=0  # A human edit re-arms the judge's patience.
+                        current.pop('auto_parked',None)
                         intent=store.next_attempt(state,feedback)
                         file=engine.directory(sid,current['id'],intent['attempt'])/'candidate.json';write_json(file,content)
                         state=store.record_candidate(sid,current['id'],intent['attempt'],file,{'method':'human_text_revision','content':content})
@@ -404,6 +498,8 @@ async def api(request):
                         if action=='edit' and (current['kind'] in ('story','plan') or not feedback and not override):
                             raise ValueError('Describe the image edit you want.')
                         if candidate:store.decision(state,candidate,'reject' if action=='regenerate' else 'request_edit',feedback)
+                        current['auto_retries']=0  # A human retry re-arms the judge's patience.
+                        current.pop('auto_parked',None)
                         intent=store.next_attempt(state,feedback,mode='edit' if action=='edit' else 'fresh',
                                                   source_candidate=candidate['id'] if candidate else None,prompt_override=override)
                         state=store.read(sid)
@@ -411,9 +507,10 @@ async def api(request):
         if publish_requested:
             await publish_session(sid)
             return web.json_response(public_state(store.read(sid)),headers={'Cache-Control':'no-store'})
-        if (data.get('action') not in ('reopen','keep_original')
-                and state['status'] not in ('awaiting_review','complete')
-                and (state['status']!='error' or data.get('action')=='resume')):
+        if (data.get('action')=='set_approval_mode'
+                or (data.get('action') not in ('reopen','keep_original','set_approval_mode')
+                    and state['status'] not in ('awaiting_review','complete')
+                    and (state['status']!='error' or data.get('action')=='resume'))):
             launch(sid,resume=data.get('action')=='resume')
         return web.json_response(public_state(store.read(sid)),headers={'Cache-Control':'no-store'})
     except store.Conflict as exc:return web.json_response({'error':str(exc)},status=409)

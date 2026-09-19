@@ -1,4 +1,12 @@
-# Independent design review + empirical proof — 2026-09-13 (latest)
+# YOLO mode: AI-judged end-to-end books — 2026-09-19 (latest)
+
+The start form now asks **Assisted or YOLO**. YOLO (`config.approval_mode == 'yolo'`, the explicit per-book acceptance for automated approval) hands every landed candidate to a local AI judge — `assisted_yolo.py`, `config.review_model` (gemma4:31b) via the existing `quality.json_model` image+schema plumbing, run off the event loop from `assisted_web.maybe_yolo` at the same two points style-take chaining hooks in. The judge checks story/plan drafts (contract failures short-circuit back to the writer without a model call), ranks the four style takes (unoccupied enforced after adjudication caught a cat in the chosen take), checks references for design/style/cleanliness, and checks pages against brief, page text, cast references and — for moment books — the original photograph. Approvals go through the unchanged `engine.advance`; rejections regenerate with the judge's issues as feedback; three failed retries, any `uncertain`, or any judge error parks the stage for a human (`auto_parked` until a human acts). `set_approval_mode` switches modes mid-book; human surgery after completion (reopen/regenerate) re-judges and re-exports a versioned export. Decisions record `source: 'yolo'`, each judged attempt saves `judge-report.json`, and the export manifest stamps `approval_mode`.
+
+Proven live end to end: book-20260919123550-4f152ddd03 ("The Blanket Palace", 4 pages, 17 stages) ran creation → complete in ~35 min with zero human input: 28 yolo decisions (10 rejects that visibly fixed the next attempt — one-off props dropped from the plan, baked-in props removed from character portraits, off-model pyjamas/pigtails and wrong cat fur caught on page 2). Kimi adjudication of every stage agreed with the judge except the style-take occupancy slip (fixed in the prompt; server restarted). Post-completion surgery verified: human reopen + regenerate of page 2 → judge approved attempt 4 → new immutable `exports/b7de1caa01e1971b/`. Pause action verified via API. Full pinned suite **417 tests pass** (13 new in `tests/test_assisted_yolo.py`).
+
+---
+
+# Independent design review + empirical proof — 2026-09-13
 
 Second adversarial pass at Lewis's request, done as an independent-design check: reconstruct the ideal
 workflow from the goal (photos true to the day, storybook style, simple, from-an-idea untouched) and

@@ -51,6 +51,10 @@ After every stage is approved, the session's `export/` folder contains `book.htm
 
 New book IDs use `book-<timestamp>-<hash>`. Existing `book-assisted-…` creator URLs open the same saved book and switch to the shorter URL in the browser. Historical output directories, image links and generation records are preserved.
 
+## Assisted or YOLO review
+
+Every new book chooses a review mode on the start form. **Assisted** (the default) is the flow above: you approve every step. **YOLO** hands each candidate to a local AI judge (the configured review model, Gemma 4 by default) which checks the story/plan drafts, ranks the four art-style takes, and reviews every reference, cover and page against its brief, the approved character designs and — for from-a-moment books — the original photograph. Approved stages advance automatically; rejected ones regenerate with the judge's corrections, up to three retries per stage, then the stage parks for your decision. The judge fails closed: any uncertainty or error parks the stage rather than approving. You can switch modes mid-book with **Pause the AI judge / Let the AI judge finish** in the sidebar, and revise anything after the book completes — revising a page re-exports a new version as usual. Every automated decision is recorded with `source: 'yolo'` alongside human decisions, a `judge-report.json` is saved in each judged attempt, and the export manifest records the book's `approval_mode`.
+
 ## Story craft and length
 
 The creator chooses its voice, approach and visual direction to suit the optional idea, or invents freely when it is blank. The books Lewis recommended inform craft principles; they are not categories or templates. Rhythm, humour, emotional credibility, coherent actions and satisfying endings stay in the internal guidance.

@@ -1,4 +1,12 @@
-# From-a-moment books — 2026-09-13 (latest)
+# YOLO review mode live — 2026-09-19 (latest)
+
+The creator start form offers **Assisted** (unchanged default: human approves every step) and **YOLO**: a local AI judge (gemma4:31b, `config.review_model`) reviews each landed candidate — story/plan text, style-take ranking, reference cleanliness, and page checks against brief, cast references and moment photographs — then approves, regenerates with its corrections (max 3 per stage), or parks for a human when uncertain or exhausted. Automated decisions are recorded `source: 'yolo'`; `judge-report.json` sits in each judged attempt; exports stamp `approval_mode`. Mid-book switch via the sidebar button / `set_approval_mode`; human surgery after completion re-judges and version-exports normally. Proven e2e unattended: book-20260919123550-4f152ddd03 completed 17 stages in ~35 min; Kimi adjudication of every stage found one prompt-level slip (style take occupancy), fixed. Suite: **417 tests**.
+
+Source: `assisted_yolo.py` (new), `assisted_store` (approval_mode config, decision source), `assisted_web` (`maybe_yolo` judge loop, `launch_judge` recovery, `set_approval_mode`), `assisted_engine` (manifest), `assisted_ui` (mode radios, judge status, pause button), `tests/test_assisted_yolo.py`. The birthday moment book (book-20260913110255-32289c92b3) is untouched, still Assisted, paused at `characters/emilia.png`.
+
+---
+
+# From-a-moment books — 2026-09-13
 
 The assisted creator's start screen offers two modes: **From an idea** (unchanged) and **From a moment**. A moment book commemorates a real day: Lewis uploads up to fourteen reference photographs, gives each a short caption, and writes a free description of the day (a few cues are enough). Photographs are uploaded to `POST /book-builder/creator/upload` (validated, normalised to PNG, staged under `books/moment-uploads/`), then moved into the new session as `moment-src/moment_NN.png` with SHA-256 pinned in `config.moment` at creation. Uploads are single-use and the create payload stays small JSON.
 

@@ -497,7 +497,8 @@ img{width:100%;height:auto}p{font-size:26px;line-height:1.65}h1,footer{text-alig
 @media print{main{margin:0}section{margin:0}p{font-size:20pt}}</style><main>'''+''.join(sections)+'</main></html>'
     write_exclusive(target/'book.html',document.encode())
     write_exclusive(target/'IMPORT.txt',b'Paste story.json into onemorebook. Import cover.png and pages/page-NNN.png in page order. Private production and illustration-plan files are not app-facing story JSON.\n')
-    manifest={'status':'complete','approval_mode':'human','session_id':state['id'],'title':title,
+    manifest={'status':'complete','approval_mode':state['config'].get('approval_mode')=='yolo' and 'yolo' or 'human',
+              'session_id':state['id'],'title':title,
               'story_sha256':hashlib.sha256((target/'story.json').read_bytes()).hexdigest(),
               'approvals':[{'stage':s['id'],'decision_id':s['decision_id'],'candidate':selected(state,s['id'])['id'],
                             'sha256':selected(state,s['id'])['sha256']} for s in state['stages']]}
