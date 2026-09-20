@@ -15,7 +15,7 @@ from . import assisted_store as store
 from . import quality
 from .story import asset_seed, object_schema
 
-JUDGE_VERSION = 'yolo-2'
+JUDGE_VERSION = 'yolo-3'
 MAX_AUTO_RETRIES = 3        # judge-requested regenerations per stage
 MAX_STYLE_TAKE_POOL = 8     # two rounds of the four-take style loop, then park
 
@@ -28,11 +28,12 @@ DEFAULT_STYLE_REVIEW_MODEL = 'hf.co/unsloth/Qwen3.5-27B-GGUF:Q6_K'
 TEXT = {'type': 'string', 'minLength': 1}
 
 SCENE_CHECKS = ('scene_matches', 'photo_fidelity', 'characters_on_model', 'no_extra_characters',
-                'style_matches', 'anatomy_sound', 'no_unwanted_text', 'age_safe')
+                'story_logic', 'style_matches', 'anatomy_sound', 'no_unwanted_text', 'age_safe')
 COVER_CHECKS = ('scene_matches', 'characters_on_model', 'style_matches', 'anatomy_sound',
                 'title_correct', 'title_integrated', 'age_safe')
 REFERENCE_CHECKS = ('design_matches', 'style_matches', 'clean_reference', 'no_unwanted_text')
-STORY_CHECKS = ('age_appropriate', 'coherent_arc', 'read_aloud', 'matches_request', 'engaging')
+STORY_CHECKS = ('age_appropriate', 'coherent_arc', 'read_aloud', 'matches_request', 'engaging',
+                'ending_payoff')
 PLAN_CHECKS = ('covers_story', 'reusable_references', 'continuity_sound', 'matches_request')
 
 
@@ -105,11 +106,18 @@ def judge_text(state, stage, candidate):
                 'safe, warm for the age band), coherent_arc (clear beginning, middle and satisfying '
                 'end), read_aloud (rhythmic, concrete, enjoyable to read aloud), matches_request (it '
                 'delivers what the creator asked for, and for a real-day book it honours every '
-                'photograph caption in order), engaging (a child would want it read again).')
+                'photograph caption in order), engaging (a child would want it read again), '
+                'ending_payoff (the final page lands an EARNED emotional beat: a callback to a '
+                'detail planted earlier, a visible change in the protagonist, or a warm, wondrous '
+                'or funny final image that only this story could produce. A flat summary of events, '
+                'a plain "they went home" closing, or a restatement of the premise fails — the last '
+                'lines are what a child carries to sleep).')
     else:
         task = ('Review this illustration plan for the approved story. Check: covers_story (every '
-                'page and the cover has a scene that matches its text), reusable_references (only '
-                'truly recurring characters, props and places become references; one-off moments do '
+                'page and the cover has a scene that matches its text), reusable_references (the '
+                'story\'s named characters are ALREADY references supplied by the story itself — '
+                'they never belong in the assets list, which is only for props, places and changed '
+                'states; only truly recurring props and places become assets; one-off moments do '
                 'not), continuity_sound (states and visible_pages keep designs consistent), '
                 'matches_request (it respects the creator\'s brief).')
     prompt = (task + '\n' + _context(state) + '\nDraft JSON:\n'
@@ -215,8 +223,11 @@ def judge_scene(state, stage, candidate):
     if stage.get('cast_refs'):
         planned = ('The planned cast for this page is exactly: '
                    + ', '.join(store.stage(state, n)['title'] for n in stage['cast_refs'])
-                   + '. Any other detailed person or animal with a face fails no_extra_characters '
-                     'unless the brief explicitly calls for a crowd. ')
+                   + '. A supporting background role the brief itself names (a cook, a shopkeeper, '
+                     'a teacher) is expected and allowed. Any other detailed person or animal with a '
+                     'face fails no_extra_characters. Tiny, distant, anonymous background figures '
+                     'without clear faces are fine when they suit the setting (a market, a party, a '
+                     'playground) — they are scenery, not characters. ')
     else:
         planned = ('The planned cast for this page is EMPTY — pure scenery. Any detailed person, '
                    'face or animal in frame fails no_extra_characters; only tiny distant anonymous '
@@ -252,9 +263,14 @@ def judge_scene(state, stage, candidate):
                 'still delivers the moment is acceptable — fail for missing or wrong action, not '
                 'for framing choice alone), '
               + fidelity + cast
-              + 'no_extra_characters (every person or animal in frame is one of the planned cast '
-                'or clearly part of the scenery crowd the brief calls for — an extra or duplicated '
-                'character, or the pet that has left the story at this point, fails), '
+              + 'no_extra_characters (every clearly-depicted person or animal in frame is one of '
+                'the planned cast or a background role the brief names — an extra or duplicated '
+                'character, or the pet that has left the story at this point, fails; tiny distant '
+                'anonymous background figures in keeping with the setting are scenery and pass), '
+              + 'story_logic (depicted physical details agree with the story\'s action: a trail of '
+                'prints, tracks or dropped objects points along the direction its maker travelled, '
+                'gazes and gestures aim at what the text names, held objects sit in hands. When '
+                'nothing directional or physical is at stake in the image, mark true), '
               + 'style_matches (storybook illustration, not a photograph), anatomy_sound (no extra '
                 'limbs, fused hands or distorted faces), no_unwanted_text (no rendered words or '
                 'letters), age_safe (nothing scary or inappropriate for young children).'

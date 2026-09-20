@@ -300,6 +300,46 @@ class YoloJudgeTests(unittest.TestCase):
             prompt2, _, _ = engine.image_inputs(state2, store.stage(state2), intent2)
         self.assertNotIn('completely unpopulated', prompt2)
 
+    def test_populated_page_closes_the_cast_after_rewrite(self):
+        state = self.prepare()
+        while state['current_stage'] != 'pages/page-001.png':
+            state = self.approve(self.png(store.read(state['id'])))
+        intent = store.next_attempt(state)
+        intent.pop('prompt_base', None)
+        with patch.object(engine, 'draft_json', return_value={'prompt': 'Mira finds the light.'}):
+            prompt, _, _ = engine.image_inputs(state, store.stage(state), intent)
+        self.assertIn('Every clearly-depicted person and animal', prompt)
+        self.assertIn('tiny, distant, anonymous', prompt)
+        self.assertNotIn('completely unpopulated', prompt)
+
+    def test_scene_judge_allows_brief_named_supporting_roles(self):
+        state = self.prepare()
+        while state['current_stage'] != 'pages/page-001.png':
+            state = self.approve(self.png(store.read(state['id'])))
+        state = self.png(state)
+        captured = {}
+        def fake(url, model, prompt, schema, **kwargs):
+            captured['prompt'] = prompt
+            return report(yolo.SCENE_CHECKS)
+        with patch.object(quality, 'json_model', side_effect=fake):
+            verdict = yolo.judge_session(state['id'])
+        self.assertEqual(verdict['action'], 'approve')
+        self.assertIn('supporting background role the brief itself names', captured['prompt'])
+        self.assertIn('scenery, not characters', captured['prompt'])
+        self.assertIn('story_logic', captured['prompt'])
+
+    def test_story_judge_checks_ending_payoff(self):
+        state = self.add(self.yolo_state(), fixtures.package_fixture())
+        captured = {}
+        def fake(url, model, prompt, schema, **kwargs):
+            captured['prompt'] = prompt
+            return report(yolo.STORY_CHECKS)
+        with patch.object(quality, 'json_model', side_effect=fake):
+            verdict = yolo.judge_session(state['id'])
+        self.assertEqual(verdict['action'], 'approve')
+        self.assertIn('ending_payoff', captured['prompt'])
+        self.assertIn('flat', captured['prompt'])
+
     def test_moment_scene_judge_receives_the_photograph(self):
         case = moment_fixtures.MomentBookTests()
         uploads = [case.stage_upload(), case.stage_upload()]

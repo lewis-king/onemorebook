@@ -394,6 +394,19 @@ def image_inputs(state, current, intent):
             empty=' This is a completely unpopulated scene: no people, no animals, no faces, no figures — pure setting and objects only.'
             if empty.strip() not in prompt:
                 prompt+=empty
+        else:
+            # The renderer happily adds uninvited foreground extras (a
+            # mentioned-but-absent pet, a bystander with a face). Close the
+            # cast positively: every clearly-depicted being is one already
+            # described. Background life stays allowed where the setting calls
+            # for it, but tiny, distant and anonymous — never a second
+            # detailed character, and never naming/negating the absent subject
+            # (negations anchor the model on them).
+            closed=(' Every clearly-depicted person and animal in the scene is one of those '
+                    'described in this prompt; any other people are only tiny, distant, anonymous '
+                    'background figures without clear faces, in keeping with the setting.')
+            if closed.strip() not in prompt:
+                prompt+=closed
     if managed:
         if base is None or prompt!=base['prompt']:
             base=assisted_prompt_base.install(state,current['id'],prompt,context_hash,

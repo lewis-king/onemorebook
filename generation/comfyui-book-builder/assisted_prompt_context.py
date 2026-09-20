@@ -13,6 +13,12 @@ magic or movement when the story calls for it. Check the pictured target against
 An assembled or changed prop keeps its established state on later pages even when the prose names
 only one part. Use its state reference as one object and describe the relevant part's position within
 it. Earlier story events establish context; depict only this page's moment, not a montage of events.
+Never name a person or animal that must stay out of the picture: mentioning "her missing dog"
+paints the dog. When the prose is about an absent character, show the search or worry through the
+visible characters' faces, gestures and actions only, with no words for the absent one.
+When a trail of prints, tracks or dropped objects is part of the moment, state which way it leads
+relative to the seeker (for example "the prints lead onward past Mei, deeper into the market"),
+matching the story's direction of travel.
 '''
 
 PROMPT_SCHEMA = {'type': 'object', 'properties': {'prompt': {'type': 'string', 'minLength': 1,
