@@ -18,7 +18,9 @@ paints the dog. When the prose is about an absent character, show the search or 
 visible characters' faces, gestures and actions only, with no words for the absent one.
 When a trail of prints, tracks or dropped objects is part of the moment, state which way it leads
 relative to the seeker (for example "the prints lead onward past Mei, deeper into the market"),
-matching the story's direction of travel.
+matching the story's direction of travel. Compose the shot so the camera follows the direction of
+travel — behind the seekers or looking down the trail from where it starts — so the receding prints
+naturally point the way their maker went; a head-on approach renders the trail backwards.
 '''
 
 PROMPT_SCHEMA = {'type': 'object', 'properties': {'prompt': {'type': 'string', 'minLength': 1,

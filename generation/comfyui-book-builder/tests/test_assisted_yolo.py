@@ -340,6 +340,19 @@ class YoloJudgeTests(unittest.TestCase):
         self.assertIn('ending_payoff', captured['prompt'])
         self.assertIn('flat', captured['prompt'])
 
+    def test_story_judge_checks_cast_tracking(self):
+        state = self.add(self.yolo_state(), fixtures.package_fixture())
+        captured = {}
+        def fake(url, model, prompt, schema, **kwargs):
+            captured['prompt'] = prompt
+            return report(yolo.STORY_CHECKS)
+        with patch.object(quality, 'json_model', side_effect=fake):
+            verdict = yolo.judge_session(state['id'])
+        self.assertEqual(verdict['action'], 'approve')
+        self.assertIn('cast_tracking', captured['prompt'])
+        self.assertIn('charactersPresent', captured['prompt'])
+        self.assertIn('absent', captured['prompt'])
+
     def test_moment_scene_judge_receives_the_photograph(self):
         case = moment_fixtures.MomentBookTests()
         uploads = [case.stage_upload(), case.stage_upload()]

@@ -33,7 +33,7 @@ COVER_CHECKS = ('scene_matches', 'characters_on_model', 'style_matches', 'anatom
                 'title_correct', 'title_integrated', 'age_safe')
 REFERENCE_CHECKS = ('design_matches', 'style_matches', 'clean_reference', 'no_unwanted_text')
 STORY_CHECKS = ('age_appropriate', 'coherent_arc', 'read_aloud', 'matches_request', 'engaging',
-                'ending_payoff')
+                'ending_payoff', 'cast_tracking')
 PLAN_CHECKS = ('covers_story', 'reusable_references', 'continuity_sound', 'matches_request')
 
 
@@ -111,7 +111,11 @@ def judge_text(state, stage, candidate):
                 'detail planted earlier, a visible change in the protagonist, or a warm, wondrous '
                 'or funny final image that only this story could produce. A flat summary of events, '
                 'a plain "they went home" closing, or a restatement of the premise fails — the last '
-                'lines are what a child carries to sleep).')
+                'lines are what a child carries to sleep), cast_tracking (each page\'s '
+                'charactersPresent lists exactly the characters who appear in that page\'s text: '
+                'anyone who speaks, acts or is physically present in the scene IS listed, and a '
+                'character who is only talked about but absent — searched for, remembered, expected '
+                '— is NOT listed).')
     else:
         task = ('Review this illustration plan for the approved story. Check: covers_story (every '
                 'page and the cover has a scene that matches its text), reusable_references (the '
@@ -284,9 +288,10 @@ def judge_scene(state, stage, candidate):
                 'character, or the pet that has left the story at this point, fails; tiny distant '
                 'anonymous background figures in keeping with the setting are scenery and pass), '
               + 'story_logic (depicted physical details agree with the story\'s action: a trail of '
-                'prints, tracks or dropped objects points along the direction its maker travelled, '
-                'gazes and gestures aim at what the text names, held objects sit in hands. When '
-                'nothing directional or physical is at stake in the image, mark true), '
+                'prints, tracks or dropped objects runs along the direction its maker travelled — '
+                'judge the trail\'s OVERALL line of travel, not the orientation of every single '
+                'print — gazes and gestures aim at what the text names, held objects sit in hands. '
+                'When nothing directional or physical is at stake in the image, mark true), '
               + 'style_matches (storybook illustration, not a photograph), anatomy_sound (no extra '
                 'limbs, fused hands or distorted faces; one continuous seamless illustration — a '
                 'vertical fold or gutter line down the middle fails), no_unwanted_text (no rendered '
