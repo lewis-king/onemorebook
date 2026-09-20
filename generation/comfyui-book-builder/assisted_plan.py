@@ -209,9 +209,9 @@ def stages(package, plan, moment=None):
         refs = ([paths[r] for r in asset['source_assets']] if asset['kind']=='prop_state' else
                 [paths[asset['source_character']]] if asset['kind']=='character_state' else ['style.png'])
         framing = ('A single full-body character portrait, relaxed upright pose, feet visible, flat warm ivory background. '
-                   if asset['kind']=='character_state' else 'One complete assembled or changed prop on a flat warm ivory background. '
-                   if asset['kind']=='prop_state' else 'A single isolated object on a flat warm ivory background. '
-                   if asset['kind']=='prop' else 'An unoccupied view of the setting. ')
+                   if asset['kind']=='character_state' else 'One complete assembled or changed prop floating in the centre of a flat plain warm ivory background, the backdrop completely bare in every direction — an isolated design study on empty paper. '
+                   if asset['kind']=='prop_state' else 'A single isolated object floating in the centre of a flat plain warm ivory background, the backdrop completely bare in every direction — an isolated design study on empty paper. '
+                   if asset['kind']=='prop' else 'An unoccupied view of the setting, any signs or labels blank or showing only simple pictures, no readable words or letters anywhere. ')
         add(paths[asset['id']], asset['kind'], asset['name'], framing+asset['appearance']+'. '+style,
             refs, character_id=asset.get('source_character',''),
             **({'source_assets':asset['source_assets'],'visible_pages':asset['visible_pages']}

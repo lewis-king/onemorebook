@@ -180,19 +180,33 @@ def judge_reference(state, stage, candidate):
         images.append(_approved_bytes(state, name))
         labels.append(f'IMAGE{len(images)} is the approved reference "{store.stage(state, name)["title"]}".')
     schema = quality.review_schema(REFERENCE_CHECKS)
+    if stage['kind'] == 'location':
+        framing_note = ('\nThe brief\'s first sentence is the FRAMING rule (an unoccupied view of '
+                        'the setting) and always wins: no people, animals or creatures, and the '
+                        'appearance description\'s scenery IS the subject here.')
+        clean = ('clean_reference (the SETTING itself is the subject here: it must be fully depicted '
+                 'and completely unoccupied — any person, animal or creature in frame fails. It is '
+                 'usable as a storybook background plate; a plain empty backdrop would fail a '
+                 'location, and so would a photograph of a physical place), ')
+    else:
+        framing_note = ('\nThe brief\'s first sentence is the FRAMING rule (single subject, plain '
+                        'backdrop) and always wins for the backdrop: scenery words inside the '
+                        'appearance description (grass, floor, a table) are story context for the '
+                        'subject, never a backdrop to draw.')
+        clean = ('clean_reference (the subject is complete and clearly usable as a design reference '
+                 'on a plain backdrop with no baked-in scenery — landscape, sky, furniture or other '
+                 'objects fail; a soft ground shadow or light grounding marks directly beneath the '
+                 'subject are acceptable artist\'s grounding, not scenery), ')
     prompt = ('Review IMAGE1 as a reusable reference image for a children\'s picture book. '
               + ' '.join(labels)
               + '\nIt should depict: ' + stage['brief']
-              + '\nThe brief\'s first sentence is the FRAMING rule (single subject, plain backdrop) '
-                'and always wins for the backdrop: scenery words inside the appearance description '
-                '(grass, floor, a table) are story context for the subject, never a backdrop to draw. '
-                'Judge the subject against the appearance and the backdrop against the framing.'
+              + framing_note
               + '\n' + _context(state)
               + '\nCheck: design_matches (the subject matches its described appearance), '
                 'style_matches (same paint/line technique, palette and lighting treatment as the '
-                'approved style — never require the same subject or scenery), clean_reference ('
-                'the subject is complete and clearly usable as a design reference; a character or '
-                'prop sits on a plain backdrop with nothing extraneous baked in), no_unwanted_text '
+                'approved style — never require the same subject or scenery), '
+              + clean
+              + 'no_unwanted_text '
                 '(no letters, words or watermarks). Reject only real, visible problems and give '
                 'concrete corrections in issues.')
     report = _call(state, stage, candidate, prompt, schema, images, 16384)
@@ -241,7 +255,9 @@ def judge_scene(state, stage, candidate):
                   + '\n' + _context(state)
                   + '\nCheck: scene_matches (the composition delivers the cover brief), '
                   + cast
-                  + 'style_matches (storybook illustration, not a photograph), anatomy_sound, '
+                  + 'style_matches (storybook illustration, not a photograph), anatomy_sound (no '
+                    'extra limbs or distorted faces; one continuous seamless illustration — a '
+                    'vertical fold or gutter line down the middle fails), '
                     f'title_correct (the exact title "{title}" appears, every word present and '
                     'correctly spelled, and no other letters or words anywhere), title_integrated '
                     '(the lettering feels like part of the artwork — hand-lettered in the '
@@ -272,8 +288,9 @@ def judge_scene(state, stage, candidate):
                 'gazes and gestures aim at what the text names, held objects sit in hands. When '
                 'nothing directional or physical is at stake in the image, mark true), '
               + 'style_matches (storybook illustration, not a photograph), anatomy_sound (no extra '
-                'limbs, fused hands or distorted faces), no_unwanted_text (no rendered words or '
-                'letters), age_safe (nothing scary or inappropriate for young children).'
+                'limbs, fused hands or distorted faces; one continuous seamless illustration — a '
+                'vertical fold or gutter line down the middle fails), no_unwanted_text (no rendered '
+                'words or letters), age_safe (nothing scary or inappropriate for young children).'
               + '\nJudge what is actually visible; do not invent hidden details. List concrete '
                 'issues only when something should change, phrased as corrections for the artist.')
     report = _call(state, stage, candidate, prompt, schema, images, 32768)
