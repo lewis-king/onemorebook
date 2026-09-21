@@ -111,11 +111,12 @@ def judge_text(state, stage, candidate):
                 'detail planted earlier, a visible change in the protagonist, or a warm, wondrous '
                 'or funny final image that only this story could produce. A flat summary of events, '
                 'a plain "they went home" closing, or a restatement of the premise fails — the last '
-                'lines are what a child carries to sleep), cast_tracking (each page\'s '
-                'charactersPresent lists exactly the characters who appear in that page\'s text: '
-                'anyone who speaks, acts or is physically present in the scene IS listed, and a '
-                'character who is only talked about but absent — searched for, remembered, expected '
-                '— is NOT listed).')
+                'lines are what a child carries to sleep), cast_tracking (work page by page: each '
+                'page\'s charactersPresent lists exactly the characters who appear in that page\'s '
+                'text. Anyone who speaks, acts, hands something over or is physically present in '
+                'the scene IS listed — re-read the final page\'s text with special care, since '
+                'farewells and gifts need both parties — and a character who is only talked about '
+                'but absent — searched for, remembered, expected — is NOT listed).')
     else:
         task = ('Review this illustration plan for the approved story. Check: covers_story (every '
                 'page and the cover has a scene that matches its text), reusable_references (the '
@@ -207,8 +208,11 @@ def judge_reference(state, stage, candidate):
               + framing_note
               + '\n' + _context(state)
               + '\nCheck: design_matches (the subject matches its described appearance), '
-                'style_matches (same paint/line technique, palette and lighting treatment as the '
-                'approved style — never require the same subject or scenery), '
+                'style_matches (same paint/line technique and shading as the approved style — never '
+                'require the same subject or scenery. A reference is a design study of the object, '
+                'not a scene: a subject of inherently neutral material (silver, glass, paper, '
+                'plain wood) passes with clean storybook line work and shading even without the '
+                'palette\'s dramatic lighting), '
               + clean
               + 'no_unwanted_text '
                 '(no letters, words or watermarks). Reject only real, visible problems and give '
@@ -236,13 +240,19 @@ def judge_scene(state, stage, candidate):
     cast = ('characters_on_model (the characters match their approved references in identity: '
             'clothing, colours, markings and distinctive features. Poses, camera angles and '
             'expressions SHOULD differ from a reference portrait — a face in profile is not a '
-            'mismatch; judge the design, not the angle), ' if stage.get('cast_refs') else
+            'mismatch; judge the design, not the angle. Features hidden by occlusion or framing '
+            '(feet behind a table, a hand out of frame) are not failures — only judge what is '
+            'visible, and treat consistent earlier pages as evidence of the design), ' if stage.get('cast_refs') else
             'characters_on_model (no character references supplied — mark true), ')
     if stage.get('cast_refs'):
         planned = ('The planned cast for this page is exactly: '
                    + ', '.join(store.stage(state, n)['title'] for n in stage['cast_refs'])
                    + '. A supporting background role the brief itself names (a cook, a shopkeeper, '
-                     'a teacher) is expected and allowed. Any other detailed person or animal with a '
+                     'a teacher) is expected and allowed. A crowd the page\'s own text explicitly '
+                     'calls for (a bakery busy with hedgehog bakers, a playground full of children) '
+                     'is the setting\'s inhabitants, not extra characters — allowed even when '
+                     'clearly depicted, as long as no crowd member is individuated like a named '
+                     'character. Any other detailed person or animal with a '
                      'face fails no_extra_characters. Tiny, distant, anonymous background figures '
                      'without clear faces are fine when they suit the setting (a market, a party, a '
                      'playground) — they are scenery, not characters. ')
@@ -279,9 +289,10 @@ def judge_scene(state, stage, candidate):
               + '\n' + _context(state) + ' ' + planned
               + '\nCheck: scene_matches (the page\'s moment is delivered: right characters, right '
                 'action, key objects and setting. Camera framing words in the brief (close-up, low '
-                'angle, wide shot) should be followed, but a clear, well-composed alternative that '
-                'still delivers the moment is acceptable — fail for missing or wrong action, not '
-                'for framing choice alone), '
+                'angle, wide shot) are preferences, not requirements: NEVER fail this check on '
+                'framing alone — a clear, well-composed alternative that still delivers the moment '
+                'always passes; fail only for missing or wrong action, characters, key objects or '
+                'setting), '
               + fidelity + cast
               + 'no_extra_characters (every clearly-depicted person or animal in frame is one of '
                 'the planned cast or a background role the brief names — an extra or duplicated '

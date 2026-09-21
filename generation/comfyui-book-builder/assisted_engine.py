@@ -403,7 +403,8 @@ def image_inputs(state, current, intent):
             # detailed character, and never naming/negating the absent subject
             # (negations anchor the model on them).
             closed=(' Every clearly-depicted person and animal in the scene is one of those '
-                    'described in this prompt; any other people are only tiny, distant, anonymous '
+                    'described in this prompt, and each of them appears exactly once — never '
+                    'duplicated in two places; any other people are only tiny, distant, anonymous '
                     'background figures without clear faces, in keeping with the setting.')
             if closed.strip() not in prompt:
                 prompt+=closed

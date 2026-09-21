@@ -211,7 +211,7 @@ class YoloJudgeTests(unittest.TestCase):
         self.assertEqual(len(captured['images']), 1 + len(stage['cast_refs']))
         self.assertIn('Illustration brief', captured['prompt'])
         self.assertIn('judge the design, not the angle', captured['prompt'])
-        self.assertIn('not for framing choice alone', captured['prompt'])
+        self.assertIn('NEVER fail this check on framing alone', captured['prompt'])
         self.assertIn('The planned cast for this page is exactly', captured['prompt'])
         self.assertEqual(verdict['action'], 'approve')
 
@@ -309,6 +309,7 @@ class YoloJudgeTests(unittest.TestCase):
         with patch.object(engine, 'draft_json', return_value={'prompt': 'Mira finds the light.'}):
             prompt, _, _ = engine.image_inputs(state, store.stage(state), intent)
         self.assertIn('Every clearly-depicted person and animal', prompt)
+        self.assertIn('appears exactly once', prompt)
         self.assertIn('tiny, distant, anonymous', prompt)
         self.assertNotIn('completely unpopulated', prompt)
 
@@ -325,6 +326,7 @@ class YoloJudgeTests(unittest.TestCase):
             verdict = yolo.judge_session(state['id'])
         self.assertEqual(verdict['action'], 'approve')
         self.assertIn('supporting background role the brief itself names', captured['prompt'])
+        self.assertIn("setting's inhabitants", captured['prompt'])
         self.assertIn('scenery, not characters', captured['prompt'])
         self.assertIn('story_logic', captured['prompt'])
 
