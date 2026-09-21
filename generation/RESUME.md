@@ -1,3 +1,19 @@
+# Two fresh YOLO books complete; judge yolo-3 hardened — 2026-09-21 (latest)
+
+book-20260920083441-0e88549d0b ("The Snowy Trail of Pumpernickel", 14pp) and
+book-20260920172038-e24548f37b ("The Midnight Bakery", 8pp, Demon Hunters art inspiration) both
+completed under YOLO, every page + cover personally adjudicated by Kimi as parked-stage reviewer.
+Both are readable exports with yolo-stamped manifests. NLM page 8 repaired dog-free in
+`exports/fb6e3fd460fd5ce3/`. Judge gains: story_logic (overall trail line), ending_payoff,
+cast_tracking, crowd allowance (text-called crowds are the setting's inhabitants), framing NEVER
+fails alone, occlusion tolerance, exactly-once cast closure, neutral-material prop latitude,
+kind-aware location rubric. Suite **430 tests** green, pushed to main (bf5154a).
+Open items: (1) no in-flight repair for judge-approved story defects — recommend a story cast-list
+amendment path; (2) Book B blemishes: page 7 hood-up Juniper, cover's extra hatless hedgehog;
+(3) Book A blemishes: snow-flowers pages 9/14. Next confidence step: one fresh confirmation book
+expected to pass with zero interventions.
+
+---
 # Golden pass 2 complete; judge hardened — 2026-09-19 (latest)
 
 book-20260919180221-17a699f801 ("The Night Lantern Market", 14 pages, 29 stages) completed under

@@ -1,3 +1,62 @@
+# YOLO-3 judge hardening + two fresh e2e books — 2026-09-20/21 (latest)
+
+Driven by Lewis's NLM feedback (paw prints facing wrong way, random dog on page 8, flat ending) and
+the bulletproof-one-click goal. All parked-stage adjudications by Kimi as human reviewer, recorded
+with feedback. Commits: 8bee5f2, 9d9056c, 91a6a2c, bf5154a. Suite: **430 tests** green.
+
+## Fixes shipped
+- **Absent-subject anchoring** (SCENE_GUIDANCE): never name a character/animal that must stay out of
+  frame ("her missing dog" paints the dog); show only the search and the searchers.
+- **Camera-follows-travel rule**: trail scenes composed with the camera behind the seekers or down
+  the trail from its start, so receding prints point the way their maker went; head-on renders the
+  trail backwards. Judge's `story_logic` now assesses the trail's OVERALL line, not per-print
+  micro-orientation.
+- **Cast closure, exactly once** (assisted_engine): populated scenes append "Every clearly-depicted
+  person and animal ... is one of those described in this prompt, and each of them appears exactly
+  once — never duplicated; others are tiny, distant, anonymous background figures". Duplication
+  (Zuzu twice, Tilly+Grandad twice) was the most common real defect across both books.
+- **Scene judge**: `story_logic` (trails/gazes/held objects); `anatomy_sound` also fails a vertical
+  gutter seam; planned-cast sentence allows brief-named supporting roles AND crowds the page text
+  explicitly calls for ("a bakery busy with hedgehog bakers") as the setting's inhabitants;
+  framing words are preferences — NEVER fail scene_matches on framing alone; features hidden by
+  occlusion/framing are not failures (judge ratcheted new nitpicks each retry otherwise).
+- **Story judge**: `ending_payoff` (final page must land an earned beat; flat "they went home"
+  fails); `cast_tracking` (page-by-page charactersPresent == who acts/is present; farewells and
+  gifts need both parties; talked-about-but-absent NOT listed).
+- **Reference judge**: kind-aware location rubric (unoccupied background plate); neutral-material
+  props (silver, glass, paper) pass style_matches as design studies without the scene's dramatic
+  palette (a silver tray was rejected 8x on palette grounds); proven bare-backdrop prop phrasing;
+  location briefs forbid lettering up front.
+- **NLM repair**: page 8 regenerated dog-free (prompt_override), judge-approved, versioned export
+  `exports/fb6e3fd460fd5ce3/`. Ending text NOT changed (story reopen would cascade); ending_payoff
+  covers future books.
+
+## Regression evidence
+`generation/.local/judge-bench/bench_nlm.py` vs the real NLM session: dog image → retry; flat
+ending → retry with callback suggestions; page-6 gaze → retry (LEGIT catch: Lantern Maker points up
+instead of toward the dumpling stalls).
+
+## Book A: book-20260920083441-0e88549d0b "The Snowy Trail of Pumpernickel" (14pp, 4 chars)
+Complete, exported, all 14 pages + cover personally adjudicated. Character consistency held
+throughout; ending lands. 3 human interventions in 34 stages, each became a general fix (camera-flip
+override on page 3; overall-line adjudication on page 7; page-12 duplicate + summer-grass
+regeneration whose root cause — story charactersPresent omitting Grandad though the prose names him
+— produced cast_tracking). Blemishes noted: blooming flowers in snow (pages 9/14), Tilly slightly
+large in the window (page 14).
+
+## Book B: book-20260920172038-e24548f37b "The Midnight Bakery" (8pp, 4 chars, art_inspiration
+"K-pop Demon Hunters" exercised live)
+Complete, exported, all 8 pages + cover adjudicated. Harder book: judge gaps found and fixed live —
+crowd allowance (page 2 burned 16 attempts before the allowance existed), neutral-material props,
+framing NEVER, occlusion. Real defects caught and fixed: Zuzu duplicated (pages 2, 6), Juniper's
+pigtails drifting, identity-marker bleed (Zuzu in red/pink boots), humanized Zuzu + aproned Juniper
+(page 7), "ZUZU" lettered on a wall sign (page 4), two spoons instead of one (page 6).
+Known unfixed design gap: story judge passed cast_tracking but MISSED page 8 (Prickle-Bun hands over
+the scone, cast [Juniper]); story/plan are immutable post-approval (assisted_revision refuses), so
+there is no in-flight repair path — RECOMMENDED: story cast-list amendment mechanism. Blemishes:
+page 7 Juniper hood-up, cover has an extra hatless teal-aproned hedgehog.
+
+---
 # Golden pass 2 at scale + judge hardening — 2026-09-19 (latest)
 
 Second golden pass on the full system: book-20260919180221-17a699f801 ("The Night Lantern Market",
